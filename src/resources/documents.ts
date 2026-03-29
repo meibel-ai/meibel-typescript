@@ -105,8 +105,8 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listDocumentChildren(jobId: string): AsyncIterable<string> {
-    yield* paginate<string>(async (cursor) => {
+  async *listDocumentChildren(jobId: string): AsyncIterable<models.DocumentChild> {
+    yield* paginate<models.DocumentChild>(async (cursor) => {
       const response = await this.http.request<models.DocumentChild[]>(`/v2/documents/${jobId}/children`, {
         method: "GET",
         params: {
@@ -114,7 +114,7 @@ export class DocumentsResource {
         },
       });
       return {
-        items: response.items ?? [],
+        items: response ?? [],
       };
     });
   }

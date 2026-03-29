@@ -117,7 +117,7 @@ export class DatasourcesDataelementsResource {
   async getDataElementsByFilters(datasourceId: string, body?: models.DataElementFilterRequest, options?: { regexFilter?: string; mediaTypeFilters?: string[] }): Promise<models.DataElement[]> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       regex_filter: options?.regexFilter,
-      media_type_filters: options?.mediaTypeFilters,
+      media_type_filters: options?.mediaTypeFilters?.join(','),
     };
 
     const response = await this.http.request<models.DataElement[]>(`/datasource/${datasourceId}/data_elements_by_filters`, {

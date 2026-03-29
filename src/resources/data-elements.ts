@@ -20,8 +20,8 @@ export class DataElementsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listDataElements(datasourceId: string): AsyncIterable<string> {
-    yield* paginate<string>(async (cursor) => {
+  async *listDataElements(datasourceId: string): AsyncIterable<models.DataElementResponse> {
+    yield* paginate<models.DataElementResponse>(async (cursor) => {
       const response = await this.http.request<models.DataElementResponse[]>(`/v2/datasources/${datasourceId}/data-elements`, {
         method: "GET",
         params: {
@@ -29,7 +29,7 @@ export class DataElementsResource {
         },
       });
       return {
-        items: response.items ?? [],
+        items: response ?? [],
       };
     });
   }

@@ -50,15 +50,15 @@ export class ConfidenceScoringResource {
  */
   async getAllScoringJobs(options?: { agentName?: string | null; agentVersion?: string | null; agentExecutionId?: string | null; agentWorkflowName?: string | null; agentWorkflowVersion?: string | null; agentWorkflowExecutionId?: string | null; toolId?: string | null; toolInstanceId?: string | null; toolExecutionId?: string | null }): Promise<string> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
-      agent_name: options?.agentName,
-      agent_version: options?.agentVersion,
-      agent_execution_id: options?.agentExecutionId,
-      agent_workflow_name: options?.agentWorkflowName,
-      agent_workflow_version: options?.agentWorkflowVersion,
-      agent_workflow_execution_id: options?.agentWorkflowExecutionId,
-      tool_id: options?.toolId,
-      tool_instance_id: options?.toolInstanceId,
-      tool_execution_id: options?.toolExecutionId,
+      agent_name: options?.agentName ?? undefined,
+      agent_version: options?.agentVersion ?? undefined,
+      agent_execution_id: options?.agentExecutionId ?? undefined,
+      agent_workflow_name: options?.agentWorkflowName ?? undefined,
+      agent_workflow_version: options?.agentWorkflowVersion ?? undefined,
+      agent_workflow_execution_id: options?.agentWorkflowExecutionId ?? undefined,
+      tool_id: options?.toolId ?? undefined,
+      tool_instance_id: options?.toolInstanceId ?? undefined,
+      tool_execution_id: options?.toolExecutionId ?? undefined,
     };
 
     const response = await this.http.request<string>("/confidence-scoring/jobs", {
@@ -88,7 +88,7 @@ Results are always scoped to the caller's customer_id.
   async getScoringJobsSummary(primary: string, options?: { secondary?: string | null }): Promise<models.ScoreSummary> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       primary: primary,
-      secondary: options?.secondary,
+      secondary: options?.secondary ?? undefined,
     };
 
     const response = await this.http.request<models.ScoreSummary>("/confidence-scoring/summary", {

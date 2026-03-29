@@ -27,8 +27,8 @@ export class DatasourcesContentResource {
  */
   async *listDatasourceContent(datasourceId: string, options?: { prefix?: string | null; continuationToken?: string | null; limit?: number }): AsyncIterable<models.ContentItem> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
-      prefix: options?.prefix,
-      continuation_token: options?.continuationToken,
+      prefix: options?.prefix ?? undefined,
+      continuation_token: options?.continuationToken ?? undefined,
       limit: options?.limit,
     };
 

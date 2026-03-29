@@ -26,13 +26,13 @@ export class ContentResource {
  */
   async *listContent(datasourceId: string, options?: { prefix?: string | null; continuationToken?: string | null; limit?: number }): AsyncIterable<string> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
-      prefix: options?.prefix,
-      continuation_token: options?.continuationToken,
+      prefix: options?.prefix ?? undefined,
+      continuation_token: options?.continuationToken ?? undefined,
       limit: options?.limit,
     };
 
     yield* paginate<string>(async (cursor) => {
-      const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/content`, {
+      const response = await this.http.request<string[]>(`/v2/datasources/${datasourceId}/content`, {
         method: "GET",
         params: {
           ...queryParams,
@@ -40,7 +40,7 @@ export class ContentResource {
         },
       });
       return {
-        items: response.items ?? [],
+        items: response ?? [],
       };
     });
   }

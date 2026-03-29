@@ -22,7 +22,7 @@ export class MetadataModelCatalogResource {
  */
   async *listMetadataModelCatalog(options?: { scope?: string | null }): AsyncIterable<models.MetadataModelCatalogEntry> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
-      scope: options?.scope,
+      scope: options?.scope ?? undefined,
     };
 
     yield* paginate<models.MetadataModelCatalogEntry>(async (cursor) => {

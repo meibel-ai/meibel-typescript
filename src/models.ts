@@ -7,6 +7,12 @@
 import { z } from 'zod';
 
 /**
+ * ActivityStatus
+ */
+export const ActivityStatusSchema = z.object({
+});
+
+/**
  * Activity
  */
 export const ActivitySchema = z.object({
@@ -21,12 +27,6 @@ export const ActivitySchema = z.object({
   error: z.union([z.string(), z.null()]).optional(),
   groupId: z.union([z.string(), z.null()]).optional(),
   taskMetadata: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
- * ActivityStatus
- */
-export const ActivityStatusSchema = z.object({
 });
 
 /**
@@ -67,6 +67,12 @@ export const AddBlueprintInstanceResponseSchema = z.object({
 });
 
 /**
+ * DslDefinition
+ */
+export const DslDefinitionSchema = z.object({
+});
+
+/**
  * AddBlueprintRequest
  */
 export const AddBlueprintRequestSchema = z.object({
@@ -103,6 +109,73 @@ export const AddBlueprintTaskRequestSchema = z.object({
 });
 
 /**
+ * CodeChunking
+ */
+export const CodeChunkingSchema = z.object({
+  chunkLines: z.union([z.number().int(), z.null()]).optional(),
+  chunkLinesOverlap: z.union([z.number().int(), z.null()]).optional(),
+  maxChars: z.union([z.number().int(), z.null()]).optional(),
+});
+
+/**
+ * HTMLChunking
+ */
+export const HtmlChunkingSchema = z.object({
+  includeMetadata: z.boolean(),
+  includePrevNextRel: z.boolean(),
+  tags: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+/**
+ * JSONNodeChunking
+ */
+export const JsonNodeChunkingSchema = z.object({
+  includeMetadata: z.boolean(),
+  includePrevNextRel: z.boolean(),
+});
+
+/**
+ * MarkdownNodeChunking
+ */
+export const MarkdownNodeChunkingSchema = z.object({
+  includeMetadata: z.boolean(),
+  includePrevNextRel: z.boolean(),
+  headerPathSeparator: z.string(),
+});
+
+/**
+ * SemanticChunking
+ */
+export const SemanticChunkingSchema = z.object({
+  bufferSize: z.union([z.number().int(), z.null()]).optional(),
+  includeMetadata: z.boolean(),
+  includePrevNextRel: z.boolean(),
+  breakpointPercentileThreshold: z.union([z.number().int(), z.null()]).optional(),
+});
+
+/**
+ * SentenceChunking
+ */
+export const SentenceChunkingSchema = z.object({
+  chunkSize: z.union([z.number().int(), z.null()]).optional(),
+  chunkOverlap: z.union([z.number().int(), z.null()]).optional(),
+  separator: z.union([z.string(), z.null()]).optional(),
+  paragraphSeparator: z.union([z.string(), z.null()]).optional(),
+  secondaryChunkingRegex: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
+ * TokenTextChunking
+ */
+export const TokenTextChunkingSchema = z.object({
+  chunkSize: z.union([z.number().int(), z.null()]).optional(),
+  chunkOverlap: z.union([z.number().int(), z.null()]).optional(),
+  separator: z.union([z.string(), z.null()]).optional(),
+  backupSeparators: z.union([z.array(z.string()), z.null()]).optional(),
+  keepWhitespaces: z.union([z.boolean(), z.null()]).optional(),
+});
+
+/**
  * AddChunkingStrategyRequest
  */
 export const AddChunkingStrategyRequestSchema = z.object({
@@ -120,6 +193,21 @@ export const AddChunkingStrategyRequestSchema = z.object({
  */
 export const AddChunkingStrategyResponseSchema = z.object({
   message: z.string(),
+});
+
+/**
+ * DataElementDiscoveryRecord
+ */
+export const DataElementDiscoveryRecordSchema = z.object({
+  discoveryTime: z.string(),
+  lastModifiedTime: z.string(),
+  size: z.union([z.number(), z.number().int()]),
+  elementHash: z.string(),
+  fileId: z.union([z.string(), z.null()]).optional(),
+  fileCreatedAt: z.union([z.string(), z.null()]).optional(),
+  fileModifiedAt: z.union([z.string(), z.null()]).optional(),
+  /** Connector-specific extra metadata */
+  extra: z.union([z.string(), z.null()]).optional(),
 });
 
 /**
@@ -155,6 +243,86 @@ export const AddEventResponseSchema = z.object({
   id: z.string(),
 });
 
+/**
+ * ObjectStorageFilters
+ */
+export const ObjectStorageFiltersSchema = z.object({
+  includedPrefixes: z.union([z.array(z.string()), z.null()]).optional(),
+  includedFileTypes: z.union([z.array(z.string()), z.null()]).optional(),
+  recursivePrefixes: z.union([z.boolean(), z.null()]).optional(),
+  modifiedDateStart: z.union([z.string(), z.null()]).optional(),
+  modifiedDateEnd: z.union([z.string(), z.null()]).optional(),
+  minFileSize: z.union([z.number().int(), z.null()]).optional(),
+  maxFileSize: z.union([z.number().int(), z.null()]).optional(),
+});
+
+/**
+ * S3Config
+ */
+export const S3ConfigSchema = z.object({
+  roleArn: z.string(),
+  region: z.string(),
+});
+
+/**
+ * ObjectStorageConfig
+ */
+export const ObjectStorageConfigSchema = z.object({
+  bucket: z.string(),
+  prefix: z.union([z.string(), z.null()]),
+  filters: z.union([ObjectStorageFiltersSchema, z.null()]).optional(),
+  gcsConfig: z.union([z.string(), z.null()]).optional(),
+  s3Config: z.union([S3ConfigSchema, z.null()]).optional(),
+});
+
+/**
+ * WebDomain
+ */
+export const DatasourceServiceClientModelsWebDomainWebDomainSchema = z.object({
+  domain: z.string(),
+  limitPattern: z.string(),
+  excludePattern: z.string(),
+  ingestible: z.boolean(),
+  expandable: z.boolean(),
+});
+
+/**
+ * BasicWebAuth
+ */
+export const BasicWebAuthSchema = z.object({
+  username: z.string(),
+  password: z.string(),
+});
+
+/**
+ * DatasourceWebConfig
+ */
+export const DatasourceWebConfigSchema = z.object({
+  baseUrl: z.string(),
+  javascriptRender: z.boolean(),
+  waitForSelector: z.union([z.string(), z.null()]),
+  domains: z.union([z.array(DatasourceServiceClientModelsWebDomainWebDomainSchema), z.null()]),
+  authentication: z.union([BasicWebAuthSchema, z.null()]),
+});
+
+/**
+ * AirbyteConfig
+ */
+export const AirbyteConfigSchema = z.object({
+  sourceId: z.string(),
+  destinationId: z.string(),
+  connectionId: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
+ * DatasourceConnectorConfig
+ */
+export const DatasourceConnectorConfigSchema = z.object({
+  connectorId: z.string(),
+  airbyteConfig: z.union([AirbyteConfigSchema, z.null()]).optional(),
+  sourceConfig: z.union([z.string(), z.null()]).optional(),
+});
+
 export const AddGatewayDatasourceRequestSchema = z.object({
   name: z.string(),
   description: z.string(),
@@ -162,6 +330,60 @@ export const AddGatewayDatasourceRequestSchema = z.object({
   objectStorageConfig: z.union([ObjectStorageConfigSchema, z.null()]).optional(),
   webConfig: z.union([DatasourceWebConfigSchema, z.null()]).optional(),
   connectorConfig: z.union([DatasourceConnectorConfigSchema, z.null()]).optional(),
+});
+
+/**
+ * ExtractorModel
+ */
+export const ExtractorModelSchema = z.object({
+  name: z.string(),
+  endpoint: z.string(),
+});
+
+/**
+ * EmbeddingModel
+ */
+export const EmbeddingModelSchema = z.object({
+  name: z.string(),
+  endpoint: z.string(),
+  dimensions: z.number().int(),
+});
+
+/**
+ * SparseEmbeddingModel
+ */
+export const SparseEmbeddingModelSchema = z.object({
+  name: z.string(),
+  endpoint: z.string(),
+});
+
+/**
+ * MetadataOptions
+ */
+export const MetadataOptionsSchema = z.object({
+  createTitle: z.union([z.boolean(), z.null()]).optional(),
+  extractQuestionsAnswers: z.union([z.boolean(), z.null()]).optional(),
+  extractSummary: z.union([z.boolean(), z.null()]).optional(),
+  hasConsumerContent: z.union([z.boolean(), z.null()]).optional(),
+  getBibliographicalInformation: z.union([z.boolean(), z.null()]).optional(),
+});
+
+/**
+ * MetadataFieldDefinition
+ */
+export const MetadataFieldDefinitionSchema = z.object({
+  name: z.string(),
+  type: z.string(),
+  description: z.string(),
+});
+
+/**
+ * MetadataModelConfig
+ */
+export const MetadataModelConfigSchema = z.object({
+  type: z.string(),
+  modelId: z.union([z.string(), z.null()]).optional(),
+  fields: z.union([z.array(MetadataFieldDefinitionSchema), z.null()]).optional(),
 });
 
 /**
@@ -201,6 +423,49 @@ export const AddTagColumnRequestSchema = z.object({
  */
 export const AddTagColumnResponseSchema = z.object({
   message: z.string(),
+});
+
+/**
+ * DatabaseType
+ */
+export const DatabaseTypeSchema = z.object({
+});
+
+/**
+ * DuckDBConfig
+ */
+export const DuckDbConfigSchema = z.object({
+  databaseType: z.union([DatabaseTypeSchema, z.null()]).optional(),
+  databaseFilepath: z.union([z.string(), z.null()]).optional(),
+  databaseName: z.union([z.string(), z.null()]).optional(),
+  databaseSchema: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
+ * ClickhouseConfig
+ */
+export const ClickhouseConfigSchema = z.object({
+  databaseType: z.union([DatabaseTypeSchema, z.null()]).optional(),
+  databaseName: z.string(),
+});
+
+/**
+ * PostgreSQLConfig
+ */
+export const PostgreSqlConfigSchema = z.object({
+  databaseType: z.union([DatabaseTypeSchema, z.null()]).optional(),
+  databaseName: z.string(),
+});
+
+/**
+ * DatabaseConfig
+ */
+export const DatabaseConfigInputSchema = z.object({
+  anyofSchema_1Validator: z.union([DuckDbConfigSchema, z.null()]).optional(),
+  anyofSchema_2Validator: z.union([ClickhouseConfigSchema, z.null()]).optional(),
+  anyofSchema_3Validator: z.union([PostgreSqlConfigSchema, z.null()]).optional(),
+  actualInstance: z.string().optional(),
+  anyOfSchemas: z.array(z.string()).optional(),
 });
 
 /**
@@ -256,15 +521,6 @@ export const AgentIdentityContextSchema = z.object({
 });
 
 /**
- * AirbyteConfig
- */
-export const AirbyteConfigSchema = z.object({
-  sourceId: z.string(),
-  destinationId: z.string(),
-  connectionId: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
  * AllowedDataElementFilterKeys
  */
 export const AllowedDataElementFilterKeysSchema = z.object({
@@ -284,11 +540,9 @@ export const ArtifactSchema = z.object({
 });
 
 /**
- * BasicWebAuth
+ * BlueprintExecutionMode
  */
-export const BasicWebAuthSchema = z.object({
-  username: z.string(),
-  password: z.string(),
+export const BlueprintExecutionModeSchema = z.object({
 });
 
 /**
@@ -316,15 +570,51 @@ export const BlueprintSchema = z.object({
 });
 
 /**
- * BlueprintExecutionMode
+ * BlueprintInstanceStatus
  */
-export const BlueprintExecutionModeSchema = z.object({
+export const BlueprintInstanceStatusSchema = z.object({
+});
+
+/**
+ * EventType
+ */
+export const EventTypeSchema = z.object({
+});
+
+/**
+ * Event
+ */
+export const EventSchema = z.object({
+  id: z.union([z.string(), z.null()]).optional(),
+  activityId: z.union([z.string(), z.null()]).optional(),
+  blueprintInstanceId: z.string(),
+  eventType: z.union([EventTypeSchema, z.null()]).optional(),
+  timestamp: z.union([z.coerce.date(), z.null()]).optional(),
+  details: z.union([z.string(), z.null()]).optional(),
+  groupId: z.union([z.string(), z.null()]).optional(),
+  isSignal: z.union([z.boolean(), z.null()]).optional(),
+  isInternal: z.union([z.boolean(), z.null()]).optional(),
+  originatingSignalId: z.union([z.string(), z.null()]).optional(),
 });
 
 /**
  * BlueprintInstance
  */
-export const BlueprintInstanceSchema = z.object({
+export const BlueprintInstanceSchema: z.ZodType<{
+  id?: string | null;
+  blueprintId?: string | null;
+  workflowType?: string | null;
+  taskQueue?: string | null;
+  workflowRunId?: string | null;
+  status?: Record<string, never> | null;
+  startTime?: Date | null;
+  endTime?: Date | null;
+  instanceMetadata?: string | null;
+  parentId?: string | null;
+  children?: unknown[] | null;
+  activities?: z.infer<typeof ActivitySchema>[] | null;
+  events?: z.infer<typeof EventSchema>[] | null;
+}> = z.object({
   id: z.union([z.string(), z.null()]).optional(),
   blueprintId: z.union([z.string(), z.null()]).optional(),
   workflowType: z.union([z.string(), z.null()]).optional(),
@@ -335,15 +625,9 @@ export const BlueprintInstanceSchema = z.object({
   endTime: z.union([z.coerce.date(), z.null()]).optional(),
   instanceMetadata: z.union([z.string(), z.null()]).optional(),
   parentId: z.union([z.string(), z.null()]).optional(),
-  children: z.union([z.array(BlueprintInstanceSchema), z.null()]).optional(),
+  children: z.union([z.lazy(() => z.array(BlueprintInstanceSchema)), z.null()]).optional(),
   activities: z.union([z.array(ActivitySchema), z.null()]).optional(),
   events: z.union([z.array(EventSchema), z.null()]).optional(),
-});
-
-/**
- * BlueprintInstanceStatus
- */
-export const BlueprintInstanceStatusSchema = z.object({
 });
 
 export const BoundingBoxSchema = z.object({
@@ -375,18 +659,14 @@ export const ChatMessageRequestSchema = z.object({
 });
 
 /**
- * Response from the non-streaming chat endpoint.
+ * A source/citation in the response.
  */
-export const ChatMessageResponseSchema = z.object({
-  /** Unique ID for this message exchange */
-  signalId: z.string(),
-  /** The structured response */
-  response: ChatResponseSchema,
-  /** The assistant response in text-format */
-  assistantResponse: z.string(),
-  toolActivity: z.union([z.array(ToolActivitySchema), z.null()]).optional(),
-  thinking: z.union([z.string(), z.null()]).optional(),
-  tokenUsage: z.union([z.record(z.string(), z.number().int()), z.null()]).optional(),
+export const SourceSchema = z.object({
+  title: z.string(),
+  url: z.union([z.string(), z.null()]).optional(),
+  snippet: z.union([z.string(), z.null()]).optional(),
+  dataElementId: z.union([z.string(), z.null()]).optional(),
+  relevanceScore: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -401,11 +681,29 @@ export const ChatResponseSchema = z.object({
 });
 
 /**
- * ClickhouseConfig
+ * Record of a tool call and its result.
  */
-export const ClickhouseConfigSchema = z.object({
-  databaseType: z.union([DatabaseTypeSchema, z.null()]).optional(),
-  databaseName: z.string(),
+export const ToolActivitySchema = z.object({
+  toolId: z.string(),
+  toolName: z.string(),
+  arguments: z.string(),
+  result: z.union([z.string(), z.null()]).optional(),
+  timestamp: z.string(),
+});
+
+/**
+ * Response from the non-streaming chat endpoint.
+ */
+export const ChatMessageResponseSchema = z.object({
+  /** Unique ID for this message exchange */
+  signalId: z.string(),
+  /** The structured response */
+  response: ChatResponseSchema,
+  /** The assistant response in text-format */
+  assistantResponse: z.string(),
+  toolActivity: z.union([z.array(ToolActivitySchema), z.null()]).optional(),
+  thinking: z.union([z.string(), z.null()]).optional(),
+  tokenUsage: z.union([z.record(z.string(), z.number().int()), z.null()]).optional(),
 });
 
 /**
@@ -423,15 +721,6 @@ export const CloudStorageConnectorSchema = z.object({
 });
 
 /**
- * CodeChunking
- */
-export const CodeChunkingSchema = z.object({
-  chunkLines: z.union([z.number().int(), z.null()]).optional(),
-  chunkLinesOverlap: z.union([z.number().int(), z.null()]).optional(),
-  maxChars: z.union([z.number().int(), z.null()]).optional(),
-});
-
-/**
  * CompleteBlueprintInstanceRequest
  */
 export const CompleteBlueprintInstanceRequestSchema = z.object({
@@ -439,11 +728,56 @@ export const CompleteBlueprintInstanceRequestSchema = z.object({
 });
 
 /**
- * Simplified configuration wrapper that separates module name from config.  This model is shared between confidence-scoring-service and confidence-framework to ensure type consistency without OpenAPI Generator wrapper issues.
+ * Configuration for judge-based confidence scoring (LLM-as-judge patterns).
  */
-export const ConfidenceScoringConfigSchema = z.object({
-  module: z.string(),
-  config: ConfigSchema,
+export const JudgeConfigSchema = z.object({
+  prompt: z.string(),
+  temperatureMax: z.union([z.number(), z.number().int(), z.null()]).optional(),
+  temperatureStep: z.union([z.number(), z.number().int(), z.null()]).optional(),
+});
+
+/**
+ * NBootstraps
+ */
+export const NBootstrapsSchema = z.object({
+  anyofSchema_1Validator: z.union([z.number().int(), z.null()]).optional(),
+  anyofSchema_2Validator: z.union([z.string(), z.null()]).optional(),
+  actualInstance: z.string().optional(),
+  anyOfSchemas: z.array(z.string()).optional(),
+});
+
+/**
+ * Configuration for Observed Consistency confidence scoring.
+ */
+export const OcConfigSchema = z.object({
+  nCompletions: z.union([z.number().int(), z.null()]).optional(),
+  maxTokens: z.union([z.number().int(), z.null()]).optional(),
+  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
+  models: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
+  nliModelConfig: z.string(),
+  nBootstraps: z.union([NBootstrapsSchema, z.null()]).optional(),
+  tokenLimit: z.union([z.number().int(), z.null()]).optional(),
+  originalCompletion: z.union([z.string(), z.null()]).optional(),
+  comparisonCompletions: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+/**
+ * Configuration for OCR confidence scoring.
+ */
+export const OcrConfigSchema = z.object({
+  calibrationModel: z.union([z.string(), z.null()]).optional(),
+  ocrConfidenceScores: z.union([z.array(z.union([z.number(), z.number().int()])), z.null()]).optional(),
+});
+
+/**
+ * Configuration for token-based confidence scoring (TF-IDF).
+ */
+export const TokenConfigSchema = z.object({
+  model: z.union([z.string(), z.null()]).optional(),
+  removeStopWords: z.union([z.boolean(), z.null()]).optional(),
+  lowerCase: z.union([z.boolean(), z.null()]).optional(),
+  maxNgrams: z.union([z.number().int(), z.null()]).optional(),
+  nInfluencers: z.union([z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -456,6 +790,47 @@ export const ConfigSchema = z.object({
   anyofSchema_4Validator: z.union([TokenConfigSchema, z.null()]).optional(),
   actualInstance: z.string().optional(),
   anyOfSchemas: z.array(z.string()).optional(),
+});
+
+/**
+ * Simplified configuration wrapper that separates module name from config.  This model is shared between confidence-scoring-service and confidence-framework to ensure type consistency without OpenAPI Generator wrapper issues.
+ */
+export const ConfidenceScoringConfigSchema = z.object({
+  module: z.string(),
+  config: ConfigSchema,
+});
+
+/**
+ * Connect to a relational database.
+ */
+export const DatabaseConnectorSchema = z.object({
+  /** Database host address */
+  host: z.string(),
+  /** Database port */
+  port: z.number().int(),
+  /** Database name */
+  database: z.string(),
+  /** Schema name (defaults to public) */
+  schemaName: z.union([z.string(), z.null()]).optional(),
+});
+
+export const GatewayServiceV2ModelsDatasourcesWebDomainSchema = z.object({
+  domain: z.string(),
+  /** URL pattern to include */
+  includePattern: z.string(),
+  /** URL pattern to exclude */
+  excludePattern: z.string().optional(),
+});
+
+/**
+ * Connect to a website for crawling.
+ */
+export const WebCrawlConnectorSchema = z.object({
+  /** Starting URL for the crawl */
+  baseUrl: z.string(),
+  /** Enable JavaScript rendering */
+  javascriptRender: z.boolean().optional(),
+  domains: z.union([z.array(GatewayServiceV2ModelsDatasourcesWebDomainSchema), z.null()]).optional(),
 });
 
 /**
@@ -479,6 +854,12 @@ export const ConnectorConfigOutputSchema = z.object({
 });
 
 /**
+ * ContentType
+ */
+export const ContentTypeSchema = z.object({
+});
+
+/**
  * ContentItem
  */
 export const ContentItemSchema = z.object({
@@ -489,12 +870,6 @@ export const ContentItemSchema = z.object({
   mediaType: z.union([z.string(), z.null()]).optional(),
   lastModified: z.union([z.string(), z.null()]).optional(),
   etag: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
- * ContentType
- */
-export const ContentTypeSchema = z.object({
 });
 
 export const CreateDataElementRequestSchema = z.object({
@@ -552,21 +927,6 @@ export const DataElementConditionSchema = z.object({
 });
 
 /**
- * DataElementDiscoveryRecord
- */
-export const DataElementDiscoveryRecordSchema = z.object({
-  discoveryTime: z.string(),
-  lastModifiedTime: z.string(),
-  size: z.union([z.number(), z.number().int()]),
-  elementHash: z.string(),
-  fileId: z.union([z.string(), z.null()]).optional(),
-  fileCreatedAt: z.union([z.string(), z.null()]).optional(),
-  fileModifiedAt: z.union([z.string(), z.null()]).optional(),
-  /** Connector-specific extra metadata */
-  extra: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
  * DataElementFilter
  */
 export const DataElementFilterSchema = z.object({
@@ -610,43 +970,12 @@ export const DataElementSearchRequestSchema = z.object({
 /**
  * DatabaseConfig
  */
-export const DatabaseConfigInputSchema = z.object({
-  anyofSchema_1Validator: z.union([DuckDbConfigSchema, z.null()]).optional(),
-  anyofSchema_2Validator: z.union([ClickhouseConfigSchema, z.null()]).optional(),
-  anyofSchema_3Validator: z.union([PostgreSqlConfigSchema, z.null()]).optional(),
-  actualInstance: z.string().optional(),
-  anyOfSchemas: z.array(z.string()).optional(),
-});
-
-/**
- * DatabaseConfig
- */
 export const DatabaseConfigOutputSchema = z.object({
   anyofSchema_1Validator: z.union([DuckDbConfigSchema, z.null()]).optional(),
   anyofSchema_2Validator: z.union([ClickhouseConfigSchema, z.null()]).optional(),
   anyofSchema_3Validator: z.union([PostgreSqlConfigSchema, z.null()]).optional(),
   actualInstance: z.string().optional(),
   anyOfSchemas: z.array(z.string()).optional(),
-});
-
-/**
- * Connect to a relational database.
- */
-export const DatabaseConnectorSchema = z.object({
-  /** Database host address */
-  host: z.string(),
-  /** Database port */
-  port: z.number().int(),
-  /** Database name */
-  database: z.string(),
-  /** Schema name (defaults to public) */
-  schemaName: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
- * DatabaseType
- */
-export const DatabaseTypeSchema = z.object({
 });
 
 /**
@@ -668,19 +997,6 @@ export const DatasourceSchema = z.object({
   connectorConfig: z.union([DatasourceConnectorConfigSchema, z.null()]),
 });
 
-/**
- * DatasourceConnectorConfig
- */
-export const DatasourceConnectorConfigSchema = z.object({
-  connectorId: z.string(),
-  airbyteConfig: z.union([AirbyteConfigSchema, z.null()]).optional(),
-  sourceConfig: z.union([z.string(), z.null()]).optional(),
-});
-
-export const DatasourceListResponseSchema = z.object({
-  datasources: z.array(DatasourceResponseSchema),
-});
-
 export const DatasourceResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -690,15 +1006,8 @@ export const DatasourceResponseSchema = z.object({
   updatedAt: z.string(),
 });
 
-/**
- * DatasourceWebConfig
- */
-export const DatasourceWebConfigSchema = z.object({
-  baseUrl: z.string(),
-  javascriptRender: z.boolean(),
-  waitForSelector: z.union([z.string(), z.null()]),
-  domains: z.union([z.array(DatasourceServiceClientModelsWebDomainWebDomainSchema), z.null()]),
-  authentication: z.union([BasicWebAuthSchema, z.null()]),
+export const DatasourceListResponseSchema = z.object({
+  datasources: z.array(DatasourceResponseSchema),
 });
 
 /**
@@ -747,6 +1056,22 @@ export const DocumentChildSchema = z.object({
   mediaType: z.string(),
 });
 
+export const TableCellSchema = z.object({
+  text: z.string(),
+  row: z.number().int(),
+  col: z.number().int(),
+  rowSpan: z.number().int().optional(),
+  colSpan: z.number().int().optional(),
+  bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
+});
+
+export const TableSchema = z.object({
+  cells: z.array(TableCellSchema),
+  rows: z.number().int(),
+  cols: z.number().int(),
+  bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
+});
+
 /**
  * A structural element in a parsed document.
  */
@@ -780,66 +1105,11 @@ export const DocumentStatusSchema = z.object({
 });
 
 /**
- * DslDefinition
- */
-export const DslDefinitionSchema = z.object({
-});
-
-/**
- * DuckDBConfig
- */
-export const DuckDbConfigSchema = z.object({
-  databaseType: z.union([DatabaseTypeSchema, z.null()]).optional(),
-  databaseFilepath: z.union([z.string(), z.null()]).optional(),
-  databaseName: z.union([z.string(), z.null()]).optional(),
-  databaseSchema: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
- * EmbeddingModel
- */
-export const EmbeddingModelSchema = z.object({
-  name: z.string(),
-  endpoint: z.string(),
-  dimensions: z.number().int(),
-});
-
-/**
- * Event
- */
-export const EventSchema = z.object({
-  id: z.union([z.string(), z.null()]).optional(),
-  activityId: z.union([z.string(), z.null()]).optional(),
-  blueprintInstanceId: z.string(),
-  eventType: z.union([EventTypeSchema, z.null()]).optional(),
-  timestamp: z.union([z.coerce.date(), z.null()]).optional(),
-  details: z.union([z.string(), z.null()]).optional(),
-  groupId: z.union([z.string(), z.null()]).optional(),
-  isSignal: z.union([z.boolean(), z.null()]).optional(),
-  isInternal: z.union([z.boolean(), z.null()]).optional(),
-  originatingSignalId: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
- * EventType
- */
-export const EventTypeSchema = z.object({
-});
-
-/**
  * ExecuteBlueprintRequest
  */
 export const ExecuteBlueprintRequestSchema = z.object({
   initInput: z.union([z.string(), z.null()]).optional(),
   enableStreaming: z.union([z.boolean(), z.null()]).optional(),
-});
-
-/**
- * ExtractorModel
- */
-export const ExtractorModelSchema = z.object({
-  name: z.string(),
-  endpoint: z.string(),
 });
 
 /**
@@ -869,7 +1139,7 @@ export const GetAllDatasourceIdsResponseSchema = z.object({
  * GetBlueprintInstancesResponse
  */
 export const GetBlueprintInstancesResponseSchema = z.object({
-  data: z.array(BlueprintInstanceSchema),
+  data: z.lazy(() => z.array(BlueprintInstanceSchema)),
 });
 
 /**
@@ -927,34 +1197,14 @@ export const GetReprocessStatusResponseSchema = z.object({
   failed: z.union([z.number().int(), z.null()]),
 });
 
-/**
- * HTMLChunking
- */
-export const HtmlChunkingSchema = z.object({
-  includeMetadata: z.boolean(),
-  includePrevNextRel: z.boolean(),
-  tags: z.union([z.array(z.string()), z.null()]).optional(),
+export const ValidationErrorSchema = z.object({
+  loc: z.array(z.union([z.string(), z.number().int()])),
+  msg: z.string(),
+  type: z.string(),
 });
 
 export const HttpValidationErrorSchema = z.object({
   detail: z.array(ValidationErrorSchema).optional(),
-});
-
-/**
- * JSONNodeChunking
- */
-export const JsonNodeChunkingSchema = z.object({
-  includeMetadata: z.boolean(),
-  includePrevNextRel: z.boolean(),
-});
-
-/**
- * Configuration for judge-based confidence scoring (LLM-as-judge patterns).
- */
-export const JudgeConfigSchema = z.object({
-  prompt: z.string(),
-  temperatureMax: z.union([z.number(), z.number().int(), z.null()]).optional(),
-  temperatureStep: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -966,60 +1216,9 @@ export const ListContentResponseSchema = z.object({
 });
 
 /**
- * ListMetadataModelCatalogResponse
+ * MetadataModelField
  */
-export const ListMetadataModelCatalogResponseSchema = z.object({
-  models: z.array(MetadataModelCatalogEntrySchema),
-});
-
-/**
- * MarkdownNodeChunking
- */
-export const MarkdownNodeChunkingSchema = z.object({
-  includeMetadata: z.boolean(),
-  includePrevNextRel: z.boolean(),
-  headerPathSeparator: z.string(),
-});
-
-/**
- * Full structured parse result (meibel format).
- */
-export const MeibelDocumentResultSchema = z.object({
-  elements: z.array(DocumentElementSchema),
-  pages: z.number().int(),
-  tables: z.number().int(),
-  metadata: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
- * Configure automatic metadata extraction from documents on ingest.
- */
-export const MetadataConfigRequestSchema = z.object({
-  type: z.enum(["catalog", "custom"]),
-  /** Required when type='catalog' */
-  modelId: z.union([z.string(), z.null()]).optional(),
-  /** Required when type='custom' */
-  fields: z.union([z.array(MetadataFieldSchema), z.null()]).optional(),
-});
-
-export const MetadataConfigResponseSchema = z.object({
-  type: z.enum(["catalog", "custom", "default"]),
-  modelId: z.union([z.string(), z.null()]).optional(),
-  fields: z.array(MetadataFieldSchema),
-});
-
-export const MetadataFieldSchema = z.object({
-  /** Field name (snake_case) */
-  name: z.string(),
-  type: z.enum(["string", "number", "boolean", "list[string]"]),
-  /** What this field captures */
-  description: z.string(),
-});
-
-/**
- * MetadataFieldDefinition
- */
-export const MetadataFieldDefinitionSchema = z.object({
+export const MetadataModelFieldSchema = z.object({
   name: z.string(),
   type: z.string(),
   description: z.string(),
@@ -1043,89 +1242,45 @@ export const MetadataModelCatalogEntrySchema = z.object({
 });
 
 /**
- * MetadataModelConfig
+ * ListMetadataModelCatalogResponse
  */
-export const MetadataModelConfigSchema = z.object({
-  type: z.string(),
-  modelId: z.union([z.string(), z.null()]).optional(),
-  fields: z.union([z.array(MetadataFieldDefinitionSchema), z.null()]).optional(),
+export const ListMetadataModelCatalogResponseSchema = z.object({
+  models: z.array(MetadataModelCatalogEntrySchema),
 });
 
 /**
- * MetadataModelField
+ * Full structured parse result (meibel format).
  */
-export const MetadataModelFieldSchema = z.object({
+export const MeibelDocumentResultSchema = z.object({
+  elements: z.array(DocumentElementSchema),
+  pages: z.number().int(),
+  tables: z.number().int(),
+  metadata: z.union([z.string(), z.null()]).optional(),
+});
+
+export const MetadataFieldSchema = z.object({
+  /** Field name (snake_case) */
   name: z.string(),
-  type: z.string(),
+  type: z.enum(["string", "number", "boolean", "list[string]"]),
+  /** What this field captures */
   description: z.string(),
 });
 
 /**
- * MetadataOptions
+ * Configure automatic metadata extraction from documents on ingest.
  */
-export const MetadataOptionsSchema = z.object({
-  createTitle: z.union([z.boolean(), z.null()]).optional(),
-  extractQuestionsAnswers: z.union([z.boolean(), z.null()]).optional(),
-  extractSummary: z.union([z.boolean(), z.null()]).optional(),
-  hasConsumerContent: z.union([z.boolean(), z.null()]).optional(),
-  getBibliographicalInformation: z.union([z.boolean(), z.null()]).optional(),
+export const MetadataConfigRequestSchema = z.object({
+  type: z.enum(["catalog", "custom"]),
+  /** Required when type='catalog' */
+  modelId: z.union([z.string(), z.null()]).optional(),
+  /** Required when type='custom' */
+  fields: z.union([z.array(MetadataFieldSchema), z.null()]).optional(),
 });
 
-/**
- * NBootstraps
- */
-export const NBootstrapsSchema = z.object({
-  anyofSchema_1Validator: z.union([z.number().int(), z.null()]).optional(),
-  anyofSchema_2Validator: z.union([z.string(), z.null()]).optional(),
-  actualInstance: z.string().optional(),
-  anyOfSchemas: z.array(z.string()).optional(),
-});
-
-/**
- * Configuration for Observed Consistency confidence scoring.
- */
-export const OcConfigSchema = z.object({
-  nCompletions: z.union([z.number().int(), z.null()]).optional(),
-  maxTokens: z.union([z.number().int(), z.null()]).optional(),
-  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
-  models: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
-  nliModelConfig: z.string(),
-  nBootstraps: z.union([NBootstrapsSchema, z.null()]).optional(),
-  tokenLimit: z.union([z.number().int(), z.null()]).optional(),
-  originalCompletion: z.union([z.string(), z.null()]).optional(),
-  comparisonCompletions: z.union([z.array(z.string()), z.null()]).optional(),
-});
-
-/**
- * Configuration for OCR confidence scoring.
- */
-export const OcrConfigSchema = z.object({
-  calibrationModel: z.union([z.string(), z.null()]).optional(),
-  ocrConfidenceScores: z.union([z.array(z.union([z.number(), z.number().int()])), z.null()]).optional(),
-});
-
-/**
- * ObjectStorageConfig
- */
-export const ObjectStorageConfigSchema = z.object({
-  bucket: z.string(),
-  prefix: z.union([z.string(), z.null()]),
-  filters: z.union([ObjectStorageFiltersSchema, z.null()]).optional(),
-  gcsConfig: z.union([z.string(), z.null()]).optional(),
-  s3Config: z.union([S3ConfigSchema, z.null()]).optional(),
-});
-
-/**
- * ObjectStorageFilters
- */
-export const ObjectStorageFiltersSchema = z.object({
-  includedPrefixes: z.union([z.array(z.string()), z.null()]).optional(),
-  includedFileTypes: z.union([z.array(z.string()), z.null()]).optional(),
-  recursivePrefixes: z.union([z.boolean(), z.null()]).optional(),
-  modifiedDateStart: z.union([z.string(), z.null()]).optional(),
-  modifiedDateEnd: z.union([z.string(), z.null()]).optional(),
-  minFileSize: z.union([z.number().int(), z.null()]).optional(),
-  maxFileSize: z.union([z.number().int(), z.null()]).optional(),
+export const MetadataConfigResponseSchema = z.object({
+  type: z.enum(["catalog", "custom", "default"]),
+  modelId: z.union([z.string(), z.null()]).optional(),
+  fields: z.array(MetadataFieldSchema),
 });
 
 /**
@@ -1155,14 +1310,6 @@ export const PatchRagConfigMetadataResponseSchema = z.object({
  * Platform
  */
 export const PlatformSchema = z.object({
-});
-
-/**
- * PostgreSQLConfig
- */
-export const PostgreSqlConfigSchema = z.object({
-  databaseType: z.union([DatabaseTypeSchema, z.null()]).optional(),
-  databaseName: z.string(),
 });
 
 /**
@@ -1237,11 +1384,23 @@ export const ReprocessDatasourceResponseSchema = z.object({
 });
 
 /**
- * S3Config
+ * ScoringStatus
  */
-export const S3ConfigSchema = z.object({
-  roleArn: z.string(),
-  region: z.string(),
+export const ScoringStatusSchema = z.object({
+});
+
+/**
+ * ScoringJobRecord
+ */
+export const ScoringJobRecordSchema = z.object({
+  jobId: z.string(),
+  agentIdentityContext: AgentIdentityContextSchema,
+  module: z.string(),
+  scoringConfig: ConfidenceScoringConfigSchema,
+  inputValue: z.string(),
+  outputValue: z.string(),
+  status: ScoringStatusSchema,
+  score: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -1260,66 +1419,6 @@ export const ScoreSummarySchema = z.object({
 });
 
 /**
- * ScoringJobRecord
- */
-export const ScoringJobRecordSchema = z.object({
-  jobId: z.string(),
-  agentIdentityContext: AgentIdentityContextSchema,
-  module: z.string(),
-  scoringConfig: ConfidenceScoringConfigSchema,
-  inputValue: z.string(),
-  outputValue: z.string(),
-  status: ScoringStatusSchema,
-  score: z.union([z.number(), z.number().int(), z.null()]).optional(),
-});
-
-/**
- * ScoringStatus
- */
-export const ScoringStatusSchema = z.object({
-});
-
-/**
- * SemanticChunking
- */
-export const SemanticChunkingSchema = z.object({
-  bufferSize: z.union([z.number().int(), z.null()]).optional(),
-  includeMetadata: z.boolean(),
-  includePrevNextRel: z.boolean(),
-  breakpointPercentileThreshold: z.union([z.number().int(), z.null()]).optional(),
-});
-
-/**
- * SentenceChunking
- */
-export const SentenceChunkingSchema = z.object({
-  chunkSize: z.union([z.number().int(), z.null()]).optional(),
-  chunkOverlap: z.union([z.number().int(), z.null()]).optional(),
-  separator: z.union([z.string(), z.null()]).optional(),
-  paragraphSeparator: z.union([z.string(), z.null()]).optional(),
-  secondaryChunkingRegex: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
- * A source/citation in the response.
- */
-export const SourceSchema = z.object({
-  title: z.string(),
-  url: z.union([z.string(), z.null()]).optional(),
-  snippet: z.union([z.string(), z.null()]).optional(),
-  dataElementId: z.union([z.string(), z.null()]).optional(),
-  relevanceScore: z.union([z.number(), z.number().int(), z.null()]).optional(),
-});
-
-/**
- * SparseEmbeddingModel
- */
-export const SparseEmbeddingModelSchema = z.object({
-  name: z.string(),
-  endpoint: z.string(),
-});
-
-/**
  * StartBlueprintInstanceRequest
  */
 export const StartBlueprintInstanceRequestSchema = z.object({
@@ -1327,22 +1426,6 @@ export const StartBlueprintInstanceRequestSchema = z.object({
   workflowKwargs: z.union([z.string(), z.null()]).optional(),
   /** Enable streaming responses to Redis for chat workflows. When True, chat responses are streamed to Redis streams that can be consumed via the /chat/stream endpoint. */
   enableStreaming: z.union([z.boolean(), z.null()]).optional(),
-});
-
-export const TableSchema = z.object({
-  cells: z.array(TableCellSchema),
-  rows: z.number().int(),
-  cols: z.number().int(),
-  bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
-});
-
-export const TableCellSchema = z.object({
-  text: z.string(),
-  row: z.number().int(),
-  col: z.number().int(),
-  rowSpan: z.number().int().optional(),
-  colSpan: z.number().int().optional(),
-  bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
 });
 
 export const TagColumnSchema = z.object({
@@ -1391,39 +1474,6 @@ export const TagTableInfoSchema = z.object({
   datasourceId: z.string(),
   name: z.string(),
   description: z.union([z.string(), z.null()]),
-});
-
-/**
- * Configuration for token-based confidence scoring (TF-IDF).
- */
-export const TokenConfigSchema = z.object({
-  model: z.union([z.string(), z.null()]).optional(),
-  removeStopWords: z.union([z.boolean(), z.null()]).optional(),
-  lowerCase: z.union([z.boolean(), z.null()]).optional(),
-  maxNgrams: z.union([z.number().int(), z.null()]).optional(),
-  nInfluencers: z.union([z.number().int(), z.null()]).optional(),
-});
-
-/**
- * TokenTextChunking
- */
-export const TokenTextChunkingSchema = z.object({
-  chunkSize: z.union([z.number().int(), z.null()]).optional(),
-  chunkOverlap: z.union([z.number().int(), z.null()]).optional(),
-  separator: z.union([z.string(), z.null()]).optional(),
-  backupSeparators: z.union([z.array(z.string()), z.null()]).optional(),
-  keepWhitespaces: z.union([z.boolean(), z.null()]).optional(),
-});
-
-/**
- * Record of a tool call and its result.
- */
-export const ToolActivitySchema = z.object({
-  toolId: z.string(),
-  toolName: z.string(),
-  arguments: z.string(),
-  result: z.union([z.string(), z.null()]).optional(),
-  timestamp: z.string(),
 });
 
 /**
@@ -1575,23 +1625,6 @@ export const UploadContentResponseSchema = z.object({
   estimatedSize: z.number().int(),
 });
 
-export const ValidationErrorSchema = z.object({
-  loc: z.array(z.union([z.string(), z.number().int()])),
-  msg: z.string(),
-  type: z.string(),
-});
-
-/**
- * Connect to a website for crawling.
- */
-export const WebCrawlConnectorSchema = z.object({
-  /** Starting URL for the crawl */
-  baseUrl: z.string(),
-  /** Enable JavaScript rendering */
-  javascriptRender: z.boolean().optional(),
-  domains: z.union([z.array(GatewayServiceV2ModelsDatasourcesWebDomainSchema), z.null()]).optional(),
-});
-
 /**
  * UpdateDataElementRequest
  */
@@ -1616,17 +1649,6 @@ export const DatasourceServiceClientModelsUpdateDatasourceRequestUpdateDatasourc
   connectorConfig: z.union([DatasourceConnectorConfigSchema, z.null()]).optional(),
 });
 
-/**
- * WebDomain
- */
-export const DatasourceServiceClientModelsWebDomainWebDomainSchema = z.object({
-  domain: z.string(),
-  limitPattern: z.string(),
-  excludePattern: z.string(),
-  ingestible: z.boolean(),
-  expandable: z.boolean(),
-});
-
 export const GatewayServiceV2ModelsDataElementsUpdateDataElementRequestSchema = z.object({
   name: z.union([z.string(), z.null()]).optional(),
   metadata: z.union([z.string(), z.null()]).optional(),
@@ -1636,14 +1658,6 @@ export const GatewayServiceV2ModelsDatasourcesUpdateDatasourceRequestSchema = z.
   name: z.union([z.string(), z.null()]).optional(),
   description: z.union([z.string(), z.null()]).optional(),
   connector: z.union([ConnectorConfigInputSchema, z.null()]).optional(),
-});
-
-export const GatewayServiceV2ModelsDatasourcesWebDomainSchema = z.object({
-  domain: z.string(),
-  /** URL pattern to include */
-  includePattern: z.string(),
-  /** URL pattern to exclude */
-  excludePattern: z.string().optional(),
 });
 
 /**

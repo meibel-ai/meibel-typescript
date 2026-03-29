@@ -20,8 +20,8 @@ export class TagDescriptionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listTagTables(datasourceId: string): AsyncIterable<string> {
-    yield* paginate<string>(async (cursor) => {
+  async *listTagTables(datasourceId: string): AsyncIterable<models.TagTable> {
+    yield* paginate<models.TagTable>(async (cursor) => {
       const response = await this.http.request<models.TagTable[]>(`/v2/datasources/${datasourceId}/tag-tables`, {
         method: "GET",
         params: {
@@ -29,7 +29,7 @@ export class TagDescriptionsResource {
         },
       });
       return {
-        items: response.items ?? [],
+        items: response ?? [],
       };
     });
   }
@@ -44,8 +44,8 @@ export class TagDescriptionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listTagColumns(datasourceId: string, tableName: string): AsyncIterable<string> {
-    yield* paginate<string>(async (cursor) => {
+  async *listTagColumns(datasourceId: string, tableName: string): AsyncIterable<models.TagColumn> {
+    yield* paginate<models.TagColumn>(async (cursor) => {
       const response = await this.http.request<models.TagColumn[]>(`/v2/datasources/${datasourceId}/tag-tables/${tableName}/columns`, {
         method: "GET",
         params: {
@@ -53,7 +53,7 @@ export class TagDescriptionsResource {
         },
       });
       return {
-        items: response.items ?? [],
+        items: response ?? [],
       };
     });
   }

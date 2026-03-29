@@ -105,10 +105,10 @@ export class BlueprintsInstancesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateBlueprintInstanceStatus(blueprintInstanceId: string, updatedStatusValue: models.BlueprintInstanceStatus, options?: { workflowRunId?: string | null }): Promise<void> {
+  async updateBlueprintInstanceStatus(blueprintInstanceId: string, updatedStatusValue: string, options?: { workflowRunId?: string | null }): Promise<void> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       updated_status_value: updatedStatusValue,
-      workflow_run_id: options?.workflowRunId,
+      workflow_run_id: options?.workflowRunId ?? undefined,
     };
 
     const response = await this.http.request<void>(`/blueprint-instance/${blueprintInstanceId}/status`, {
@@ -224,7 +224,7 @@ export class BlueprintsInstancesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateActivityStatus(blueprintInstanceId: string, activityId: string, updatedStatusValue: models.ActivityStatus): Promise<void> {
+  async updateActivityStatus(blueprintInstanceId: string, activityId: string, updatedStatusValue: string): Promise<void> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       updated_status_value: updatedStatusValue,
     };
