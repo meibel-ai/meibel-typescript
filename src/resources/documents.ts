@@ -128,7 +128,7 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *streamDocumentTrace(jobId: string): AsyncIterable<models. | models. | models. | models. | models.> {
+  async *streamDocumentTrace(jobId: string): AsyncIterable<Record<string, unknown>> {
     const response = await this.http.request<Response>(`/v2/documents/${jobId}/trace`, {
       method: "GET",
       stream: true,
