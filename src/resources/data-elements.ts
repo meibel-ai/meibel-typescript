@@ -22,7 +22,7 @@ export class DataElementsResource {
  */
   async *listDataElements(datasourceId: string): AsyncIterable<models.DataElementResponse> {
     yield* paginate<models.DataElementResponse>(async (cursor) => {
-      const response = await this.http.request<models.DataElementResponse[]>(`/v2/datasources/${datasourceId}/data-elements`, {
+      const response = await this.http.request<models.DataElementResponse[]>(`/datasources/${datasourceId}/data-elements`, {
         method: "GET",
         params: {
           offset: cursor,
@@ -45,7 +45,7 @@ export class DataElementsResource {
  * @throws {ApiError} If the request fails
  */
   async createDataElement(datasourceId: string, body: models.CreateDataElementRequest): Promise<models.DataElementResponse> {
-    const response = await this.http.request<models.DataElementResponse>(`/v2/datasources/${datasourceId}/data-elements`, {
+    const response = await this.http.request<models.DataElementResponse>(`/datasources/${datasourceId}/data-elements`, {
       method: "POST",
       body,
     });
@@ -64,7 +64,7 @@ export class DataElementsResource {
  * @throws {ApiError} If the request fails
  */
   async getDataElement(datasourceId: string, dataElementId: string): Promise<models.DataElementResponse> {
-    const response = await this.http.request<models.DataElementResponse>(`/v2/datasources/${datasourceId}/data-elements/${dataElementId}`, {
+    const response = await this.http.request<models.DataElementResponse>(`/datasources/${datasourceId}/data-elements/${dataElementId}`, {
       method: "GET",
     });
 
@@ -82,8 +82,8 @@ export class DataElementsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateDataElement(datasourceId: string, dataElementId: string, body: models.GatewayServiceV2ModelsDataElementsUpdateDataElementRequest): Promise<models.DataElementResponse> {
-    const response = await this.http.request<models.DataElementResponse>(`/v2/datasources/${datasourceId}/data-elements/${dataElementId}`, {
+  async updateDataElement(datasourceId: string, dataElementId: string, body: models.UpdateDataElementRequest): Promise<models.DataElementResponse> {
+    const response = await this.http.request<models.DataElementResponse>(`/datasources/${datasourceId}/data-elements/${dataElementId}`, {
       method: "PUT",
       body,
     });
@@ -102,7 +102,7 @@ export class DataElementsResource {
  * @throws {ApiError} If the request fails
  */
   async deleteDataElement(datasourceId: string, dataElementId: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/data-elements/${dataElementId}`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}/data-elements/${dataElementId}`, {
       method: "DELETE",
     });
 
@@ -120,7 +120,7 @@ export class DataElementsResource {
  * @throws {ApiError} If the request fails
  */
   async searchDataElements(datasourceId: string, body: models.DataElementSearchRequest): Promise<models.DataElementResponse[]> {
-    const response = await this.http.request<models.DataElementResponse[]>(`/v2/datasources/${datasourceId}/data-elements/search`, {
+    const response = await this.http.request<models.DataElementResponse[]>(`/datasources/${datasourceId}/data-elements/search`, {
       method: "POST",
       body,
     });

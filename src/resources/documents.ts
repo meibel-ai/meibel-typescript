@@ -25,7 +25,7 @@ export class DocumentsResource {
  * @throws {ApiError} If the request fails
  */
   async parseDocument(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.ParseDocumentResponse> {
-    const path = "/v2/documents";
+    const path = "/documents";
     return this.http.upload<models.ParseDocumentResponse>(path, [
       { fieldName: 'file', fileName: fileName, content: file },
     ]);
@@ -44,7 +44,7 @@ export class DocumentsResource {
  * @throws {ApiError} If the request fails
  */
   async processDocument(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.ProcessDocumentResponse> {
-    const path = "/v2/documents/process";
+    const path = "/documents/process";
     return this.http.upload<models.ProcessDocumentResponse>(path, [
       { fieldName: 'file', fileName: fileName, content: file },
     ]);
@@ -62,7 +62,7 @@ export class DocumentsResource {
  * @throws {ApiError} If the request fails
  */
   async getDocumentStatus(jobId: string): Promise<models.DocumentStatus> {
-    const response = await this.http.request<models.DocumentStatus>(`/v2/documents/${jobId}`, {
+    const response = await this.http.request<models.DocumentStatus>(`/documents/${jobId}`, {
       method: "GET",
     });
 
@@ -86,7 +86,7 @@ export class DocumentsResource {
       format: options?.format,
     };
 
-    const response = await this.http.request<string>(`/v2/documents/${jobId}/result`, {
+    const response = await this.http.request<string>(`/documents/${jobId}/result`, {
       method: "GET",
       params: queryParams,
     });
@@ -107,7 +107,7 @@ export class DocumentsResource {
  */
   async *listDocumentChildren(jobId: string): AsyncIterable<models.DocumentChild> {
     yield* paginate<models.DocumentChild>(async (cursor) => {
-      const response = await this.http.request<models.DocumentChild[]>(`/v2/documents/${jobId}/children`, {
+      const response = await this.http.request<models.DocumentChild[]>(`/documents/${jobId}/children`, {
         method: "GET",
         params: {
           offset: cursor,
@@ -129,7 +129,7 @@ export class DocumentsResource {
  * @throws {ApiError} If the request fails
  */
   async *streamDocumentTrace(jobId: string): AsyncIterable<Record<string, unknown>> {
-    const response = await this.http.request<Response>(`/v2/documents/${jobId}/trace`, {
+    const response = await this.http.request<Response>(`/documents/${jobId}/trace`, {
       method: "GET",
       stream: true,
     });

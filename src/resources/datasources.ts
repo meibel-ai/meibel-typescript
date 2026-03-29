@@ -20,7 +20,7 @@ export class DatasourcesResource {
  */
   async *listDatasources(): AsyncIterable<models.DatasourceResponse> {
     yield* paginate<models.DatasourceResponse>(async (cursor) => {
-      const response = await this.http.request<models.DatasourceListResponse>("/v2/datasources", {
+      const response = await this.http.request<models.DatasourceListResponse>("/datasources", {
         method: "GET",
         params: {
           offset: cursor,
@@ -42,7 +42,7 @@ export class DatasourcesResource {
  * @throws {ApiError} If the request fails
  */
   async createDatasource(body: models.CreateDatasourceRequest): Promise<models.DatasourceResponse> {
-    const response = await this.http.request<models.DatasourceResponse>("/v2/datasources", {
+    const response = await this.http.request<models.DatasourceResponse>("/datasources", {
       method: "POST",
       body,
     });
@@ -60,7 +60,7 @@ export class DatasourcesResource {
  * @throws {ApiError} If the request fails
  */
   async getDatasource(datasourceId: string): Promise<models.DatasourceResponse> {
-    const response = await this.http.request<models.DatasourceResponse>(`/v2/datasources/${datasourceId}`, {
+    const response = await this.http.request<models.DatasourceResponse>(`/datasources/${datasourceId}`, {
       method: "GET",
     });
 
@@ -77,8 +77,8 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateDatasource(datasourceId: string, body: models.GatewayServiceV2ModelsDatasourcesUpdateDatasourceRequest): Promise<models.DatasourceResponse> {
-    const response = await this.http.request<models.DatasourceResponse>(`/v2/datasources/${datasourceId}`, {
+  async updateDatasource(datasourceId: string, body: models.UpdateDatasourceRequest): Promise<models.DatasourceResponse> {
+    const response = await this.http.request<models.DatasourceResponse>(`/datasources/${datasourceId}`, {
       method: "PUT",
       body,
     });
@@ -96,7 +96,7 @@ export class DatasourcesResource {
  * @throws {ApiError} If the request fails
  */
   async deleteDatasource(datasourceId: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}`, {
       method: "DELETE",
     });
 

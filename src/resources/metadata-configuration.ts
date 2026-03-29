@@ -20,7 +20,7 @@ export class MetadataConfigurationResource {
  * @throws {ApiError} If the request fails
  */
   async getMetadataConfig(datasourceId: string): Promise<models.MetadataConfigResponse> {
-    const response = await this.http.request<models.MetadataConfigResponse>(`/v2/datasources/${datasourceId}/metadata-config`, {
+    const response = await this.http.request<models.MetadataConfigResponse>(`/datasources/${datasourceId}/metadata-config`, {
       method: "GET",
     });
 
@@ -38,7 +38,7 @@ export class MetadataConfigurationResource {
  * @throws {ApiError} If the request fails
  */
   async updateMetadataConfig(datasourceId: string, body: models.MetadataConfigRequest): Promise<models.MetadataConfigResponse> {
-    const response = await this.http.request<models.MetadataConfigResponse>(`/v2/datasources/${datasourceId}/metadata-config`, {
+    const response = await this.http.request<models.MetadataConfigResponse>(`/datasources/${datasourceId}/metadata-config`, {
       method: "PUT",
       body,
     });
@@ -56,7 +56,7 @@ export class MetadataConfigurationResource {
  * @throws {ApiError} If the request fails
  */
   async reprocessMetadata(datasourceId: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/reprocess-metadata`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}/reprocess-metadata`, {
       method: "POST",
     });
 
@@ -73,7 +73,7 @@ export class MetadataConfigurationResource {
  * @throws {ApiError} If the request fails
  */
   async getReprocessMetadataStatus(datasourceId: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/reprocess-metadata/status`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}/reprocess-metadata/status`, {
       method: "GET",
     });
 

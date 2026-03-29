@@ -26,7 +26,7 @@ export class MetadataModelCatalogResource {
     };
 
     yield* paginate<models.MetadataModelCatalogEntry>(async (cursor) => {
-      const response = await this.http.request<models.ListMetadataModelCatalogResponse>("/v2/metadata-model-catalog", {
+      const response = await this.http.request<models.ListMetadataModelCatalogResponse>("/metadata-model-catalog", {
         method: "GET",
         params: {
           ...queryParams,
@@ -49,7 +49,7 @@ export class MetadataModelCatalogResource {
  * @throws {ApiError} If the request fails
  */
   async getMetadataModelCatalogEntry(modelId: string): Promise<models.MetadataModelCatalogEntry> {
-    const response = await this.http.request<models.MetadataModelCatalogEntry>(`/v2/metadata-model-catalog/${modelId}`, {
+    const response = await this.http.request<models.MetadataModelCatalogEntry>(`/metadata-model-catalog/${modelId}`, {
       method: "GET",
     });
 

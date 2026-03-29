@@ -9,7 +9,6 @@
 export const VERSION = "0.1.0-beta.1";
 
 export * from './client.js';
-export { ValidationError as ApiValidationError } from './errors.js';
-export { ApiError, AuthenticationError, AuthorizationError, NotFoundError, RateLimitError, ServerError, TimeoutError, NetworkError } from './errors.js';
 export * from './models.js';
+export { ApiError, AuthenticationError, AuthorizationError, NotFoundError, ValidationError as ApiValidationError, RateLimitError, ServerError, TimeoutError, NetworkError } from './errors.js';
 export * from './resources/index.js';

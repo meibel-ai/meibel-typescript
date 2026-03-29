@@ -5,19 +5,11 @@
  */
 
 import { HttpClient, type HttpClientOptions } from './http.js';
-import { BlueprintsResource } from './resources/blueprints.js';
-import { BlueprintsExecutionsResource } from './resources/blueprints-executions.js';
-import { BlueprintsInstancesResource } from './resources/blueprints-instances.js';
 import { ConfidenceScoringResource } from './resources/confidence-scoring.js';
 import { ContentResource } from './resources/content.js';
 import { DataElementMetadataResource } from './resources/data-element-metadata.js';
 import { DataElementsResource } from './resources/data-elements.js';
 import { DatasourcesResource } from './resources/datasources.js';
-import { DatasourcesContentResource } from './resources/datasources-content.js';
-import { DatasourcesDataelementsResource } from './resources/datasources-dataelements.js';
-import { DatasourcesMetadataModelCatalogResource } from './resources/datasources-metadata-model-catalog.js';
-import { DatasourcesRagResource } from './resources/datasources-rag.js';
-import { DatasourcesTagResource } from './resources/datasources-tag.js';
 import { DocumentsResource } from './resources/documents.js';
 import { MetadataConfigurationResource } from './resources/metadata-configuration.js';
 import { MetadataModelCatalogResource } from './resources/metadata-model-catalog.js';
@@ -33,26 +25,18 @@ export interface ClientOptions extends HttpClientOptions {
 export class MeibelClient {
   private readonly http: HttpClient;
 
-  public readonly blueprints: BlueprintsResource;
-  public readonly blueprintsExecutions: BlueprintsExecutionsResource;
-  public readonly blueprintsInstances: BlueprintsInstancesResource;
   public readonly confidenceScoring: ConfidenceScoringResource;
   public readonly content: ContentResource;
   public readonly dataElementMetadata: DataElementMetadataResource;
   public readonly dataElements: DataElementsResource;
   public readonly datasources: DatasourcesResource;
-  public readonly datasourcesContent: DatasourcesContentResource;
-  public readonly datasourcesDataelements: DatasourcesDataelementsResource;
-  public readonly datasourcesMetadataModelCatalog: DatasourcesMetadataModelCatalogResource;
-  public readonly datasourcesRag: DatasourcesRagResource;
-  public readonly datasourcesTag: DatasourcesTagResource;
   public readonly documents: DocumentsResource;
   public readonly metadataConfiguration: MetadataConfigurationResource;
   public readonly metadataModelCatalog: MetadataModelCatalogResource;
   public readonly tagDescriptions: TagDescriptionsResource;
 
   constructor(options: ClientOptions = {}) {
-    const baseUrl = options.baseUrl ?? "https://api.meibel.ai/v1";
+    const baseUrl = options.baseUrl ?? "https://api.meibel.ai/v2";
     const headers: Record<string, string> = { ...options.headers };
 
     if (options.apiKey) {
@@ -68,19 +52,11 @@ export class MeibelClient {
       headers,
     });
 
-    this.blueprints = new BlueprintsResource(this.http);
-    this.blueprintsExecutions = new BlueprintsExecutionsResource(this.http);
-    this.blueprintsInstances = new BlueprintsInstancesResource(this.http);
     this.confidenceScoring = new ConfidenceScoringResource(this.http);
     this.content = new ContentResource(this.http);
     this.dataElementMetadata = new DataElementMetadataResource(this.http);
     this.dataElements = new DataElementsResource(this.http);
     this.datasources = new DatasourcesResource(this.http);
-    this.datasourcesContent = new DatasourcesContentResource(this.http);
-    this.datasourcesDataelements = new DatasourcesDataelementsResource(this.http);
-    this.datasourcesMetadataModelCatalog = new DatasourcesMetadataModelCatalogResource(this.http);
-    this.datasourcesRag = new DatasourcesRagResource(this.http);
-    this.datasourcesTag = new DatasourcesTagResource(this.http);
     this.documents = new DocumentsResource(this.http);
     this.metadataConfiguration = new MetadataConfigurationResource(this.http);
     this.metadataModelCatalog = new MetadataModelCatalogResource(this.http);

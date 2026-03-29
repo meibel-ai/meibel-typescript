@@ -21,7 +21,7 @@ export class DataElementMetadataResource {
  * @throws {ApiError} If the request fails
  */
   async getDataElementMetadata(datasourceId: string, dataElementId: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/data-elements/${dataElementId}/metadata`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}/data-elements/${dataElementId}/metadata`, {
       method: "GET",
     });
 
@@ -40,7 +40,7 @@ export class DataElementMetadataResource {
  * @throws {ApiError} If the request fails
  */
   async updateDataElementMetadata(datasourceId: string, dataElementId: string, body: models.DataElementMetadata): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/data-elements/${dataElementId}/metadata`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}/data-elements/${dataElementId}/metadata`, {
       method: "PUT",
       body,
     });
@@ -60,7 +60,7 @@ export class DataElementMetadataResource {
  * @throws {ApiError} If the request fails
  */
   async getDataElementMetadataResult(datasourceId: string, dataElementId: string, requestId: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/data-elements/${dataElementId}/metadata/result/${requestId}`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}/data-elements/${dataElementId}/metadata/result/${requestId}`, {
       method: "GET",
     });
 

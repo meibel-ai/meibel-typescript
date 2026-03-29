@@ -6,14 +6,13 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
+import { paginate } from '../pagination.js';
 
 export class ConfidenceScoringResource {
   constructor(private readonly http: HttpClient) {}
 
 /**
  * Get Scoring Job
- *
- * Get a scoring job by ID. Returns 403 if the job does not belong to the caller's customer.
  *
  * @param jobId - The job_id parameter
  *
@@ -30,9 +29,7 @@ export class ConfidenceScoringResource {
   }
 
 /**
- * Get All Scoring Jobs
- *
- * Get all scoring jobs for the caller's customer.
+ * List Scoring Jobs
  *
  * @param agentName - The agent_name parameter
  * @param agentVersion - The agent_version parameter
@@ -48,7 +45,7 @@ export class ConfidenceScoringResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getAllScoringJobs(options?: { agentName?: string | null; agentVersion?: string | null; agentExecutionId?: string | null; agentWorkflowName?: string | null; agentWorkflowVersion?: string | null; agentWorkflowExecutionId?: string | null; toolId?: string | null; toolInstanceId?: string | null; toolExecutionId?: string | null }): Promise<string> {
+  async *listScoringJobs(options?: { agentName?: string | null; agentVersion?: string | null; agentExecutionId?: string | null; agentWorkflowName?: string | null; agentWorkflowVersion?: string | null; agentWorkflowExecutionId?: string | null; toolId?: string | null; toolInstanceId?: string | null; toolExecutionId?: string | null }): AsyncIterable<models.ScoringJobRecord> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       agent_name: options?.agentName ?? undefined,
       agent_version: options?.agentVersion ?? undefined,
@@ -61,22 +58,23 @@ export class ConfidenceScoringResource {
       tool_execution_id: options?.toolExecutionId ?? undefined,
     };
 
-    const response = await this.http.request<string>("/confidence-scoring/jobs", {
-      method: "GET",
-      params: queryParams,
+    yield* paginate<models.ScoringJobRecord>(async (cursor) => {
+      const response = await this.http.request<{ items: models.ScoringJobRecord[]; nextCursor?: string | null }>("/confidence-scoring/jobs", {
+        method: "GET",
+        params: {
+          ...queryParams,
+          offset: cursor,
+        },
+      });
+      return {
+        items: response.items ?? [],
+        nextCursor: response.nextCursor,
+      };
     });
-
-    return response;
   }
 
 /**
  * Get Scoring Jobs Summary
- *
- * Get aggregated scoring summary for the caller's customer.
-
-primary: Required filter in format 'field:value' (e.g., 'agent_execution_id:exec_123').
-secondary: Optional secondary filter in format 'field:value' (e.g., 'agent_name:my_agent').
-Results are always scoped to the caller's customer_id.
  *
  * @param primary - The primary parameter
  * @param secondary - The secondary parameter

@@ -22,7 +22,7 @@ export class TagDescriptionsResource {
  */
   async *listTagTables(datasourceId: string): AsyncIterable<models.TagTable> {
     yield* paginate<models.TagTable>(async (cursor) => {
-      const response = await this.http.request<models.TagTable[]>(`/v2/datasources/${datasourceId}/tag-tables`, {
+      const response = await this.http.request<models.TagTable[]>(`/datasources/${datasourceId}/tag-tables`, {
         method: "GET",
         params: {
           offset: cursor,
@@ -46,7 +46,7 @@ export class TagDescriptionsResource {
  */
   async *listTagColumns(datasourceId: string, tableName: string): AsyncIterable<models.TagColumn> {
     yield* paginate<models.TagColumn>(async (cursor) => {
-      const response = await this.http.request<models.TagColumn[]>(`/v2/datasources/${datasourceId}/tag-tables/${tableName}/columns`, {
+      const response = await this.http.request<models.TagColumn[]>(`/datasources/${datasourceId}/tag-tables/${tableName}/columns`, {
         method: "GET",
         params: {
           offset: cursor,
@@ -70,7 +70,7 @@ export class TagDescriptionsResource {
  * @throws {ApiError} If the request fails
  */
   async updateTagTableDescription(datasourceId: string, tableName: string, body: models.UpdateTagDescriptionRequest): Promise<models.TagTable> {
-    const response = await this.http.request<models.TagTable>(`/v2/datasources/${datasourceId}/tag-tables/${tableName}`, {
+    const response = await this.http.request<models.TagTable>(`/datasources/${datasourceId}/tag-tables/${tableName}`, {
       method: "PUT",
       body,
     });
@@ -91,7 +91,7 @@ export class TagDescriptionsResource {
  * @throws {ApiError} If the request fails
  */
   async updateTagColumnDescription(datasourceId: string, tableName: string, columnName: string, body: models.UpdateTagDescriptionRequest): Promise<models.TagColumn> {
-    const response = await this.http.request<models.TagColumn>(`/v2/datasources/${datasourceId}/tag-tables/${tableName}/columns/${columnName}`, {
+    const response = await this.http.request<models.TagColumn>(`/datasources/${datasourceId}/tag-tables/${tableName}/columns/${columnName}`, {
       method: "PUT",
       body,
     });

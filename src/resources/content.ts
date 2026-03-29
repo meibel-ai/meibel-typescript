@@ -32,7 +32,7 @@ export class ContentResource {
     };
 
     yield* paginate<string>(async (cursor) => {
-      const response = await this.http.request<string[]>(`/v2/datasources/${datasourceId}/content`, {
+      const response = await this.http.request<{ items: string[]; nextCursor?: string | null }>(`/datasources/${datasourceId}/content`, {
         method: "GET",
         params: {
           ...queryParams,
@@ -40,7 +40,8 @@ export class ContentResource {
         },
       });
       return {
-        items: response ?? [],
+        items: response.items ?? [],
+        nextCursor: response.nextCursor,
       };
     });
   }
@@ -56,7 +57,7 @@ export class ContentResource {
  * @throws {ApiError} If the request fails
  */
   async uploadContent(datasourceId: string, file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<string> {
-    const path = `/v2/datasources/${datasourceId}/content`;
+    const path = `/datasources/${datasourceId}/content`;
     return this.http.upload<string>(path, [
       { fieldName: 'file', fileName: fileName, content: file },
     ]);
@@ -70,7 +71,7 @@ export class ContentResource {
  * @throws {ApiError} If the request fails
  */
   async streamUploadProgress(uploadId: string): Promise<void> {
-    const response = await this.http.request<void>(`/v2/uploads/${uploadId}/progress`, {
+    const response = await this.http.request<void>(`/uploads/${uploadId}/progress`, {
       method: "GET",
     });
 
@@ -88,7 +89,7 @@ export class ContentResource {
  * @throws {ApiError} If the request fails
  */
   async getContentMetadata(datasourceId: string, path: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/content/${path}/metadata`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}/content/${path}/metadata`, {
       method: "GET",
     });
 
@@ -104,7 +105,7 @@ export class ContentResource {
  * @throws {ApiError} If the request fails
  */
   async downloadContent(datasourceId: string, path: string): Promise<void> {
-    const response = await this.http.request<void>(`/v2/datasources/${datasourceId}/content/${path}/download`, {
+    const response = await this.http.request<void>(`/datasources/${datasourceId}/content/${path}/download`, {
       method: "GET",
     });
 
@@ -121,7 +122,7 @@ export class ContentResource {
  * @throws {ApiError} If the request fails
  */
   async triggerIngest(datasourceId: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/trigger-ingest`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}/trigger-ingest`, {
       method: "POST",
     });
 
@@ -139,7 +140,7 @@ export class ContentResource {
  * @throws {ApiError} If the request fails
  */
   async deleteContent(datasourceId: string, path: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/content/${path}`, {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}/content/${path}`, {
       method: "DELETE",
     });
 
