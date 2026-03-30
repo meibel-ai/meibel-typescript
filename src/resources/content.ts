@@ -28,7 +28,7 @@ export class ContentResource {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       prefix: options?.prefix ?? undefined,
       continuation_token: options?.continuationToken ?? undefined,
-      limit: options?.limit,
+      limit: options?.limit ?? undefined,
     };
 
     yield* paginate<string>(async (cursor) => {

@@ -6,8 +6,6 @@
 
 import { z } from 'zod';
 
-// ---- Leaf schemas (no model dependencies) ----
-
 /**
  * Identity context for agent execution.  Contains only immutable identity fields that answer: - WHO: customer_id, project_id (tenant identity) - WHAT: agent_name, agent_version, agent_execution_id (agent identity, optional) - WHERE: agent_workflow_name, agent_workflow_version, agent_workflow_execution_id (parent workflow, optional) - WHICH TOOL: tool_id, tool_instance_id, tool_execution_id (tool identity, optional)  This model is FLAT - no inheritance, all fields in one model. Agent, workflow, and tool fields are optional, making this suitable for all execution contexts.  This model does NOT contain: - Configuration (see AgentExecutionConfig in agent-platform) - Runtime state (see AgentExecutionState in agent-platform)  Design Pattern - Progressive Enhancement: - Callers provide only tenant/project identity - FSMWorkflow fills in agent_workflow_* fields from AgentWorkflowSpec - ReactAgent fills in agent_* fields from AgentSpec and workflow.info().workflow_id - Tool activities add tool_* fields via model_copy() - Context gains fields as it flows through the system  Examples:     # Starting FSMWorkflow (caller provides minimal context)     context = AgentIdentityContext(         customer_id="cust_123",         project_id="proj_456"     )     # FSM fills in workflow identity     context = context.model_copy(update={         "agent_workflow_name": "support_fsm",         "agent_workflow_version": "3.0.0",         "agent_workflow_execution_id": workflow.info().workflow_id     })      # Starting ReactAgent standalone (caller provides minimal context)     context = AgentIdentityContext(         customer_id="cust_123",         project_id="proj_456"     )     # ReactAgent fills in agent identity     context = context.model_copy(update={         "agent_name": "sales_assistant",         "agent_version": "2.0.0",         "agent_execution_id": workflow.info().workflow_id     })      # ReactAgent as FSM child (inherits workflow context, adds agent identity)     child_context = parent_context.model_copy(update={         "agent_name": "router",         "agent_version": "1.0.0",         "agent_execution_id": workflow.info().workflow_id         # agent_workflow_* fields inherited from parent     })      # Tool execution (adds tool identity to agent context)     tool_context = context.model_copy(update={         'tool_id': "tool_xyz",         'tool_instance_id': "tool_inst_123",         'tool_execution_id': "tool_exec_456"     })
  */
@@ -161,6 +159,14 @@ export const NBootstrapsSchema = z.object({
 });
 
 /**
+ * Configuration for OCR confidence scoring.
+ */
+export const OcrConfigSchema = z.object({
+  calibrationModel: z.union([z.string(), z.null()]).optional(),
+  ocrConfidenceScores: z.union([z.array(z.union([z.number(), z.number().int()])), z.null()]).optional(),
+});
+
+/**
  * Returned from POST /documents (async).
  */
 export const ParseDocumentResponseSchema = z.object({
@@ -173,15 +179,6 @@ export const ParseDocumentResponseSchema = z.object({
  * ScoringStatus
  */
 export const ScoringStatusSchema = z.object({
-});
-
-export const TableCellSchema = z.object({
-  text: z.string(),
-  row: z.number().int(),
-  col: z.number().int(),
-  rowSpan: z.number().int().optional(),
-  colSpan: z.number().int().optional(),
-  bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
 });
 
 export const TagColumnSchema = z.object({
@@ -205,14 +202,6 @@ export const TokenConfigSchema = z.object({
   nInfluencers: z.union([z.number().int(), z.null()]).optional(),
 });
 
-/**
- * Configuration for OCR confidence scoring.
- */
-export const OcrConfigSchema = z.object({
-  calibrationModel: z.union([z.string(), z.null()]).optional(),
-  ocrConfidenceScores: z.union([z.array(z.union([z.number(), z.number().int()])), z.null()]).optional(),
-});
-
 export const UpdateTagDescriptionRequestSchema = z.object({
   /** Description for AI context */
   description: z.string(),
@@ -224,6 +213,11 @@ export const ValidationErrorSchema = z.object({
   type: z.string(),
 });
 
+export const UpdateDataElementRequestSchema = z.object({
+  name: z.union([z.string(), z.null()]).optional(),
+  metadata: z.union([z.string(), z.null()]).optional(),
+});
+
 export const WebDomainSchema = z.object({
   domain: z.string(),
   /** URL pattern to include */
@@ -232,48 +226,13 @@ export const WebDomainSchema = z.object({
   excludePattern: z.string().optional(),
 });
 
-export const UpdateDataElementRequestSchema = z.object({
-  name: z.union([z.string(), z.null()]).optional(),
-  metadata: z.union([z.string(), z.null()]).optional(),
-});
-
-// ---- Schemas with single-level dependencies ----
-
-/**
- * Connect to a website for crawling.
- */
-export const WebCrawlConnectorSchema = z.object({
-  /** Starting URL for the crawl */
-  baseUrl: z.string(),
-  /** Enable JavaScript rendering */
-  javascriptRender: z.boolean().optional(),
-  domains: z.union([z.array(WebDomainSchema), z.null()]).optional(),
-});
-
-/**
- * Configuration for Observed Consistency confidence scoring.
- */
-export const OcConfigSchema = z.object({
-  nCompletions: z.union([z.number().int(), z.null()]).optional(),
-  maxTokens: z.union([z.number().int(), z.null()]).optional(),
-  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
-  models: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
-  nliModelConfig: z.string(),
-  nBootstraps: z.union([NBootstrapsSchema, z.null()]).optional(),
-  tokenLimit: z.union([z.number().int(), z.null()]).optional(),
-  originalCompletion: z.union([z.string(), z.null()]).optional(),
-  comparisonCompletions: z.union([z.array(z.string()), z.null()]).optional(),
-});
-
-export const TableSchema = z.object({
-  cells: z.array(TableCellSchema),
-  rows: z.number().int(),
-  cols: z.number().int(),
+export const TableCellSchema = z.object({
+  text: z.string(),
+  row: z.number().int(),
+  col: z.number().int(),
+  rowSpan: z.number().int().optional(),
+  colSpan: z.number().int().optional(),
   bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
-});
-
-export const HttpValidationErrorSchema = z.object({
-  detail: z.array(ValidationErrorSchema).optional(),
 });
 
 /**
@@ -310,7 +269,61 @@ export const MetadataModelCatalogEntrySchema = z.object({
   updatedAt: z.union([z.coerce.date(), z.null()]).optional(),
 });
 
-// ---- Schemas with multi-level dependencies ----
+/**
+ * Configuration for Observed Consistency confidence scoring.
+ */
+export const OcConfigSchema = z.object({
+  nCompletions: z.union([z.number().int(), z.null()]).optional(),
+  maxTokens: z.union([z.number().int(), z.null()]).optional(),
+  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
+  models: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
+  nliModelConfig: z.string(),
+  nBootstraps: z.union([NBootstrapsSchema, z.null()]).optional(),
+  tokenLimit: z.union([z.number().int(), z.null()]).optional(),
+  originalCompletion: z.union([z.string(), z.null()]).optional(),
+  comparisonCompletions: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+export const HttpValidationErrorSchema = z.object({
+  detail: z.array(ValidationErrorSchema).optional(),
+});
+
+/**
+ * Connect to a website for crawling.
+ */
+export const WebCrawlConnectorSchema = z.object({
+  /** Starting URL for the crawl */
+  baseUrl: z.string(),
+  /** Enable JavaScript rendering */
+  javascriptRender: z.boolean().optional(),
+  domains: z.union([z.array(WebDomainSchema), z.null()]).optional(),
+});
+
+export const TableSchema = z.object({
+  cells: z.array(TableCellSchema),
+  rows: z.number().int(),
+  cols: z.number().int(),
+  bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
+});
+
+/**
+ * ListMetadataModelCatalogResponse
+ */
+export const ListMetadataModelCatalogResponseSchema = z.object({
+  models: z.array(MetadataModelCatalogEntrySchema),
+});
+
+/**
+ * Config
+ */
+export const ConfigSchema = z.object({
+  anyofSchema_1Validator: z.union([JudgeConfigSchema, z.null()]).optional(),
+  anyofSchema_2Validator: z.union([OcConfigSchema, z.null()]).optional(),
+  anyofSchema_3Validator: z.union([OcrConfigSchema, z.null()]).optional(),
+  anyofSchema_4Validator: z.union([TokenConfigSchema, z.null()]).optional(),
+  actualInstance: z.string().optional(),
+  anyOfSchemas: z.array(z.string()).optional(),
+});
 
 /**
  * Datasource connection configuration. Exactly one connector type must be set.
@@ -333,18 +346,6 @@ export const ConnectorConfigOutputSchema = z.object({
 });
 
 /**
- * Config
- */
-export const ConfigSchema = z.object({
-  anyofSchema_1Validator: z.union([JudgeConfigSchema, z.null()]).optional(),
-  anyofSchema_2Validator: z.union([OcConfigSchema, z.null()]).optional(),
-  anyofSchema_3Validator: z.union([OcrConfigSchema, z.null()]).optional(),
-  anyofSchema_4Validator: z.union([TokenConfigSchema, z.null()]).optional(),
-  actualInstance: z.string().optional(),
-  anyOfSchemas: z.array(z.string()).optional(),
-});
-
-/**
  * A structural element in a parsed document.
  */
 export const DocumentElementSchema = z.object({
@@ -357,13 +358,6 @@ export const DocumentElementSchema = z.object({
   bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
   confidence: z.union([z.number(), z.null()]).optional(),
   page: z.union([z.number().int(), z.null()]).optional(),
-});
-
-/**
- * ListMetadataModelCatalogResponse
- */
-export const ListMetadataModelCatalogResponseSchema = z.object({
-  models: z.array(MetadataModelCatalogEntrySchema),
 });
 
 /**
@@ -381,6 +375,12 @@ export const CreateDatasourceRequestSchema = z.object({
   description: z.string().optional(),
   /** Connection configuration */
   connector: ConnectorConfigInputSchema,
+});
+
+export const UpdateDatasourceRequestSchema = z.object({
+  name: z.union([z.string(), z.null()]).optional(),
+  description: z.union([z.string(), z.null()]).optional(),
+  connector: z.union([ConnectorConfigInputSchema, z.null()]).optional(),
 });
 
 export const DatasourceResponseSchema = z.object({
@@ -402,10 +402,18 @@ export const MeibelDocumentResultSchema = z.object({
   metadata: z.union([z.string(), z.null()]).optional(),
 });
 
-export const UpdateDatasourceRequestSchema = z.object({
-  name: z.union([z.string(), z.null()]).optional(),
-  description: z.union([z.string(), z.null()]).optional(),
-  connector: z.union([ConnectorConfigInputSchema, z.null()]).optional(),
+/**
+ * ScoringJobRecord
+ */
+export const ScoringJobRecordSchema = z.object({
+  jobId: z.string(),
+  agentIdentityContext: AgentIdentityContextSchema,
+  module: z.string(),
+  scoringConfig: ConfidenceScoringConfigSchema,
+  inputValue: z.string(),
+  outputValue: z.string(),
+  status: ScoringStatusSchema,
+  score: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
 export const DatasourceListResponseSchema = z.object({
@@ -421,20 +429,6 @@ export const ProcessDocumentResponseSchema = z.object({
   status: z.string(),
   /** MeibelDocumentResult for meibel format, str for markdown */
   result: z.union([MeibelDocumentResultSchema, z.string()]),
-});
-
-/**
- * ScoringJobRecord
- */
-export const ScoringJobRecordSchema = z.object({
-  jobId: z.string(),
-  agentIdentityContext: AgentIdentityContextSchema,
-  module: z.string(),
-  scoringConfig: ConfidenceScoringConfigSchema,
-  inputValue: z.string(),
-  outputValue: z.string(),
-  status: ScoringStatusSchema,
-  score: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -456,46 +450,46 @@ export const ScoreSummarySchema = z.object({
 export type AgentIdentityContext = z.infer<typeof AgentIdentityContextSchema>;
 export type BoundingBox = z.infer<typeof BoundingBoxSchema>;
 export type CloudStorageConnector = z.infer<typeof CloudStorageConnectorSchema>;
-export type ConfidenceScoringConfig = z.infer<typeof ConfidenceScoringConfigSchema>;
-export type Config = z.infer<typeof ConfigSchema>;
-export type ConnectorConfigInput = z.infer<typeof ConnectorConfigInputSchema>;
-export type ConnectorConfigOutput = z.infer<typeof ConnectorConfigOutputSchema>;
 export type CreateDataElementRequest = z.infer<typeof CreateDataElementRequestSchema>;
-export type CreateDatasourceRequest = z.infer<typeof CreateDatasourceRequestSchema>;
 export type DataElementMetadata = z.infer<typeof DataElementMetadataSchema>;
 export type DataElementResponse = z.infer<typeof DataElementResponseSchema>;
 export type DataElementSearchRequest = z.infer<typeof DataElementSearchRequestSchema>;
 export type DatabaseConnector = z.infer<typeof DatabaseConnectorSchema>;
-export type DatasourceListResponse = z.infer<typeof DatasourceListResponseSchema>;
-export type DatasourceResponse = z.infer<typeof DatasourceResponseSchema>;
 export type DocumentChild = z.infer<typeof DocumentChildSchema>;
-export type DocumentElement = z.infer<typeof DocumentElementSchema>;
 export type DocumentStatus = z.infer<typeof DocumentStatusSchema>;
-export type HttpValidationError = z.infer<typeof HttpValidationErrorSchema>;
 export type JudgeConfig = z.infer<typeof JudgeConfigSchema>;
-export type ListMetadataModelCatalogResponse = z.infer<typeof ListMetadataModelCatalogResponseSchema>;
-export type MeibelDocumentResult = z.infer<typeof MeibelDocumentResultSchema>;
-export type MetadataConfigRequest = z.infer<typeof MetadataConfigRequestSchema>;
-export type MetadataConfigResponse = z.infer<typeof MetadataConfigResponseSchema>;
 export type MetadataField = z.infer<typeof MetadataFieldSchema>;
-export type MetadataModelCatalogEntry = z.infer<typeof MetadataModelCatalogEntrySchema>;
 export type MetadataModelField = z.infer<typeof MetadataModelFieldSchema>;
 export type NBootstraps = z.infer<typeof NBootstrapsSchema>;
-export type OcConfig = z.infer<typeof OcConfigSchema>;
 export type OcrConfig = z.infer<typeof OcrConfigSchema>;
 export type ParseDocumentResponse = z.infer<typeof ParseDocumentResponseSchema>;
-export type ProcessDocumentResponse = z.infer<typeof ProcessDocumentResponseSchema>;
-export type ScoreSummary = z.infer<typeof ScoreSummarySchema>;
-export type ScoringJobRecord = z.infer<typeof ScoringJobRecordSchema>;
 export type ScoringStatus = z.infer<typeof ScoringStatusSchema>;
-export type Table = z.infer<typeof TableSchema>;
-export type TableCell = z.infer<typeof TableCellSchema>;
 export type TagColumn = z.infer<typeof TagColumnSchema>;
 export type TagTable = z.infer<typeof TagTableSchema>;
 export type TokenConfig = z.infer<typeof TokenConfigSchema>;
 export type UpdateTagDescriptionRequest = z.infer<typeof UpdateTagDescriptionRequestSchema>;
 export type ValidationErrorDetail = z.infer<typeof ValidationErrorSchema>;
-export type WebCrawlConnector = z.infer<typeof WebCrawlConnectorSchema>;
 export type UpdateDataElementRequest = z.infer<typeof UpdateDataElementRequestSchema>;
-export type UpdateDatasourceRequest = z.infer<typeof UpdateDatasourceRequestSchema>;
 export type WebDomain = z.infer<typeof WebDomainSchema>;
+export type TableCell = z.infer<typeof TableCellSchema>;
+export type MetadataConfigRequest = z.infer<typeof MetadataConfigRequestSchema>;
+export type MetadataConfigResponse = z.infer<typeof MetadataConfigResponseSchema>;
+export type MetadataModelCatalogEntry = z.infer<typeof MetadataModelCatalogEntrySchema>;
+export type OcConfig = z.infer<typeof OcConfigSchema>;
+export type HttpValidationError = z.infer<typeof HttpValidationErrorSchema>;
+export type WebCrawlConnector = z.infer<typeof WebCrawlConnectorSchema>;
+export type Table = z.infer<typeof TableSchema>;
+export type ListMetadataModelCatalogResponse = z.infer<typeof ListMetadataModelCatalogResponseSchema>;
+export type Config = z.infer<typeof ConfigSchema>;
+export type ConnectorConfigInput = z.infer<typeof ConnectorConfigInputSchema>;
+export type ConnectorConfigOutput = z.infer<typeof ConnectorConfigOutputSchema>;
+export type DocumentElement = z.infer<typeof DocumentElementSchema>;
+export type ConfidenceScoringConfig = z.infer<typeof ConfidenceScoringConfigSchema>;
+export type CreateDatasourceRequest = z.infer<typeof CreateDatasourceRequestSchema>;
+export type UpdateDatasourceRequest = z.infer<typeof UpdateDatasourceRequestSchema>;
+export type DatasourceResponse = z.infer<typeof DatasourceResponseSchema>;
+export type MeibelDocumentResult = z.infer<typeof MeibelDocumentResultSchema>;
+export type ScoringJobRecord = z.infer<typeof ScoringJobRecordSchema>;
+export type DatasourceListResponse = z.infer<typeof DatasourceListResponseSchema>;
+export type ProcessDocumentResponse = z.infer<typeof ProcessDocumentResponseSchema>;
+export type ScoreSummary = z.infer<typeof ScoreSummarySchema>;

@@ -20,9 +20,9 @@ export class DataElementsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listDataElements(datasourceId: string): AsyncIterable<models.DataElementResponse> {
-    yield* paginate<models.DataElementResponse>(async (cursor) => {
-      const response = await this.http.request<models.DataElementResponse[]>(`/datasources/${datasourceId}/data-elements`, {
+  async *listDataElements(datasourceId: string): AsyncIterable<string> {
+    yield* paginate<string>(async (cursor) => {
+      const response = await this.http.request<string[]>(`/datasources/${datasourceId}/data-elements`, {
         method: "GET",
         params: {
           offset: cursor,

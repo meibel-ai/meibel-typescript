@@ -20,9 +20,9 @@ export class TagDescriptionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listTagTables(datasourceId: string): AsyncIterable<models.TagTable> {
-    yield* paginate<models.TagTable>(async (cursor) => {
-      const response = await this.http.request<models.TagTable[]>(`/datasources/${datasourceId}/tag-tables`, {
+  async *listTagTables(datasourceId: string): AsyncIterable<string> {
+    yield* paginate<string>(async (cursor) => {
+      const response = await this.http.request<string[]>(`/datasources/${datasourceId}/tag-tables`, {
         method: "GET",
         params: {
           offset: cursor,
@@ -44,9 +44,9 @@ export class TagDescriptionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listTagColumns(datasourceId: string, tableName: string): AsyncIterable<models.TagColumn> {
-    yield* paginate<models.TagColumn>(async (cursor) => {
-      const response = await this.http.request<models.TagColumn[]>(`/datasources/${datasourceId}/tag-tables/${tableName}/columns`, {
+  async *listTagColumns(datasourceId: string, tableName: string): AsyncIterable<string> {
+    yield* paginate<string>(async (cursor) => {
+      const response = await this.http.request<string[]>(`/datasources/${datasourceId}/tag-tables/${tableName}/columns`, {
         method: "GET",
         params: {
           offset: cursor,

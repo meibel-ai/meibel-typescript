@@ -83,7 +83,7 @@ export class DocumentsResource {
  */
   async getDocumentResult(jobId: string, options?: { format?: string }): Promise<string> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
-      format: options?.format,
+      format: options?.format ?? undefined,
     };
 
     const response = await this.http.request<string>(`/documents/${jobId}/result`, {
@@ -105,9 +105,9 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listDocumentChildren(jobId: string): AsyncIterable<models.DocumentChild> {
-    yield* paginate<models.DocumentChild>(async (cursor) => {
-      const response = await this.http.request<models.DocumentChild[]>(`/documents/${jobId}/children`, {
+  async *listDocumentChildren(jobId: string): AsyncIterable<string> {
+    yield* paginate<string>(async (cursor) => {
+      const response = await this.http.request<string[]>(`/documents/${jobId}/children`, {
         method: "GET",
         params: {
           offset: cursor,

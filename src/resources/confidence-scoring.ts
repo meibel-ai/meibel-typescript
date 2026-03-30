@@ -45,7 +45,7 @@ export class ConfidenceScoringResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listScoringJobs(options?: { agentName?: string | null; agentVersion?: string | null; agentExecutionId?: string | null; agentWorkflowName?: string | null; agentWorkflowVersion?: string | null; agentWorkflowExecutionId?: string | null; toolId?: string | null; toolInstanceId?: string | null; toolExecutionId?: string | null }): AsyncIterable<models.ScoringJobRecord> {
+  async *listScoringJobs(options?: { agentName?: string | null; agentVersion?: string | null; agentExecutionId?: string | null; agentWorkflowName?: string | null; agentWorkflowVersion?: string | null; agentWorkflowExecutionId?: string | null; toolId?: string | null; toolInstanceId?: string | null; toolExecutionId?: string | null }): AsyncIterable<string> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       agent_name: options?.agentName ?? undefined,
       agent_version: options?.agentVersion ?? undefined,
@@ -58,8 +58,8 @@ export class ConfidenceScoringResource {
       tool_execution_id: options?.toolExecutionId ?? undefined,
     };
 
-    yield* paginate<models.ScoringJobRecord>(async (cursor) => {
-      const response = await this.http.request<models.ScoringJobRecord[]>("/confidence-scoring/jobs", {
+    yield* paginate<string>(async (cursor) => {
+      const response = await this.http.request<string[]>("/confidence-scoring/jobs", {
         method: "GET",
         params: {
           ...queryParams,
