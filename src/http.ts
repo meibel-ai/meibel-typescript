@@ -14,6 +14,31 @@ import {
 } from './errors.js';
 import { type UploadFile, createMultipartStream } from './upload.js';
 
+// ---- Key transformation utilities ----
+// The API uses snake_case but TypeScript types use camelCase.
+
+function snakeToCamel(str: string): string {
+  return str.replace(/_([a-z0-9])/g, (_, c) => c.toUpperCase());
+}
+
+function camelToSnake(str: string): string {
+  return str.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+}
+
+function transformKeys(obj: unknown, transform: (key: string) => string): unknown {
+  if (Array.isArray(obj)) {
+    return obj.map((item) => transformKeys(item, transform));
+  }
+  if (obj !== null && typeof obj === 'object' && !(obj instanceof Date)) {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+      result[transform(key)] = transformKeys(value, transform);
+    }
+    return result;
+  }
+  return obj;
+}
+
 export interface HttpClientOptions {
   /** Base URL for API requests */
   baseUrl?: string;
@@ -73,7 +98,7 @@ export class HttpClient {
         signal: controller.signal,
       };
       if (options.body !== undefined) {
-        requestInit.body = JSON.stringify(options.body);
+        requestInit.body = JSON.stringify(transformKeys(options.body, camelToSnake));
       }
       const response = await this.fetchFn(url, requestInit);
 
@@ -96,8 +121,13 @@ export class HttpClient {
 
       const contentType = response.headers.get('content-type');
       if (contentType?.includes('application/json')) {
-        return (await response.json()) as T;
+        const data = await response.json();
+        return transformKeys(data, snakeToCamel) as T;
       }
+
+      // Return plain text for non-JSON responses (e.g., markdown)
+      const text = await response.text();
+      if (text) return text as unknown as T;
 
       return undefined as unknown as T;
     } catch (error) {
@@ -150,7 +180,12 @@ export class HttpClient {
       if (response.status === 204) return undefined as T;
 
       const ct = response.headers.get('content-type');
-      if (ct?.includes('application/json')) return (await response.json()) as T;
+      if (ct?.includes('application/json')) {
+        const data = await response.json();
+        return transformKeys(data, snakeToCamel) as T;
+      }
+      const text = await response.text();
+      if (text) return text as unknown as T;
       return undefined as unknown as T;
     } catch (error) {
       clearTimeout(timeoutId);
