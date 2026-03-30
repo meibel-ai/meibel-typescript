@@ -169,7 +169,12 @@ export class HttpClient {
     path: string,
     params?: Record<string, string | number | boolean | undefined>
   ): string {
-    const url = new URL(path, this.baseUrl);
+    // Ensure base URL ends with / so relative paths append correctly.
+    // new URL("/documents", "https://host/v2") would discard /v2,
+    // but new URL("documents", "https://host/v2/") preserves it.
+    const base = this.baseUrl.endsWith('/') ? this.baseUrl : this.baseUrl + '/';
+    const relativePath = path.startsWith('/') ? path.slice(1) : path;
+    const url = new URL(relativePath, base);
 
     if (params) {
       for (const [key, value] of Object.entries(params)) {

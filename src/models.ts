@@ -6,6 +6,8 @@
 
 import { z } from 'zod';
 
+// ---- Leaf schemas (no model dependencies) ----
+
 /**
  * Identity context for agent execution.  Contains only immutable identity fields that answer: - WHO: customer_id, project_id (tenant identity) - WHAT: agent_name, agent_version, agent_execution_id (agent identity, optional) - WHERE: agent_workflow_name, agent_workflow_version, agent_workflow_execution_id (parent workflow, optional) - WHICH TOOL: tool_id, tool_instance_id, tool_execution_id (tool identity, optional)  This model is FLAT - no inheritance, all fields in one model. Agent, workflow, and tool fields are optional, making this suitable for all execution contexts.  This model does NOT contain: - Configuration (see AgentExecutionConfig in agent-platform) - Runtime state (see AgentExecutionState in agent-platform)  Design Pattern - Progressive Enhancement: - Callers provide only tenant/project identity - FSMWorkflow fills in agent_workflow_* fields from AgentWorkflowSpec - ReactAgent fills in agent_* fields from AgentSpec and workflow.info().workflow_id - Tool activities add tool_* fields via model_copy() - Context gains fields as it flows through the system  Examples:     # Starting FSMWorkflow (caller provides minimal context)     context = AgentIdentityContext(         customer_id="cust_123",         project_id="proj_456"     )     # FSM fills in workflow identity     context = context.model_copy(update={         "agent_workflow_name": "support_fsm",         "agent_workflow_version": "3.0.0",         "agent_workflow_execution_id": workflow.info().workflow_id     })      # Starting ReactAgent standalone (caller provides minimal context)     context = AgentIdentityContext(         customer_id="cust_123",         project_id="proj_456"     )     # ReactAgent fills in agent identity     context = context.model_copy(update={         "agent_name": "sales_assistant",         "agent_version": "2.0.0",         "agent_execution_id": workflow.info().workflow_id     })      # ReactAgent as FSM child (inherits workflow context, adds agent identity)     child_context = parent_context.model_copy(update={         "agent_name": "router",         "agent_version": "1.0.0",         "agent_execution_id": workflow.info().workflow_id         # agent_workflow_* fields inherited from parent     })      # Tool execution (adds tool identity to agent context)     tool_context = context.model_copy(update={         'tool_id': "tool_xyz",         'tool_instance_id': "tool_inst_123",         'tool_execution_id': "tool_exec_456"     })
  */
@@ -131,20 +133,20 @@ export const JudgeConfigSchema = z.object({
   temperatureStep: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
+export const MetadataFieldSchema = z.object({
+  /** Field name (snake_case) */
+  name: z.string(),
+  type: z.enum(["string", "number", "boolean", "list[string]"]),
+  /** What this field captures */
+  description: z.string(),
+});
+
 /**
  * MetadataModelField
  */
 export const MetadataModelFieldSchema = z.object({
   name: z.string(),
   type: z.string(),
-  description: z.string(),
-});
-
-export const MetadataFieldSchema = z.object({
-  /** Field name (snake_case) */
-  name: z.string(),
-  type: z.enum(["string", "number", "boolean", "list[string]"]),
-  /** What this field captures */
   description: z.string(),
 });
 
@@ -156,29 +158,6 @@ export const NBootstrapsSchema = z.object({
   anyofSchema_2Validator: z.union([z.string(), z.null()]).optional(),
   actualInstance: z.string().optional(),
   anyOfSchemas: z.array(z.string()).optional(),
-});
-
-/**
- * Configuration for Observed Consistency confidence scoring.
- */
-export const OcConfigSchema = z.object({
-  nCompletions: z.union([z.number().int(), z.null()]).optional(),
-  maxTokens: z.union([z.number().int(), z.null()]).optional(),
-  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
-  models: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
-  nliModelConfig: z.string(),
-  nBootstraps: z.union([NBootstrapsSchema, z.null()]).optional(),
-  tokenLimit: z.union([z.number().int(), z.null()]).optional(),
-  originalCompletion: z.union([z.string(), z.null()]).optional(),
-  comparisonCompletions: z.union([z.array(z.string()), z.null()]).optional(),
-});
-
-/**
- * Configuration for OCR confidence scoring.
- */
-export const OcrConfigSchema = z.object({
-  calibrationModel: z.union([z.string(), z.null()]).optional(),
-  ocrConfidenceScores: z.union([z.array(z.union([z.number(), z.number().int()])), z.null()]).optional(),
 });
 
 /**
@@ -226,6 +205,14 @@ export const TokenConfigSchema = z.object({
   nInfluencers: z.union([z.number().int(), z.null()]).optional(),
 });
 
+/**
+ * Configuration for OCR confidence scoring.
+ */
+export const OcrConfigSchema = z.object({
+  calibrationModel: z.union([z.string(), z.null()]).optional(),
+  ocrConfidenceScores: z.union([z.array(z.union([z.number(), z.number().int()])), z.null()]).optional(),
+});
+
 export const UpdateTagDescriptionRequestSchema = z.object({
   /** Description for AI context */
   description: z.string(),
@@ -250,27 +237,7 @@ export const UpdateDataElementRequestSchema = z.object({
   metadata: z.union([z.string(), z.null()]).optional(),
 });
 
-// --- Schemas with dependencies (ordered so dependencies come first) ---
-
-/**
- * Config
- */
-export const ConfigSchema = z.object({
-  anyofSchema_1Validator: z.union([JudgeConfigSchema, z.null()]).optional(),
-  anyofSchema_2Validator: z.union([OcConfigSchema, z.null()]).optional(),
-  anyofSchema_3Validator: z.union([OcrConfigSchema, z.null()]).optional(),
-  anyofSchema_4Validator: z.union([TokenConfigSchema, z.null()]).optional(),
-  actualInstance: z.string().optional(),
-  anyOfSchemas: z.array(z.string()).optional(),
-});
-
-/**
- * Simplified configuration wrapper that separates module name from config.  This model is shared between confidence-scoring-service and confidence-framework to ensure type consistency without OpenAPI Generator wrapper issues.
- */
-export const ConfidenceScoringConfigSchema = z.object({
-  module: z.string(),
-  config: ConfigSchema,
-});
+// ---- Schemas with single-level dependencies ----
 
 /**
  * Connect to a website for crawling.
@@ -282,6 +249,68 @@ export const WebCrawlConnectorSchema = z.object({
   javascriptRender: z.boolean().optional(),
   domains: z.union([z.array(WebDomainSchema), z.null()]).optional(),
 });
+
+/**
+ * Configuration for Observed Consistency confidence scoring.
+ */
+export const OcConfigSchema = z.object({
+  nCompletions: z.union([z.number().int(), z.null()]).optional(),
+  maxTokens: z.union([z.number().int(), z.null()]).optional(),
+  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
+  models: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
+  nliModelConfig: z.string(),
+  nBootstraps: z.union([NBootstrapsSchema, z.null()]).optional(),
+  tokenLimit: z.union([z.number().int(), z.null()]).optional(),
+  originalCompletion: z.union([z.string(), z.null()]).optional(),
+  comparisonCompletions: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+export const TableSchema = z.object({
+  cells: z.array(TableCellSchema),
+  rows: z.number().int(),
+  cols: z.number().int(),
+  bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
+});
+
+export const HttpValidationErrorSchema = z.object({
+  detail: z.array(ValidationErrorSchema).optional(),
+});
+
+/**
+ * Configure automatic metadata extraction from documents on ingest.
+ */
+export const MetadataConfigRequestSchema = z.object({
+  type: z.enum(["catalog", "custom"]),
+  /** Required when type='catalog' */
+  modelId: z.union([z.string(), z.null()]).optional(),
+  /** Required when type='custom' */
+  fields: z.union([z.array(MetadataFieldSchema), z.null()]).optional(),
+});
+
+export const MetadataConfigResponseSchema = z.object({
+  type: z.enum(["catalog", "custom", "default"]),
+  modelId: z.union([z.string(), z.null()]).optional(),
+  fields: z.array(MetadataFieldSchema),
+});
+
+/**
+ * MetadataModelCatalogEntry
+ */
+export const MetadataModelCatalogEntrySchema = z.object({
+  modelId: z.string(),
+  name: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
+  scope: z.string(),
+  customerId: z.union([z.string(), z.null()]).optional(),
+  projectId: z.union([z.string(), z.null()]).optional(),
+  fields: z.array(MetadataModelFieldSchema),
+  createdBy: z.union([z.string(), z.null()]).optional(),
+  updatedBy: z.union([z.string(), z.null()]).optional(),
+  createdAt: z.union([z.coerce.date(), z.null()]).optional(),
+  updatedAt: z.union([z.coerce.date(), z.null()]).optional(),
+});
+
+// ---- Schemas with multi-level dependencies ----
 
 /**
  * Datasource connection configuration. Exactly one connector type must be set.
@@ -303,39 +332,16 @@ export const ConnectorConfigOutputSchema = z.object({
   webCrawl: z.union([WebCrawlConnectorSchema, z.null()]).optional(),
 });
 
-export const CreateDatasourceRequestSchema = z.object({
-  /** Human-readable datasource name */
-  name: z.string(),
-  /** What this datasource contains */
-  description: z.string().optional(),
-  /** Connection configuration */
-  connector: ConnectorConfigInputSchema,
-});
-
-export const UpdateDatasourceRequestSchema = z.object({
-  name: z.union([z.string(), z.null()]).optional(),
-  description: z.union([z.string(), z.null()]).optional(),
-  connector: z.union([ConnectorConfigInputSchema, z.null()]).optional(),
-});
-
-export const DatasourceResponseSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  description: z.string(),
-  connector: ConnectorConfigOutputSchema,
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-
-export const DatasourceListResponseSchema = z.object({
-  datasources: z.array(DatasourceResponseSchema),
-});
-
-export const TableSchema = z.object({
-  cells: z.array(TableCellSchema),
-  rows: z.number().int(),
-  cols: z.number().int(),
-  bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
+/**
+ * Config
+ */
+export const ConfigSchema = z.object({
+  anyofSchema_1Validator: z.union([JudgeConfigSchema, z.null()]).optional(),
+  anyofSchema_2Validator: z.union([OcConfigSchema, z.null()]).optional(),
+  anyofSchema_3Validator: z.union([OcrConfigSchema, z.null()]).optional(),
+  anyofSchema_4Validator: z.union([TokenConfigSchema, z.null()]).optional(),
+  actualInstance: z.string().optional(),
+  anyOfSchemas: z.array(z.string()).optional(),
 });
 
 /**
@@ -354,6 +360,39 @@ export const DocumentElementSchema = z.object({
 });
 
 /**
+ * ListMetadataModelCatalogResponse
+ */
+export const ListMetadataModelCatalogResponseSchema = z.object({
+  models: z.array(MetadataModelCatalogEntrySchema),
+});
+
+/**
+ * Simplified configuration wrapper that separates module name from config.  This model is shared between confidence-scoring-service and confidence-framework to ensure type consistency without OpenAPI Generator wrapper issues.
+ */
+export const ConfidenceScoringConfigSchema = z.object({
+  module: z.string(),
+  config: ConfigSchema,
+});
+
+export const CreateDatasourceRequestSchema = z.object({
+  /** Human-readable datasource name */
+  name: z.string(),
+  /** What this datasource contains */
+  description: z.string().optional(),
+  /** Connection configuration */
+  connector: ConnectorConfigInputSchema,
+});
+
+export const DatasourceResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  connector: ConnectorConfigOutputSchema,
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+/**
  * Full structured parse result (meibel format).
  */
 export const MeibelDocumentResultSchema = z.object({
@@ -361,6 +400,16 @@ export const MeibelDocumentResultSchema = z.object({
   pages: z.number().int(),
   tables: z.number().int(),
   metadata: z.union([z.string(), z.null()]).optional(),
+});
+
+export const UpdateDatasourceRequestSchema = z.object({
+  name: z.union([z.string(), z.null()]).optional(),
+  description: z.union([z.string(), z.null()]).optional(),
+  connector: z.union([ConnectorConfigInputSchema, z.null()]).optional(),
+});
+
+export const DatasourceListResponseSchema = z.object({
+  datasources: z.array(DatasourceResponseSchema),
 });
 
 /**
@@ -372,51 +421,6 @@ export const ProcessDocumentResponseSchema = z.object({
   status: z.string(),
   /** MeibelDocumentResult for meibel format, str for markdown */
   result: z.union([MeibelDocumentResultSchema, z.string()]),
-});
-
-export const HttpValidationErrorSchema = z.object({
-  detail: z.array(ValidationErrorSchema).optional(),
-});
-
-/**
- * MetadataModelCatalogEntry
- */
-export const MetadataModelCatalogEntrySchema = z.object({
-  modelId: z.string(),
-  name: z.string(),
-  description: z.union([z.string(), z.null()]).optional(),
-  scope: z.string(),
-  customerId: z.union([z.string(), z.null()]).optional(),
-  projectId: z.union([z.string(), z.null()]).optional(),
-  fields: z.array(MetadataModelFieldSchema),
-  createdBy: z.union([z.string(), z.null()]).optional(),
-  updatedBy: z.union([z.string(), z.null()]).optional(),
-  createdAt: z.union([z.coerce.date(), z.null()]).optional(),
-  updatedAt: z.union([z.coerce.date(), z.null()]).optional(),
-});
-
-/**
- * ListMetadataModelCatalogResponse
- */
-export const ListMetadataModelCatalogResponseSchema = z.object({
-  models: z.array(MetadataModelCatalogEntrySchema),
-});
-
-/**
- * Configure automatic metadata extraction from documents on ingest.
- */
-export const MetadataConfigRequestSchema = z.object({
-  type: z.enum(["catalog", "custom"]),
-  /** Required when type='catalog' */
-  modelId: z.union([z.string(), z.null()]).optional(),
-  /** Required when type='custom' */
-  fields: z.union([z.array(MetadataFieldSchema), z.null()]).optional(),
-});
-
-export const MetadataConfigResponseSchema = z.object({
-  type: z.enum(["catalog", "custom", "default"]),
-  modelId: z.union([z.string(), z.null()]).optional(),
-  fields: z.array(MetadataFieldSchema),
 });
 
 /**
@@ -490,7 +494,7 @@ export type TagColumn = z.infer<typeof TagColumnSchema>;
 export type TagTable = z.infer<typeof TagTableSchema>;
 export type TokenConfig = z.infer<typeof TokenConfigSchema>;
 export type UpdateTagDescriptionRequest = z.infer<typeof UpdateTagDescriptionRequestSchema>;
-export type ValidationError = z.infer<typeof ValidationErrorSchema>;
+export type ValidationErrorDetail = z.infer<typeof ValidationErrorSchema>;
 export type WebCrawlConnector = z.infer<typeof WebCrawlConnectorSchema>;
 export type UpdateDataElementRequest = z.infer<typeof UpdateDataElementRequestSchema>;
 export type UpdateDatasourceRequest = z.infer<typeof UpdateDatasourceRequestSchema>;

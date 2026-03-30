@@ -1,6 +1,6 @@
 {
   "name": "meibel",
-  "version": "0.1.0-beta.4",
+  "version": "0.1.0-beta.5",
   "description": "The Meibel API provides document parsing, datasource management, and AI agent orchestration.",
   "type": "module",
   "main": "./dist/cjs/index.js",
@@ -31,21 +31,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/meibel-ai/meibel-typescript.git"
-  },
-  "homepage": "https://docs.meibel.ai/sdk/typescript",
-  "bugs": {
-    "url": "https://github.com/meibel-ai/meibel-typescript/issues"
-  },
-  "license": "MIT",
-  "keywords": [
-    "meibel",
-    "sdk",
-    "api",
-    "document-parsing",
-    "ai"
-  ]
+  }
 }

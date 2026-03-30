@@ -32,7 +32,7 @@ export class ContentResource {
     };
 
     yield* paginate<string>(async (cursor) => {
-      const response = await this.http.request<{ items: string[]; nextCursor?: string | null }>(`/datasources/${datasourceId}/content`, {
+      const response = await this.http.request<string[]>(`/datasources/${datasourceId}/content`, {
         method: "GET",
         params: {
           ...queryParams,
@@ -40,8 +40,7 @@ export class ContentResource {
         },
       });
       return {
-        items: response.items ?? [],
-        nextCursor: response.nextCursor,
+        items: response ?? [],
       };
     });
   }

@@ -59,7 +59,7 @@ export class ConfidenceScoringResource {
     };
 
     yield* paginate<models.ScoringJobRecord>(async (cursor) => {
-      const response = await this.http.request<{ items: models.ScoringJobRecord[]; nextCursor?: string | null }>("/confidence-scoring/jobs", {
+      const response = await this.http.request<models.ScoringJobRecord[]>("/confidence-scoring/jobs", {
         method: "GET",
         params: {
           ...queryParams,
@@ -67,8 +67,7 @@ export class ConfidenceScoringResource {
         },
       });
       return {
-        items: response.items ?? [],
-        nextCursor: response.nextCursor,
+        items: response ?? [],
       };
     });
   }
