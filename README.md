@@ -12,10 +12,10 @@ npm install meibel@beta
 
 ```typescript
 import { MeibelClient } from 'meibel';
+import fs from 'fs';
 
 const client = new MeibelClient({
   apiKey: 'your-api-key',
-  baseUrl: 'https://api.meibel.ai/v2',
 });
 
 // Parse a document
@@ -31,11 +31,39 @@ const result = await client.documents.processDocument({
 console.log(result);
 
 // List datasources
-const datasources = await client.datasources.listDatasources();
-for (const ds of datasources.items) {
+for await (const ds of client.datasources.listDatasources()) {
   console.log(ds.name);
 }
 ```
+
+## Authentication
+
+The SDK authenticates via an API key sent in the `Meibel-API-Key` header. You can also use a bearer token.
+
+```typescript
+// API key authentication
+const client = new MeibelClient({
+  apiKey: 'your-api-key',
+});
+
+// Bearer token authentication
+const client = new MeibelClient({
+  bearerToken: 'your-token',
+});
+```
+
+Get your API key from the [Meibel Dashboard](https://app.meibel.ai).
+
+## Configuration
+
+| Option         | Default                      | Description               |
+|---------------|------------------------------|---------------------------|
+| `apiKey`       | —                            | Your Meibel API key       |
+| `bearerToken`  | —                            | Bearer token for auth     |
+| `baseUrl`      | `https://api.meibel.ai/v2`  | API base URL              |
+| `timeout`      | `30000`                      | Request timeout (ms)      |
+| `headers`      | `{}`                         | Additional request headers|
+| `fetch`        | global `fetch`               | Custom fetch implementation|
 
 ## Documentation
 
