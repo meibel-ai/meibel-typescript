@@ -6,6 +6,32 @@
 
 import { z } from 'zod';
 
+export const AgentDetailResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  displayName: z.string(),
+  catalogUrn: z.string(),
+  version: z.string(),
+  parentVersion: z.union([z.string(), z.null()]).optional(),
+  type: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
+  llmModel: z.string(),
+  fallbackModels: z.array(z.string()),
+  datasources: z.array(z.string()),
+  instructions: z.string(),
+  tools: z.array(z.string()),
+  artifacts: z.array(z.string()),
+  confidenceConfigs: z.array(z.string()),
+  temperature: z.union([z.number(), z.number().int()]),
+  maxTokens: z.union([z.number().int(), z.null()]).optional(),
+  tags: z.array(z.string()),
+  icon: z.union([z.string(), z.null()]).optional(),
+  createdBy: z.union([z.string(), z.null()]).optional(),
+  createdAt: z.union([z.coerce.date(), z.null()]).optional(),
+  lastExecutionStatus: z.union([z.string(), z.null()]).optional(),
+  lastExecutionTime: z.union([z.coerce.date(), z.null()]).optional(),
+});
+
 /**
  * Identity context for agent execution.  Contains only immutable identity fields that answer: - WHO: customer_id, project_id (tenant identity) - WHAT: agent_name, agent_version, agent_execution_id (agent identity, optional) - WHERE: agent_workflow_name, agent_workflow_version, agent_workflow_execution_id (parent workflow, optional) - WHICH TOOL: tool_id, tool_instance_id, tool_execution_id (tool identity, optional)  This model is FLAT - no inheritance, all fields in one model. Agent, workflow, and tool fields are optional, making this suitable for all execution contexts.  This model does NOT contain: - Configuration (see AgentExecutionConfig in agent-platform) - Runtime state (see AgentExecutionState in agent-platform)  Design Pattern - Progressive Enhancement: - Callers provide only tenant/project identity - FSMWorkflow fills in agent_workflow_* fields from AgentWorkflowSpec - ReactAgent fills in agent_* fields from AgentSpec and workflow.info().workflow_id - Tool activities add tool_* fields via model_copy() - Context gains fields as it flows through the system  Examples:     # Starting FSMWorkflow (caller provides minimal context)     context = AgentIdentityContext(         customer_id="cust_123",         project_id="proj_456"     )     # FSM fills in workflow identity     context = context.model_copy(update={         "agent_workflow_name": "support_fsm",         "agent_workflow_version": "3.0.0",         "agent_workflow_execution_id": workflow.info().workflow_id     })      # Starting ReactAgent standalone (caller provides minimal context)     context = AgentIdentityContext(         customer_id="cust_123",         project_id="proj_456"     )     # ReactAgent fills in agent identity     context = context.model_copy(update={         "agent_name": "sales_assistant",         "agent_version": "2.0.0",         "agent_execution_id": workflow.info().workflow_id     })      # ReactAgent as FSM child (inherits workflow context, adds agent identity)     child_context = parent_context.model_copy(update={         "agent_name": "router",         "agent_version": "1.0.0",         "agent_execution_id": workflow.info().workflow_id         # agent_workflow_* fields inherited from parent     })      # Tool execution (adds tool identity to agent context)     tool_context = context.model_copy(update={         'tool_id': "tool_xyz",         'tool_instance_id': "tool_inst_123",         'tool_execution_id': "tool_exec_456"     })
  */
@@ -25,12 +51,135 @@ export const AgentIdentityContextSchema = z.object({
   toolExecutionId: z.union([z.string(), z.null()]).optional(),
 });
 
+export const AgentSummarySchema = z.object({
+  id: z.string(),
+  name: z.union([z.string(), z.null()]).optional(),
+  displayName: z.string(),
+  llmModel: z.string(),
+  toolCount: z.number().int(),
+  datasourceCount: z.number().int(),
+  lastExecutionStatus: z.union([z.string(), z.null()]).optional(),
+  lastExecutionTime: z.union([z.coerce.date(), z.null()]).optional(),
+});
+
+/**
+ * AgentToolDefinition
+ */
+export const AgentToolDefinitionSchema = z.object({
+  /** Instance name - what the LLM sees and calls */
+  name: z.string(),
+  /** Tool type: rag_search, database_query, etc. */
+  type: z.string(),
+  /** Description shown to LLM */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** Tool config passed to activity via tool_context (datasource_id, base_prompt, etc.) */
+  config: z.union([z.string(), z.null()]).optional(),
+  /** Optional override for the tool's parameters schema */
+  parametersSchema: z.union([z.string(), z.null()]).optional(),
+  /** When to use this tool (injected into system prompt) */
+  useFor: z.union([z.array(z.string()), z.null()]).optional(),
+  /** When NOT to use this tool (injected into system prompt) */
+  avoidFor: z.union([z.array(z.string()), z.null()]).optional(),
+  /** If true, workflow pauses for human approval before executing this tool */
+  requireApproval: z.union([z.boolean(), z.null()]).optional(),
+  /** Message to display when requesting approval (supports {{variable}} templates) */
+  approvalMessage: z.union([z.string(), z.null()]).optional(),
+});
+
+export const AgentVersionSummarySchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  version: z.string(),
+  parentVersion: z.union([z.string(), z.null()]).optional(),
+  description: z.union([z.string(), z.null()]).optional(),
+  llmModel: z.string(),
+  createdAt: z.union([z.coerce.date(), z.null()]).optional(),
+  createdBy: z.union([z.string(), z.null()]).optional(),
+  isPublished: z.boolean(),
+  publishedAt: z.union([z.coerce.date(), z.null()]).optional(),
+  commitMessage: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
+ * A generated artifact/file from the chat agent.
+ */
+export const ArtifactSchema = z.object({
+  artifactId: z.string(),
+  filename: z.string(),
+  mimeType: z.string(),
+  content: z.union([z.string(), z.null()]).optional(),
+  storageUrl: z.union([z.string(), z.null()]).optional(),
+  sizeBytes: z.union([z.number().int(), z.null()]).optional(),
+  createdAt: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
+ * ArtifactEntry
+ */
+export const ArtifactEntrySchema = z.object({
+  name: z.string(),
+  content: z.union([z.string(), z.null()]).optional(),
+  fileType: z.union([z.string(), z.null()]),
+});
+
+export const ArtifactSchemaResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  displayName: z.string(),
+  version: z.string(),
+  parentVersion: z.union([z.string(), z.null()]).optional(),
+  type: z.string(),
+  description: z.string(),
+  required: z.boolean(),
+  schemaDef: z.string(),
+  maxSizeBytes: z.union([z.number().int(), z.null()]).optional(),
+  storageStrategy: z.string(),
+  createdBy: z.union([z.string(), z.null()]).optional(),
+  createdAt: z.union([z.coerce.date(), z.null()]).optional(),
+});
+
+/**
+ * Supported storage strategies.
+ */
+export const ArtifactStorageStrategySchema = z.object({
+});
+
+/**
+ * Supported artifact types.
+ */
+export const ArtifactTypeSchema = z.object({
+});
+
 export const BoundingBoxSchema = z.object({
   x: z.number(),
   y: z.number(),
   width: z.number(),
   height: z.number(),
   page: z.number().int(),
+});
+
+/**
+ * An action the user can take.
+ */
+export const CallToActionSchema = z.object({
+  label: z.string(),
+  action: z.string(),
+  /** Optional override for the tool's parameters schema */
+  actionData: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
+ * Request body for chat message endpoints.
+ */
+export const ChatMessageRequestSchema = z.object({
+  /** The user's chat message */
+  userMessage: z.string(),
+  /** Maximum time to wait for response (seconds) */
+  timeoutSeconds: z.union([z.number().int(), z.null()]).optional(),
+  /** Whether to include thinking content in response */
+  includeThinking: z.union([z.boolean(), z.null()]).optional(),
+  /** Whether to include tool call/result activity */
+  includeToolActivity: z.union([z.boolean(), z.null()]).optional(),
 });
 
 /**
@@ -45,29 +194,56 @@ export const CloudStorageConnectorSchema = z.object({
   prefix: z.union([z.string(), z.null()]).optional(),
   /** AWS IAM role ARN (S3 only) */
   roleArn: z.union([z.string(), z.null()]).optional(),
-});
-
-export const CreateDataElementRequestSchema = z.object({
-  /** Data element name */
-  name: z.string(),
-  /** MIME type of the data element */
-  mediaType: z.union([z.string(), z.null()]).optional(),
-  /** Arbitrary metadata */
-  metadata: z.union([z.string(), z.null()]).optional(),
+  /** AWS region (S3 only) */
+  region: z.union([z.string(), z.null()]).optional(),
 });
 
 /**
- * Metadata key-value pairs on a data element.
+ * Request model for creating a new agent prompt.
  */
-export const DataElementMetadataSchema = z.object({
-  /** Arbitrary key-value metadata */
-  metadata: z.string(),
+export const CreateAgentPromptRequestSchema = z.object({
+  /** Human-readable name of the prompt (letters, numbers, and spaces only). Converted to kebab-case internally. */
+  displayName: z.string(),
+  /** Prompt text */
+  prompt: z.string(),
+});
+
+export const CreateAgentResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  displayName: z.string(),
+  version: z.string(),
+});
+
+export const CreateArtifactSchemaResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  displayName: z.string(),
+  version: z.string(),
+});
+
+export const CreatePromptResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  displayName: z.string(),
+  version: z.string(),
+});
+
+export const CreateSessionRequestSchema = z.object({
+  prompt: z.union([z.string(), z.null()]).optional(),
+  initialContext: z.union([z.string(), z.null()]).optional(),
+  maxIterationsPerUserMessage: z.union([z.number().int(), z.null()]).optional(),
+});
+
+export const CreateSessionResponseSchema = z.object({
+  sessionId: z.string(),
 });
 
 export const DataElementResponseSchema = z.object({
   id: z.string(),
   datasourceId: z.string(),
   name: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
   mediaType: z.union([z.string(), z.null()]).optional(),
   metadata: z.union([z.string(), z.null()]).optional(),
   createdAt: z.union([z.string(), z.null()]).optional(),
@@ -122,6 +298,67 @@ export const DocumentStatusSchema = z.object({
   error: z.union([z.string(), z.null()]).optional(),
 });
 
+export const DownloadJobRequestSchema = z.object({
+  /** Content to include: files, parsed_content, or files_and_parsed_content */
+  content: z.union([z.string(), z.null()]).optional(),
+  /** Specific data element IDs to include */
+  dataElementIds: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+export const DownloadJobResponseSchema = z.object({
+  jobId: z.string(),
+  /** Current job status */
+  status: z.string(),
+  /** Stream progress events from this SSE URL */
+  statusUrl: z.string(),
+});
+
+export const FieldSummarySchema = z.object({
+  name: z.string(),
+  type: z.string(),
+});
+
+/**
+ * FileParseCompleteInfo
+ */
+export const FileParseCompleteInfoSchema = z.object({
+  status: z.union([z.string(), z.null()]),
+  error: z.union([z.string(), z.null()]).optional(),
+  bboxCount: z.union([z.number().int(), z.null()]),
+  pageCount: z.union([z.number().int(), z.null()]),
+  contentType: z.union([z.string(), z.null()]),
+  timestamp: z.union([z.string(), z.null()]),
+});
+
+/**
+ * FileParseStartInfo
+ */
+export const FileParseStartInfoSchema = z.object({
+  attempt: z.union([z.number().int(), z.null()]),
+  timestamp: z.union([z.string(), z.null()]),
+});
+
+export const FilesSummaryResponseSchema = z.object({
+  total: z.number().int(),
+  deleted: z.union([z.number().int(), z.null()]).optional(),
+});
+
+export const IngestMethodCountsResponseSchema = z.object({
+  total: z.number().int(),
+  new: z.union([z.number().int(), z.null()]).optional(),
+  updated: z.union([z.number().int(), z.null()]).optional(),
+});
+
+export const IngestMethodSummarySchema = z.object({
+  method: z.string(),
+  totalFiles: z.number().int().optional(),
+  processedFiles: z.number().int().optional(),
+  adds: z.number().int().optional(),
+  updates: z.number().int().optional(),
+  errors: z.number().int().optional(),
+  warnings: z.number().int().optional(),
+});
+
 /**
  * Configuration for judge-based confidence scoring (LLM-as-judge patterns).
  */
@@ -131,12 +368,25 @@ export const JudgeConfigSchema = z.object({
   temperatureStep: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
+/**
+ * MessageEntry
+ */
+export const MessageEntrySchema = z.object({
+  role: z.string(),
+  message: z.string(),
+  signalId: z.union([z.string(), z.null()]),
+  timestamp: z.coerce.date(),
+});
+
 export const MetadataFieldSchema = z.object({
   /** Field name (snake_case) */
   name: z.string(),
-  type: z.enum(["string", "number", "boolean", "list[string]"]),
+  /** Data type of the field */
+  type: z.enum(["string", "integer", "float", "boolean", "datetime", "uuid", "geo", "list[string]"]),
   /** What this field captures */
   description: z.string(),
+  /** Whether this field is indexed for filtering */
+  index: z.boolean().optional(),
 });
 
 /**
@@ -146,6 +396,7 @@ export const MetadataModelFieldSchema = z.object({
   name: z.string(),
   type: z.string(),
   description: z.string(),
+  index: z.union([z.boolean(), z.null()]).optional(),
 });
 
 /**
@@ -175,20 +426,115 @@ export const ParseDocumentResponseSchema = z.object({
   status: z.string(),
 });
 
+export const PromptResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  displayName: z.string(),
+  version: z.string(),
+  parentVersion: z.union([z.string(), z.null()]).optional(),
+  prompt: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
+  createdBy: z.union([z.string(), z.null()]).optional(),
+  createdAt: z.union([z.coerce.date(), z.null()]).optional(),
+});
+
+export const PromptSummarySchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  version: z.string(),
+  preview: z.string(),
+});
+
+/**
+ * Request model for publishing the current draft of an agent.
+ */
+export const PublishAgentDefinitionRequestSchema = z.object({
+  /** User-provided description of what changed in this version */
+  commitMessage: z.string(),
+});
+
+/**
+ * Response model for a publish event.
+ */
+export const PublishAgentDefinitionResponseSchema = z.object({
+  /** Registry entry ID */
+  id: z.string(),
+  /** Catalog URN of the published AgentDefinition version */
+  agentDefinitionUrn: z.string(),
+  /** Agent name */
+  agentName: z.string(),
+  /** Published version slug */
+  version: z.string(),
+  /** Display name of the published version */
+  displayName: z.string(),
+  /** User-provided description of what changed in this version */
+  commitMessage: z.string(),
+  /** Timestamp of the publish event */
+  publishedAt: z.coerce.date(),
+  /** User who published */
+  publishedBy: z.union([z.string(), z.null()]).optional(),
+});
+
 /**
  * ScoringStatus
  */
 export const ScoringStatusSchema = z.object({
 });
 
+export const SessionMessageItemSchema = z.object({
+  type: z.string(),
+  timestamp: z.union([z.string(), z.null()]).optional(),
+  message: z.union([z.string(), z.null()]).optional(),
+  signalId: z.union([z.string(), z.null()]).optional(),
+  toolId: z.union([z.string(), z.null()]).optional(),
+  toolName: z.union([z.string(), z.null()]).optional(),
+  arguments: z.union([z.string(), z.null()]).optional(),
+  result: z.union([z.string(), z.null()]).optional(),
+});
+
+export const SessionSummarySchema = z.object({
+  sessionId: z.string(),
+  status: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.union([z.coerce.date(), z.null()]).optional(),
+  agentName: z.union([z.string(), z.null()]).optional(),
+  agentVersion: z.union([z.string(), z.null()]).optional(),
+  messagesCount: z.number().int().optional(),
+  tokenUsage: z.union([z.string(), z.null()]).optional(),
+  result: z.array(z.string()).optional(),
+});
+
+/**
+ * A source/citation in the response.
+ */
+export const SourceSchema = z.object({
+  title: z.string(),
+  url: z.union([z.string(), z.null()]).optional(),
+  snippet: z.union([z.string(), z.null()]).optional(),
+  dataElementId: z.union([z.string(), z.null()]).optional(),
+  relevanceScore: z.union([z.number(), z.number().int(), z.null()]).optional(),
+});
+
+export const TableSummaryResponseSchema = z.object({
+  name: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
+  columnCount: z.number().int(),
+});
+
 export const TagColumnSchema = z.object({
   columnName: z.string(),
+  type: z.union([z.string(), z.null()]).optional(),
   description: z.union([z.string(), z.null()]).optional(),
 });
 
-export const TagTableSchema = z.object({
+export const TagColumnUpdateItemSchema = z.object({
+  columnName: z.string(),
+  description: z.string(),
+});
+
+export const TagTableUpdateItemSchema = z.object({
   tableName: z.string(),
-  description: z.union([z.string(), z.null()]).optional(),
+  description: z.string(),
 });
 
 /**
@@ -202,9 +548,69 @@ export const TokenConfigSchema = z.object({
   nInfluencers: z.union([z.number().int(), z.null()]).optional(),
 });
 
-export const UpdateTagDescriptionRequestSchema = z.object({
-  /** Description for AI context */
-  description: z.string(),
+/**
+ * Record of a tool call and its result.
+ */
+export const ToolActivitySchema = z.object({
+  toolId: z.string(),
+  toolName: z.string(),
+  arguments: z.string(),
+  /** Optional override for the tool's parameters schema */
+  result: z.union([z.string(), z.null()]).optional(),
+  timestamp: z.string(),
+});
+
+/**
+ * ToolCallInfo
+ */
+export const ToolCallInfoSchema = z.object({
+  toolName: z.union([z.string(), z.null()]),
+  /** Optional override for the tool's parameters schema */
+  arguments: z.union([z.string(), z.null()]),
+  sequence: z.union([z.string(), z.null()]),
+  timestamp: z.union([z.string(), z.null()]),
+});
+
+/**
+ * ToolResultInfo
+ */
+export const ToolResultInfoSchema = z.object({
+  toolName: z.union([z.string(), z.null()]),
+  result: z.union([z.string(), z.null()]).optional(),
+  sequence: z.union([z.string(), z.null()]),
+  timestamp: z.union([z.string(), z.null()]),
+});
+
+/**
+ * Response model for updating an agent definition.
+ */
+export const UpdateAgentDefinitionResponseSchema = z.object({
+  /** New agent definition ID */
+  id: z.string(),
+  /** Catalog URN for the new version */
+  catalogUrn: z.string(),
+  /** New version number */
+  version: z.string(),
+});
+
+/**
+ * Request model for updating an agent prompt. Name is intentionally excluded as it serves as the stable identifier for a version chain and cannot be changed.
+ */
+export const UpdateAgentPromptRequestSchema = z.object({
+  /** Human-readable name of the prompt */
+  displayName: z.union([z.string(), z.null()]).optional(),
+  /** Prompt text */
+  prompt: z.union([z.string(), z.null()]).optional(),
+});
+
+export const UpdateArtifactSchemaResponseSchema = z.object({
+  id: z.string(),
+  version: z.string(),
+});
+
+export const UpdatePromptResponseSchema = z.object({
+  id: z.string(),
+  version: z.string(),
 });
 
 export const ValidationErrorSchema = z.object({
@@ -213,17 +619,211 @@ export const ValidationErrorSchema = z.object({
   type: z.string(),
 });
 
+/**
+ * A server-sent event indicating the stream connection has been established
+ */
+export const ConnectedEventSchema = z.object({
+  event: z.string(),
+  data: z.string(),
+});
+
+/**
+ * A server-sent event containing an agent status update
+ */
+export const StatusEventSchema = z.object({
+  event: z.string(),
+  data: z.string(),
+});
+
+/**
+ * A server-sent event indicating the agent is calling a tool
+ */
+export const ToolCallEventSchema = z.object({
+  event: z.string(),
+  data: z.string(),
+});
+
+/**
+ * A server-sent event containing the result of a tool call
+ */
+export const ToolResultEventSchema = z.object({
+  event: z.string(),
+  data: z.string(),
+});
+
+/**
+ * A server-sent event containing an incremental response from the agent
+ */
+export const PartialResponseEventSchema = z.object({
+  event: z.string(),
+  data: z.string(),
+});
+
+/**
+ * A server-sent event containing the final complete response from the agent, sent once at the end of the stream
+ */
+export const CompletionEventSchema = z.object({
+  event: z.string(),
+  data: z.string(),
+});
+
+export const ContentItemSchema = z.object({
+  name: z.string(),
+  path: z.string(),
+  type: z.union([z.string(), z.null()]).optional(),
+  size: z.union([z.number().int(), z.null()]).optional(),
+  mediaType: z.union([z.string(), z.null()]).optional(),
+  lastModified: z.union([z.string(), z.null()]).optional(),
+  etag: z.union([z.string(), z.null()]).optional(),
+});
+
+export const UploadContentResponseSchema = z.object({
+  success: z.boolean(),
+  message: z.string(),
+  datasourceId: z.string(),
+  uploadId: z.string(),
+  sseUrl: z.string(),
+  estimatedFiles: z.union([z.number().int(), z.null()]).optional(),
+  estimatedSize: z.union([z.number().int(), z.null()]).optional(),
+  ingestUrl: z.union([z.string(), z.null()]).optional(),
+});
+
 export const UpdateDataElementRequestSchema = z.object({
+  /** Updated name */
   name: z.union([z.string(), z.null()]).optional(),
+  /** Updated description */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** Metadata key-value pairs — replaces all existing metadata */
   metadata: z.union([z.string(), z.null()]).optional(),
 });
 
 export const WebDomainSchema = z.object({
+  /** Domain to crawl (e.g. example.com) */
   domain: z.string(),
-  /** URL pattern to include */
+  /** Regex URL pattern to include */
   includePattern: z.string(),
-  /** URL pattern to exclude */
+  /** Regex URL pattern to exclude */
   excludePattern: z.string().optional(),
+});
+
+export const AgentListResponseSchema = z.object({
+  data: z.array(AgentSummarySchema),
+  total: z.number().int(),
+});
+
+/**
+ * Request model for creating a new agent definition.
+ */
+export const CreateAgentDefinitionRequestSchema = z.object({
+  /** Human-readable name of the agent (letters, numbers, and spaces only). Converted to kebab-case internally. */
+  displayName: z.string(),
+  /** System prompt/instructions for the agent */
+  instructions: z.string(),
+  /** Agent type */
+  type: z.union([z.string(), z.null()]).optional(),
+  /** Description of the agent */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** LLM model to use */
+  llmModel: z.union([z.string(), z.null()]).optional(),
+  /** List of fallback models */
+  fallbackModels: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Datasource IDs the agent has access to */
+  datasources: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Tools configuration */
+  tools: z.union([z.array(AgentToolDefinitionSchema), z.null()]).optional(),
+  /** Catalog URNs of artifacts the agent produces */
+  artifacts: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Confidence scoring module names to apply during execution */
+  confidenceConfigs: z.union([z.array(z.string()), z.null()]).optional(),
+  /** LLM temperature */
+  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
+  /** Maximum tokens in response */
+  maxTokens: z.union([z.number().int(), z.null()]).optional(),
+  /** Tags for categorization */
+  tags: z.union([z.array(z.string()), z.null()]).optional(),
+  /** UI icon identifier */
+  icon: z.union([z.string(), z.null()]).optional(),
+  additionalProperties: z.string().optional(),
+});
+
+/**
+ * Request model for updating an agent definition. Name is intentionally excluded as it serves as the stable identifier for a version chain and cannot be changed.
+ */
+export const UpdateAgentDefinitionRequestSchema = z.object({
+  /** Human-readable name of the agent */
+  displayName: z.union([z.string(), z.null()]).optional(),
+  /** System prompt/instructions */
+  instructions: z.union([z.string(), z.null()]).optional(),
+  /** Agent type */
+  type: z.union([z.string(), z.null()]).optional(),
+  /** Description of the agent */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** LLM model to use */
+  llmModel: z.union([z.string(), z.null()]).optional(),
+  /** List of fallback models */
+  fallbackModels: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Datasource IDs the agent has access to */
+  datasources: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Tools configuration */
+  tools: z.union([z.array(AgentToolDefinitionSchema), z.null()]).optional(),
+  /** Catalog URNs of artifacts the agent produces */
+  artifacts: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Confidence scoring module names to apply during execution */
+  confidenceConfigs: z.union([z.array(z.string()), z.null()]).optional(),
+  /** LLM temperature */
+  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
+  /** Maximum tokens in response */
+  maxTokens: z.union([z.number().int(), z.null()]).optional(),
+  /** Tags for categorization */
+  tags: z.union([z.array(z.string()), z.null()]).optional(),
+  /** UI icon identifier */
+  icon: z.union([z.string(), z.null()]).optional(),
+});
+
+export const AgentVersionListResponseSchema = z.object({
+  data: z.array(AgentVersionSummarySchema),
+  total: z.number().int(),
+});
+
+/**
+ * Request model for creating a new agent artifact.
+ */
+export const CreateAgentArtifactRequestSchema = z.object({
+  /** Human-readable name of the artifact (letters, numbers, and spaces only). Converted to kebab-case internally. */
+  displayName: z.string(),
+  /** Artifact type (json, markdown, csv, yaml, text, html, pdf) */
+  type: ArtifactTypeSchema,
+  /** Description of the artifact */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** Whether agent must produce this artifact */
+  required: z.union([z.boolean(), z.null()]).optional(),
+  /** Schema definition */
+  schemaDef: z.string(),
+  /** Maximum artifact size in bytes */
+  maxSizeBytes: z.union([z.number().int(), z.null()]).optional(),
+  /** Storage strategy (inline, gcs, auto) */
+  storageStrategy: z.union([ArtifactStorageStrategySchema, z.null()]).optional(),
+  additionalProperties: z.string().optional(),
+});
+
+/**
+ * Request model for updating an agent artifact. Name is intentionally excluded as it serves as the stable identifier for a version chain and cannot be changed.
+ */
+export const UpdateAgentArtifactRequestSchema = z.object({
+  /** Human-readable name of the artifact */
+  displayName: z.union([z.string(), z.null()]).optional(),
+  /** Artifact type */
+  type: z.union([ArtifactTypeSchema, z.null()]).optional(),
+  /** Description of the artifact */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** Whether agent must produce this artifact */
+  required: z.union([z.boolean(), z.null()]).optional(),
+  /** Optional override for the tool's parameters schema */
+  schemaDef: z.union([z.string(), z.null()]).optional(),
+  /** Maximum artifact size in bytes */
+  maxSizeBytes: z.union([z.number().int(), z.null()]).optional(),
+  /** Storage strategy */
+  storageStrategy: z.union([ArtifactStorageStrategySchema, z.null()]).optional(),
 });
 
 export const TableCellSchema = z.object({
@@ -235,14 +835,53 @@ export const TableCellSchema = z.object({
   bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
 });
 
+export const DataElementListResponseSchema = z.object({
+  items: z.array(DataElementResponseSchema),
+  nextCursor: z.union([z.string(), z.null()]).optional(),
+  hasNext: z.boolean().optional(),
+});
+
+export const ArtifactSchemaSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  type: z.string(),
+  fieldsSummary: z.array(FieldSummarySchema),
+});
+
+/**
+ * FileParseEntry
+ */
+export const FileParseEntrySchema = z.object({
+  fileId: z.string(),
+  filename: z.union([z.string(), z.null()]),
+  parseStart: z.union([FileParseStartInfoSchema, z.null()]),
+  parseComplete: z.union([FileParseCompleteInfoSchema, z.null()]),
+});
+
+export const IngestCountsResponseSchema = z.object({
+  rag: z.union([IngestMethodCountsResponseSchema, z.null()]).optional(),
+  tag: z.union([IngestMethodCountsResponseSchema, z.null()]).optional(),
+  refGraph: z.union([IngestMethodCountsResponseSchema, z.null()]).optional(),
+});
+
+export const IngestStatusResponseSchema = z.object({
+  datasourceId: z.string(),
+  status: z.string(),
+  startedAt: z.union([z.string(), z.null()]).optional(),
+  completedAt: z.union([z.string(), z.null()]).optional(),
+  methods: z.array(IngestMethodSummarySchema).optional(),
+});
+
 /**
  * Configure automatic metadata extraction from documents on ingest.
  */
 export const MetadataConfigRequestSchema = z.object({
+  /** Use 'catalog' to select a pre-built extraction model (set model_id); use 'custom' to define your own fields (set fields) */
   type: z.enum(["catalog", "custom"]),
-  /** Required when type='catalog' */
+  /** Pre-built model ID from the metadata model catalog — required when type is 'catalog' */
   modelId: z.union([z.string(), z.null()]).optional(),
-  /** Required when type='custom' */
+  /** Custom field definitions to extract — required when type is 'custom' */
   fields: z.union([z.array(MetadataFieldSchema), z.null()]).optional(),
 });
 
@@ -284,8 +923,68 @@ export const OcConfigSchema = z.object({
   comparisonCompletions: z.union([z.array(z.string()), z.null()]).optional(),
 });
 
+export const PromptListResponseSchema = z.object({
+  data: z.array(PromptSummarySchema),
+});
+
+export const SessionMessagesResponseSchema = z.object({
+  agentId: z.union([z.string(), z.null()]).optional(),
+  agentName: z.union([z.string(), z.null()]).optional(),
+  version: z.union([z.string(), z.null()]).optional(),
+  messages: z.array(SessionMessageItemSchema),
+});
+
+export const SessionListResponseSchema = z.object({
+  data: z.array(SessionSummarySchema),
+  total: z.number().int(),
+});
+
+/**
+ * The structured chat response.
+ */
+export const ChatResponseSchema = z.object({
+  message: z.union([z.string(), z.null()]).optional(),
+  sources: z.union([z.array(SourceSchema), z.null()]).optional(),
+  followUpQuestions: z.union([z.array(z.string()), z.null()]).optional(),
+  callToActions: z.union([z.array(CallToActionSchema), z.null()]).optional(),
+  artifacts: z.union([z.array(ArtifactSchema), z.null()]).optional(),
+});
+
+export const TagTableSchema = z.object({
+  tableName: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
+  columns: z.union([z.array(TagColumnSchema), z.null()]).optional(),
+});
+
+export const TableDescriptionUpdateSchema = z.object({
+  tableName: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
+  columns: z.union([z.array(TagColumnUpdateItemSchema), z.null()]).optional(),
+});
+
+/**
+ * ToolActivityEntry
+ */
+export const ToolActivityEntrySchema = z.object({
+  toolId: z.string(),
+  toolCall: z.union([ToolCallInfoSchema, z.null()]),
+  toolResult: z.union([ToolResultInfoSchema, z.null()]),
+});
+
 export const HttpValidationErrorSchema = z.object({
   detail: z.array(ValidationErrorSchema).optional(),
+});
+
+export const FileUploadSyncResponseSchema = z.object({
+  datasourceId: z.string(),
+  items: z.array(ContentItemSchema),
+  continuationToken: z.union([z.string(), z.null()]).optional(),
+  ingestUrl: z.union([z.string(), z.null()]).optional(),
+});
+
+export const ListContentResponseSchema = z.object({
+  items: z.array(ContentItemSchema),
+  continuationToken: z.union([z.string(), z.null()]).optional(),
 });
 
 /**
@@ -304,6 +1003,11 @@ export const TableSchema = z.object({
   rows: z.number().int(),
   cols: z.number().int(),
   bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
+});
+
+export const ArtifactSchemaListResponseSchema = z.object({
+  data: z.array(ArtifactSchemaSummarySchema),
+  total: z.number().int(),
 });
 
 /**
@@ -326,19 +1030,43 @@ export const ConfigSchema = z.object({
 });
 
 /**
- * Datasource connection configuration. Exactly one connector type must be set.
+ * Response from the non-streaming chat endpoint.
  */
-export const ConnectorConfigInputSchema = z.object({
-  type: z.enum(["database", "cloud_storage", "web_crawl"]),
-  database: z.union([DatabaseConnectorSchema, z.null()]).optional(),
-  cloudStorage: z.union([CloudStorageConnectorSchema, z.null()]).optional(),
-  webCrawl: z.union([WebCrawlConnectorSchema, z.null()]).optional(),
+export const ChatMessageResponseSchema = z.object({
+  /** Unique ID for this message exchange */
+  signalId: z.string(),
+  /** The structured response */
+  response: ChatResponseSchema,
+  /** The assistant response in text-format */
+  assistantResponse: z.string(),
+  /** Tool calls made during response generation */
+  toolActivity: z.union([z.array(ToolActivitySchema), z.null()]).optional(),
+  /** LLM thinking/reasoning content */
+  thinking: z.union([z.string(), z.null()]).optional(),
+  /** Token usage statistics */
+  tokenUsage: z.union([z.record(z.string(), z.number().int()), z.null()]).optional(),
+});
+
+/**
+ * AgentExecutionDetailsResponse
+ */
+export const AgentExecutionDetailsResponseSchema = z.object({
+  agentId: z.union([z.string(), z.null()]),
+  agentName: z.union([z.string(), z.null()]),
+  version: z.union([z.string(), z.null()]),
+  status: z.string(),
+  messages: z.array(MessageEntrySchema),
+  toolActivity: z.array(ToolActivityEntrySchema),
+  tokenUsage: z.array(z.union([z.string(), z.null()])),
+  fileParsing: z.array(FileParseEntrySchema),
+  result: z.array(ArtifactEntrySchema),
 });
 
 /**
  * Datasource connection configuration. Exactly one connector type must be set.
  */
-export const ConnectorConfigOutputSchema = z.object({
+export const ConnectorConfigSchema = z.object({
+  /** Connector type — set the matching config object: 'database' → database, 'cloud_storage' → cloud_storage, 'web_crawl' → web_crawl */
   type: z.enum(["database", "cloud_storage", "web_crawl"]),
   database: z.union([DatabaseConnectorSchema, z.null()]).optional(),
   cloudStorage: z.union([CloudStorageConnectorSchema, z.null()]).optional(),
@@ -374,22 +1102,38 @@ export const CreateDatasourceRequestSchema = z.object({
   /** What this datasource contains */
   description: z.string().optional(),
   /** Connection configuration */
-  connector: ConnectorConfigInputSchema,
-});
-
-export const UpdateDatasourceRequestSchema = z.object({
-  name: z.union([z.string(), z.null()]).optional(),
-  description: z.union([z.string(), z.null()]).optional(),
-  connector: z.union([ConnectorConfigInputSchema, z.null()]).optional(),
+  connector: ConnectorConfigSchema,
+  /** Optional metadata extraction config to apply after creation */
+  metadataConfig: z.union([MetadataConfigRequestSchema, z.null()]).optional(),
 });
 
 export const DatasourceResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string(),
-  connector: ConnectorConfigOutputSchema,
+  connector: ConnectorConfigSchema,
   createdAt: z.string(),
   updatedAt: z.string(),
+  lastSyncAt: z.union([z.string(), z.null()]).optional(),
+  lastSyncStatus: z.union([z.string(), z.null()]).optional(),
+  totalIngestedFiles: z.union([z.number().int(), z.null()]).optional(),
+  metadataConfig: z.union([MetadataConfigResponseSchema, z.null()]).optional(),
+  files: z.union([FilesSummaryResponseSchema, z.null()]).optional(),
+  ingestCounts: z.union([IngestCountsResponseSchema, z.null()]).optional(),
+  tables: z.union([z.array(TableSummaryResponseSchema), z.null()]).optional(),
+});
+
+export const UpdateDatasourceRequestSchema = z.object({
+  /** Updated datasource name */
+  name: z.union([z.string(), z.null()]).optional(),
+  /** Updated description */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** Updated connection configuration */
+  connector: z.union([ConnectorConfigSchema, z.null()]).optional(),
+  /** Metadata extraction config — if changed, re-extraction triggers automatically */
+  metadataConfig: z.union([MetadataConfigRequestSchema, z.null()]).optional(),
+  /** Table and column descriptions to update (structured datasources only) */
+  tables: z.union([z.array(TableDescriptionUpdateSchema), z.null()]).optional(),
 });
 
 /**
@@ -447,47 +1191,116 @@ export const ScoreSummarySchema = z.object({
 });
 
 // Type exports
+export type AgentDetailResponse = z.infer<typeof AgentDetailResponseSchema>;
 export type AgentIdentityContext = z.infer<typeof AgentIdentityContextSchema>;
+export type AgentSummary = z.infer<typeof AgentSummarySchema>;
+export type AgentToolDefinition = z.infer<typeof AgentToolDefinitionSchema>;
+export type AgentVersionSummary = z.infer<typeof AgentVersionSummarySchema>;
+export type Artifact = z.infer<typeof ArtifactSchema>;
+export type ArtifactEntry = z.infer<typeof ArtifactEntrySchema>;
+export type ArtifactSchemaResponse = z.infer<typeof ArtifactSchemaResponseSchema>;
+export type ArtifactStorageStrategy = z.infer<typeof ArtifactStorageStrategySchema>;
+export type ArtifactType = z.infer<typeof ArtifactTypeSchema>;
 export type BoundingBox = z.infer<typeof BoundingBoxSchema>;
+export type CallToAction = z.infer<typeof CallToActionSchema>;
+export type ChatMessageRequest = z.infer<typeof ChatMessageRequestSchema>;
 export type CloudStorageConnector = z.infer<typeof CloudStorageConnectorSchema>;
-export type CreateDataElementRequest = z.infer<typeof CreateDataElementRequestSchema>;
-export type DataElementMetadata = z.infer<typeof DataElementMetadataSchema>;
+export type CreateAgentPromptRequest = z.infer<typeof CreateAgentPromptRequestSchema>;
+export type CreateAgentResponse = z.infer<typeof CreateAgentResponseSchema>;
+export type CreateArtifactSchemaResponse = z.infer<typeof CreateArtifactSchemaResponseSchema>;
+export type CreatePromptResponse = z.infer<typeof CreatePromptResponseSchema>;
+export type CreateSessionRequest = z.infer<typeof CreateSessionRequestSchema>;
+export type CreateSessionResponse = z.infer<typeof CreateSessionResponseSchema>;
 export type DataElementResponse = z.infer<typeof DataElementResponseSchema>;
 export type DataElementSearchRequest = z.infer<typeof DataElementSearchRequestSchema>;
 export type DatabaseConnector = z.infer<typeof DatabaseConnectorSchema>;
 export type DocumentChild = z.infer<typeof DocumentChildSchema>;
 export type DocumentStatus = z.infer<typeof DocumentStatusSchema>;
+export type DownloadJobRequest = z.infer<typeof DownloadJobRequestSchema>;
+export type DownloadJobResponse = z.infer<typeof DownloadJobResponseSchema>;
+export type FieldSummary = z.infer<typeof FieldSummarySchema>;
+export type FileParseCompleteInfo = z.infer<typeof FileParseCompleteInfoSchema>;
+export type FileParseStartInfo = z.infer<typeof FileParseStartInfoSchema>;
+export type FilesSummaryResponse = z.infer<typeof FilesSummaryResponseSchema>;
+export type IngestMethodCountsResponse = z.infer<typeof IngestMethodCountsResponseSchema>;
+export type IngestMethodSummary = z.infer<typeof IngestMethodSummarySchema>;
 export type JudgeConfig = z.infer<typeof JudgeConfigSchema>;
+export type MessageEntry = z.infer<typeof MessageEntrySchema>;
 export type MetadataField = z.infer<typeof MetadataFieldSchema>;
 export type MetadataModelField = z.infer<typeof MetadataModelFieldSchema>;
 export type NBootstraps = z.infer<typeof NBootstrapsSchema>;
 export type OcrConfig = z.infer<typeof OcrConfigSchema>;
 export type ParseDocumentResponse = z.infer<typeof ParseDocumentResponseSchema>;
+export type PromptResponse = z.infer<typeof PromptResponseSchema>;
+export type PromptSummary = z.infer<typeof PromptSummarySchema>;
+export type PublishAgentDefinitionRequest = z.infer<typeof PublishAgentDefinitionRequestSchema>;
+export type PublishAgentDefinitionResponse = z.infer<typeof PublishAgentDefinitionResponseSchema>;
 export type ScoringStatus = z.infer<typeof ScoringStatusSchema>;
+export type SessionMessageItem = z.infer<typeof SessionMessageItemSchema>;
+export type SessionSummary = z.infer<typeof SessionSummarySchema>;
+export type Source = z.infer<typeof SourceSchema>;
+export type TableSummaryResponse = z.infer<typeof TableSummaryResponseSchema>;
 export type TagColumn = z.infer<typeof TagColumnSchema>;
-export type TagTable = z.infer<typeof TagTableSchema>;
+export type TagColumnUpdateItem = z.infer<typeof TagColumnUpdateItemSchema>;
+export type TagTableUpdateItem = z.infer<typeof TagTableUpdateItemSchema>;
 export type TokenConfig = z.infer<typeof TokenConfigSchema>;
-export type UpdateTagDescriptionRequest = z.infer<typeof UpdateTagDescriptionRequestSchema>;
+export type ToolActivity = z.infer<typeof ToolActivitySchema>;
+export type ToolCallInfo = z.infer<typeof ToolCallInfoSchema>;
+export type ToolResultInfo = z.infer<typeof ToolResultInfoSchema>;
+export type UpdateAgentDefinitionResponse = z.infer<typeof UpdateAgentDefinitionResponseSchema>;
+export type UpdateAgentPromptRequest = z.infer<typeof UpdateAgentPromptRequestSchema>;
+export type UpdateArtifactSchemaResponse = z.infer<typeof UpdateArtifactSchemaResponseSchema>;
+export type UpdatePromptResponse = z.infer<typeof UpdatePromptResponseSchema>;
 export type ValidationErrorDetail = z.infer<typeof ValidationErrorSchema>;
+export type ConnectedEvent = z.infer<typeof ConnectedEventSchema>;
+export type StatusEvent = z.infer<typeof StatusEventSchema>;
+export type ToolCallEvent = z.infer<typeof ToolCallEventSchema>;
+export type ToolResultEvent = z.infer<typeof ToolResultEventSchema>;
+export type PartialResponseEvent = z.infer<typeof PartialResponseEventSchema>;
+export type CompletionEvent = z.infer<typeof CompletionEventSchema>;
+export type ContentItem = z.infer<typeof ContentItemSchema>;
+export type UploadContentResponse = z.infer<typeof UploadContentResponseSchema>;
 export type UpdateDataElementRequest = z.infer<typeof UpdateDataElementRequestSchema>;
 export type WebDomain = z.infer<typeof WebDomainSchema>;
+export type AgentListResponse = z.infer<typeof AgentListResponseSchema>;
+export type CreateAgentDefinitionRequest = z.infer<typeof CreateAgentDefinitionRequestSchema>;
+export type UpdateAgentDefinitionRequest = z.infer<typeof UpdateAgentDefinitionRequestSchema>;
+export type AgentVersionListResponse = z.infer<typeof AgentVersionListResponseSchema>;
+export type CreateAgentArtifactRequest = z.infer<typeof CreateAgentArtifactRequestSchema>;
+export type UpdateAgentArtifactRequest = z.infer<typeof UpdateAgentArtifactRequestSchema>;
 export type TableCell = z.infer<typeof TableCellSchema>;
+export type DataElementListResponse = z.infer<typeof DataElementListResponseSchema>;
+export type ArtifactSchemaSummary = z.infer<typeof ArtifactSchemaSummarySchema>;
+export type FileParseEntry = z.infer<typeof FileParseEntrySchema>;
+export type IngestCountsResponse = z.infer<typeof IngestCountsResponseSchema>;
+export type IngestStatusResponse = z.infer<typeof IngestStatusResponseSchema>;
 export type MetadataConfigRequest = z.infer<typeof MetadataConfigRequestSchema>;
 export type MetadataConfigResponse = z.infer<typeof MetadataConfigResponseSchema>;
 export type MetadataModelCatalogEntry = z.infer<typeof MetadataModelCatalogEntrySchema>;
 export type OcConfig = z.infer<typeof OcConfigSchema>;
+export type PromptListResponse = z.infer<typeof PromptListResponseSchema>;
+export type SessionMessagesResponse = z.infer<typeof SessionMessagesResponseSchema>;
+export type SessionListResponse = z.infer<typeof SessionListResponseSchema>;
+export type ChatResponse = z.infer<typeof ChatResponseSchema>;
+export type TagTable = z.infer<typeof TagTableSchema>;
+export type TableDescriptionUpdate = z.infer<typeof TableDescriptionUpdateSchema>;
+export type ToolActivityEntry = z.infer<typeof ToolActivityEntrySchema>;
 export type HttpValidationError = z.infer<typeof HttpValidationErrorSchema>;
+export type FileUploadSyncResponse = z.infer<typeof FileUploadSyncResponseSchema>;
+export type ListContentResponse = z.infer<typeof ListContentResponseSchema>;
 export type WebCrawlConnector = z.infer<typeof WebCrawlConnectorSchema>;
 export type Table = z.infer<typeof TableSchema>;
+export type ArtifactSchemaListResponse = z.infer<typeof ArtifactSchemaListResponseSchema>;
 export type ListMetadataModelCatalogResponse = z.infer<typeof ListMetadataModelCatalogResponseSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
-export type ConnectorConfigInput = z.infer<typeof ConnectorConfigInputSchema>;
-export type ConnectorConfigOutput = z.infer<typeof ConnectorConfigOutputSchema>;
+export type ChatMessageResponse = z.infer<typeof ChatMessageResponseSchema>;
+export type AgentExecutionDetailsResponse = z.infer<typeof AgentExecutionDetailsResponseSchema>;
+export type ConnectorConfig = z.infer<typeof ConnectorConfigSchema>;
 export type DocumentElement = z.infer<typeof DocumentElementSchema>;
 export type ConfidenceScoringConfig = z.infer<typeof ConfidenceScoringConfigSchema>;
 export type CreateDatasourceRequest = z.infer<typeof CreateDatasourceRequestSchema>;
-export type UpdateDatasourceRequest = z.infer<typeof UpdateDatasourceRequestSchema>;
 export type DatasourceResponse = z.infer<typeof DatasourceResponseSchema>;
+export type UpdateDatasourceRequest = z.infer<typeof UpdateDatasourceRequestSchema>;
 export type MeibelDocumentResult = z.infer<typeof MeibelDocumentResultSchema>;
 export type ScoringJobRecord = z.infer<typeof ScoringJobRecordSchema>;
 export type DatasourceListResponse = z.infer<typeof DatasourceListResponseSchema>;

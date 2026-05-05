@@ -1,7 +1,7 @@
 {
   "name": "meibel",
-  "version": "0.1.0-beta.7",
-  "description": "The Meibel API provides document parsing, datasource management, and AI agent orchestration.",
+  "version": "0.4.0",
+  "description": "The Meibel API provides document parsing, datasource management, and AI agent orchestration. Read the docs at https://docs.meibel.ai to learn more.",
   "type": "module",
   "main": "./dist/cjs/index.js",
   "module": "./dist/index.js",
@@ -18,7 +18,7 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsc -p tsconfig.cjs.json && node -e \"require('fs').writeFileSync('dist/cjs/package.json',JSON.stringify({type:'commonjs'},null,2)+'\\n')\"",
     "clean": "rm -rf dist",
     "prepublishOnly": "npm run build"
   },
