@@ -13,8 +13,6 @@ export class ConfidenceScoringResource {
 /**
  * Get Scoring Job
  *
- * Get a scoring job by ID. Returns 403 if the job does not belong to the caller's customer.
- *
  * @param jobId - The job_id parameter
  *
  * @returns Successful Response
@@ -23,53 +21,6 @@ export class ConfidenceScoringResource {
  */
   async getScoringJob(jobId: string): Promise<string> {
     const response = await this.http.request<string>(`/confidence-scoring/job/${jobId}`, {
-      method: "GET",
-    });
-
-    return response;
-  }
-
-/**
- * Get Scoring Jobs Summary
- *
- * Get aggregated scoring summary for the caller's customer.
-
-primary: Required filter in format 'field:value' (e.g., 'agent_execution_id:exec_123').
-secondary: Optional secondary filter in format 'field:value' (e.g., 'agent_name:my_agent').
-Results are always scoped to the caller's customer_id.
- *
- * @param primary - The primary parameter
- * @param secondary - The secondary parameter
- *
- * @returns Successful Response
- *
- * @throws {ApiError} If the request fails
- */
-  async getScoringJobsSummary(primary: string, options?: { secondary?: string | null }): Promise<models.ScoreSummary> {
-    const queryParams: Record<string, string | number | boolean | undefined> = {
-      primary: primary,
-      secondary: options?.secondary ?? undefined,
-    };
-
-    const response = await this.http.request<models.ScoreSummary>("/confidence-scoring/summary", {
-      method: "GET",
-      params: queryParams,
-    });
-
-    return response;
-  }
-
-/**
- * Get Scoring Job
- *
- * @param jobId - The job_id parameter
- *
- * @returns Successful Response
- *
- * @throws {ApiError} If the request fails
- */
-  async getScoringJob(jobId: string): Promise<string> {
-    const response = await this.http.request<string>(`/v2/confidence-scoring/job/${jobId}`, {
       method: "GET",
     });
 
@@ -106,7 +57,7 @@ Results are always scoped to the caller's customer_id.
       tool_execution_id: options?.toolExecutionId ?? undefined,
     };
 
-    const response = await this.http.request<string>("/v2/confidence-scoring/jobs", {
+    const response = await this.http.request<string>("/confidence-scoring/jobs", {
       method: "GET",
       params: queryParams,
     });
@@ -130,7 +81,7 @@ Results are always scoped to the caller's customer_id.
       secondary: options?.secondary ?? undefined,
     };
 
-    const response = await this.http.request<models.ScoreSummary>("/v2/confidence-scoring/summary", {
+    const response = await this.http.request<models.ScoreSummary>("/confidence-scoring/summary", {
       method: "GET",
       params: queryParams,
     });

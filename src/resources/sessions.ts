@@ -6,22 +6,57 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
+import { streamSSE } from '../streaming.js';
 
 export class SessionsResource {
   constructor(private readonly http: HttpClient) {}
 
 /**
+ * Get Session
+ *
+ * @param sessionId - The session_id parameter
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async getSession(sessionId: string): Promise<models.AgentExecutionDetailsResponse> {
+    const response = await this.http.request<models.AgentExecutionDetailsResponse>(`/sessions/${sessionId}`, {
+      method: "GET",
+    });
+
+    return response;
+  }
+
+/**
+ * Get Session Messages
+ *
+ * @param sessionId - The session_id parameter
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async getSessionMessages(sessionId: string): Promise<models.SessionMessagesResponse> {
+    const response = await this.http.request<models.SessionMessagesResponse>(`/sessions/${sessionId}/messages`, {
+      method: "GET",
+    });
+
+    return response;
+  }
+
+/**
  * Send Chat Message
  *
- * @param blueprintInstanceId - The blueprint_instance_id parameter
+ * @param sessionId - The session_id parameter
  * @param body - Request body
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async sendChatMessage(blueprintInstanceId: string, body: models.ChatMessageRequest): Promise<models.ChatMessageResponse> {
-    const response = await this.http.request<models.ChatMessageResponse>(`/${blueprintInstanceId}/chat`, {
+  async sendChatMessage(sessionId: string, body: models.ChatMessageRequest): Promise<models.ChatMessageResponse> {
+    const response = await this.http.request<models.ChatMessageResponse>(`/sessions/${sessionId}/chat`, {
       method: "POST",
       body,
     });
@@ -32,20 +67,19 @@ export class SessionsResource {
 /**
  * Send a chat message and stream the response via SSE
  *
- * Send a chat message to a running chat agent workflow and stream the response as Server-Sent Events.
- *
- * @param blueprintInstanceId - The blueprint_instance_id parameter
+ * @param sessionId - The session_id parameter
  * @param body - Request body
  *
  * @throws {ApiError} If the request fails
  */
-  async sendChatMessageStream(blueprintInstanceId: string, body: models.ChatMessageRequest): Promise<void> {
-    const response = await this.http.request<void>(`/${blueprintInstanceId}/chat/stream`, {
+  async *sendChatMessageStream(sessionId: string, body: models.ChatMessageRequest): AsyncIterable<Record<string, unknown>> {
+    const response = await this.http.request<Response>(`/sessions/${sessionId}/chat/stream`, {
       method: "POST",
       body,
+      stream: true,
     });
 
-    return response;
+    yield* streamSSE(response);
   }
 
 }
