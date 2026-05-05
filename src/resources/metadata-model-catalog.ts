@@ -6,6 +6,7 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
+import { paginate } from '../pagination.js';
 
 export class MetadataModelCatalogResource {
   constructor(private readonly http: HttpClient) {}
@@ -19,17 +20,23 @@ export class MetadataModelCatalogResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async listMetadataModelCatalog(options?: { scope?: string | null }): Promise<models.ListMetadataModelCatalogResponse> {
+  async *listMetadataModelCatalog(options?: { scope?: string | null }): AsyncIterable<models.ListMetadataModelCatalogResponse> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       scope: options?.scope ?? undefined,
     };
 
-    const response = await this.http.request<models.ListMetadataModelCatalogResponse>("/metadata-model-catalog", {
-      method: "GET",
-      params: queryParams,
+    yield* paginate<models.ListMetadataModelCatalogResponse>(async (cursor) => {
+      const response = await this.http.request<models.ListMetadataModelCatalogResponse>("/metadata_model_catalog", {
+        method: "GET",
+        params: {
+          ...queryParams,
+          page: cursor,
+        },
+      });
+      return {
+        items: response.items ?? [],
+      };
     });
-
-    return response;
   }
 
 /**
@@ -42,7 +49,52 @@ export class MetadataModelCatalogResource {
  * @throws {ApiError} If the request fails
  */
   async getMetadataModelCatalogEntry(modelId: string): Promise<models.MetadataModelCatalogEntry> {
-    const response = await this.http.request<models.MetadataModelCatalogEntry>(`/metadata-model-catalog/${modelId}`, {
+    const response = await this.http.request<models.MetadataModelCatalogEntry>(`/metadata_model_catalog/${modelId}`, {
+      method: "GET",
+    });
+
+    return response;
+  }
+
+/**
+ * List Metadata Model Catalog
+ *
+ * @param scope - The scope parameter
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async *listMetadataModelCatalog(options?: { scope?: string | null }): AsyncIterable<models.ListMetadataModelCatalogResponse> {
+    const queryParams: Record<string, string | number | boolean | undefined> = {
+      scope: options?.scope ?? undefined,
+    };
+
+    yield* paginate<models.ListMetadataModelCatalogResponse>(async (cursor) => {
+      const response = await this.http.request<models.ListMetadataModelCatalogResponse>("/v2/metadata-model-catalog", {
+        method: "GET",
+        params: {
+          ...queryParams,
+          page: cursor,
+        },
+      });
+      return {
+        items: response.items ?? [],
+      };
+    });
+  }
+
+/**
+ * Get Metadata Model Catalog Entry
+ *
+ * @param modelId - The model_id parameter
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async getMetadataModelCatalogEntry(modelId: string): Promise<models.MetadataModelCatalogEntry> {
+    const response = await this.http.request<models.MetadataModelCatalogEntry>(`/v2/metadata-model-catalog/${modelId}`, {
       method: "GET",
     });
 

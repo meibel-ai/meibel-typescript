@@ -24,7 +24,7 @@ export class DocumentsResource {
  * @throws {ApiError} If the request fails
  */
   async parseDocument(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.ParseDocumentResponse> {
-    const path = "/documents";
+    const path = "/v2/documents";
     return this.http.upload<models.ParseDocumentResponse>(path, [
       { fieldName: 'file', fileName: fileName, content: file },
     ]);
@@ -35,7 +35,6 @@ export class DocumentsResource {
  *
  * Upload a document and block until parsing is complete. Returns the full parsed result.
  *
- * @param format - Result format: markdown, annotated, docling, json
  * @param body - Request body
  *
  * @returns Successful Response
@@ -43,7 +42,7 @@ export class DocumentsResource {
  * @throws {ApiError} If the request fails
  */
   async processDocument(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.ProcessDocumentResponse> {
-    const path = "/documents/process";
+    const path = "/v2/documents/process";
     return this.http.upload<models.ProcessDocumentResponse>(path, [
       { fieldName: 'file', fileName: fileName, content: file },
     ]);
@@ -61,7 +60,7 @@ export class DocumentsResource {
  * @throws {ApiError} If the request fails
  */
   async getDocumentStatus(jobId: string): Promise<models.DocumentStatus> {
-    const response = await this.http.request<models.DocumentStatus>(`/documents/${jobId}`, {
+    const response = await this.http.request<models.DocumentStatus>(`/v2/documents/${jobId}`, {
       method: "GET",
     });
 
@@ -74,20 +73,14 @@ export class DocumentsResource {
  * Download the parsed result of a completed document parsing job.
  *
  * @param jobId - The job_id parameter
- * @param format - Result format: markdown, annotated, docling, json
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async getDocumentResult(jobId: string, options?: { format?: string }): Promise<string> {
-    const queryParams: Record<string, string | number | boolean | undefined> = {
-      format: options?.format ?? undefined,
-    };
-
-    const response = await this.http.request<string>(`/documents/${jobId}/result`, {
+  async getDocumentResult(jobId: string): Promise<string> {
+    const response = await this.http.request<string>(`/v2/documents/${jobId}/result`, {
       method: "GET",
-      params: queryParams,
     });
 
     return response;
@@ -105,7 +98,7 @@ export class DocumentsResource {
  * @throws {ApiError} If the request fails
  */
   async listDocumentChildren(jobId: string): Promise<models.DocumentChild[]> {
-    const response = await this.http.request<models.DocumentChild[]>(`/documents/${jobId}/children`, {
+    const response = await this.http.request<models.DocumentChild[]>(`/v2/documents/${jobId}/children`, {
       method: "GET",
     });
 
@@ -122,7 +115,7 @@ export class DocumentsResource {
  * @throws {ApiError} If the request fails
  */
   async *streamDocumentTrace(jobId: string): AsyncIterable<Record<string, unknown>> {
-    const response = await this.http.request<Response>(`/documents/${jobId}/trace`, {
+    const response = await this.http.request<Response>(`/v2/documents/${jobId}/trace`, {
       method: "GET",
       stream: true,
     });

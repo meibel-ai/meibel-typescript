@@ -6,59 +6,45 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
-import { paginate } from '../pagination.js';
-import { streamSSE } from '../streaming.js';
 import type { UploadFile } from '../upload.js';
 
 export class ContentResource {
   constructor(private readonly http: HttpClient) {}
 
 /**
- * Upload Content (async)
+ * Stream upload progress events
  *
- * @param body - Request body
- *
- * @returns Successful Response
- *
- * @throws {ApiError} If the request fails
- */
-  async uploadContent(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.UploadContentResponse> {
-    const path = "/datasources/uploads";
-    return this.http.upload<models.UploadContentResponse>(path, [
-      { fieldName: 'file', fileName: fileName, content: file },
-    ]);
-  }
-
-/**
- * Upload Content (sync)
- *
- * @param body - Request body
- *
- * @returns Successful Response
- *
- * @throws {ApiError} If the request fails
- */
-  async uploadAndListContent(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.FileUploadSyncResponse> {
-    const path = "/datasources/uploads/process";
-    return this.http.upload<models.FileUploadSyncResponse>(path, [
-      { fieldName: 'file', fileName: fileName, content: file },
-    ]);
-  }
-
-/**
- * Stream Upload Progress
+ * Subscribe to real-time upload progress updates via Server-Sent Events
  *
  * @param uploadId - The upload_id parameter
  *
  * @throws {ApiError} If the request fails
  */
-  async *streamUploadProgress(uploadId: string): AsyncIterable<Record<string, unknown>> {
-    const response = await this.http.request<Response>(`/datasources/uploads/${uploadId}/progress`, {
+  async streamUploadProgress(uploadId: string): Promise<void> {
+    const response = await this.http.request<void>(`/uploads/${uploadId}/progress`, {
       method: "GET",
-      stream: true,
     });
 
-    yield* streamSSE(response);
+    return response;
+  }
+
+/**
+ * Trigger ingest
+ *
+ * Trigger ingestion for a datasource
+ *
+ * @param datasourceId - The datasource_id parameter
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async triggerIngest(datasourceId: string): Promise<string> {
+    const response = await this.http.request<string>(`/datasource/${datasourceId}/trigger-ingest`, {
+      method: "GET",
+    });
+
+    return response;
   }
 
 /**
@@ -73,25 +59,51 @@ export class ContentResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listContent(datasourceId: string, options?: { prefix?: string | null; continuationToken?: string | null; limit?: number }): AsyncIterable<models.ContentItem> {
+  async listContent(datasourceId: string, options?: { prefix?: string | null; continuationToken?: string | null; limit?: number }): Promise<string> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       prefix: options?.prefix ?? undefined,
       continuation_token: options?.continuationToken ?? undefined,
       limit: options?.limit ?? undefined,
     };
 
-    yield* paginate<models.ContentItem>(async (cursor) => {
-      const response = await this.http.request<models.ListContentResponse>(`/datasources/${datasourceId}/content`, {
-        method: "GET",
-        params: {
-          ...queryParams,
-          continuation_token: cursor,
-        },
-      });
-      return {
-        items: response.items ?? [],
-      };
+    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/content`, {
+      method: "GET",
+      params: queryParams,
     });
+
+    return response;
+  }
+
+/**
+ * Upload Content
+ *
+ * @param datasourceId - The datasource_id parameter
+ * @param body - Request body
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async uploadContent(datasourceId: string, file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<string> {
+    const path = `/v2/datasources/${datasourceId}/content`;
+    return this.http.upload<string>(path, [
+      { fieldName: 'file', fileName: fileName, content: file },
+    ]);
+  }
+
+/**
+ * Stream Upload Progress
+ *
+ * @param uploadId - The upload_id parameter
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async streamUploadProgress(uploadId: string): Promise<void> {
+    const response = await this.http.request<void>(`/v2/uploads/${uploadId}/progress`, {
+      method: "GET",
+    });
+
+    return response;
   }
 
 /**
@@ -104,25 +116,8 @@ export class ContentResource {
  * @throws {ApiError} If the request fails
  */
   async triggerIngest(datasourceId: string): Promise<string> {
-    const response = await this.http.request<string>(`/datasources/${datasourceId}/trigger-ingest`, {
+    const response = await this.http.request<string>(`/v2/datasources/${datasourceId}/trigger-ingest`, {
       method: "POST",
-    });
-
-    return response;
-  }
-
-/**
- * Get Ingest Status
- *
- * @param datasourceId - The datasource_id parameter
- *
- * @returns Successful Response
- *
- * @throws {ApiError} If the request fails
- */
-  async getIngestStatus(datasourceId: string): Promise<models.IngestStatusResponse> {
-    const response = await this.http.request<models.IngestStatusResponse>(`/datasources/${datasourceId}/ingest-status`, {
-      method: "GET",
     });
 
     return response;

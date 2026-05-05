@@ -6,7 +6,6 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
-import { paginate } from '../pagination.js';
 
 export class DataElementsResource {
   constructor(private readonly http: HttpClient) {}
@@ -21,8 +20,8 @@ export class DataElementsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getDataElement(datasourceId: string, dataElementId: string): Promise<models.DataElementResponse> {
-    const response = await this.http.request<models.DataElementResponse>(`/datasources/${datasourceId}/data-elements/${dataElementId}`, {
+  async getDataElement(datasourceId: string, dataElementId: string): Promise<models.DataElement> {
+    const response = await this.http.request<models.DataElement>(`/datasource/${datasourceId}/data_element/${dataElementId}`, {
       method: "GET",
     });
 
@@ -40,8 +39,8 @@ export class DataElementsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateDataElement(datasourceId: string, dataElementId: string, body: models.UpdateDataElementRequest): Promise<models.DataElementResponse> {
-    const response = await this.http.request<models.DataElementResponse>(`/datasources/${datasourceId}/data-elements/${dataElementId}`, {
+  async updateDataElement(datasourceId: string, dataElementId: string, body: models.DatasourceServiceClientModelsUpdateDataElementRequestUpdateDataElementRequest): Promise<models.UpdateDataElementResponse> {
+    const response = await this.http.request<models.UpdateDataElementResponse>(`/datasource/${datasourceId}/data_element/${dataElementId}`, {
       method: "PUT",
       body,
     });
@@ -53,54 +52,70 @@ export class DataElementsResource {
  * List Data Elements
  *
  * @param datasourceId - The datasource_id parameter
- * @param cursor - Cursor for pagination
- * @param limit - Maximum items to return
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async *listDataElements(datasourceId: string, options?: { cursor?: string | null; limit?: number }): AsyncIterable<models.DataElementResponse> {
-    const queryParams: Record<string, string | number | boolean | undefined> = {
-      cursor: options?.cursor ?? undefined,
-      limit: options?.limit ?? undefined,
-    };
-
-    yield* paginate<models.DataElementResponse>(async (cursor) => {
-      const response = await this.http.request<models.DataElementListResponse>(`/datasources/${datasourceId}/data-elements`, {
-        method: "GET",
-        params: {
-          ...queryParams,
-          cursor: cursor,
-        },
-      });
-      return {
-        items: response.items ?? [],
-      };
+  async listDataElements(datasourceId: string): Promise<models.DataElementResponse[]> {
+    const response = await this.http.request<models.DataElementResponse[]>(`/v2/datasources/${datasourceId}/data-elements`, {
+      method: "GET",
     });
+
+    return response;
   }
 
 /**
- * Search Data Elements
+ * Get Data Element
  *
  * @param datasourceId - The datasource_id parameter
- * @param cursor - Cursor for pagination
- * @param limit - Maximum items to return
+ * @param dataElementId - The data_element_id parameter
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async getDataElement(datasourceId: string, dataElementId: string): Promise<models.DataElementResponse> {
+    const response = await this.http.request<models.DataElementResponse>(`/v2/datasources/${datasourceId}/data-elements/${dataElementId}`, {
+      method: "GET",
+    });
+
+    return response;
+  }
+
+/**
+ * Update Data Element
+ *
+ * @param datasourceId - The datasource_id parameter
+ * @param dataElementId - The data_element_id parameter
  * @param body - Request body
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async searchDataElements(datasourceId: string, body: models.DataElementSearchRequest, options?: { cursor?: string | null; limit?: number }): Promise<models.DataElementListResponse> {
-    const queryParams: Record<string, string | number | boolean | undefined> = {
-      cursor: options?.cursor ?? undefined,
-      limit: options?.limit ?? undefined,
-    };
+  async updateDataElement(datasourceId: string, dataElementId: string, body: models.GatewayServiceV2ModelsDataElementsUpdateDataElementRequest): Promise<models.DataElementResponse> {
+    const response = await this.http.request<models.DataElementResponse>(`/v2/datasources/${datasourceId}/data-elements/${dataElementId}`, {
+      method: "PUT",
+      body,
+    });
 
-    const response = await this.http.request<models.DataElementListResponse>(`/datasources/${datasourceId}/data-elements/search`, {
+    return response;
+  }
+
+/**
+ * Search Data Elements
+ *
+ * @param datasourceId - The datasource_id parameter
+ * @param body - Request body
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async searchDataElements(datasourceId: string, body: models.DataElementSearchRequest): Promise<models.DataElementResponse[]> {
+    const response = await this.http.request<models.DataElementResponse[]>(`/v2/datasources/${datasourceId}/data-elements/search`, {
       method: "POST",
-      params: queryParams,
       body,
     });
 
