@@ -4,8 +4,10 @@ The official TypeScript/Node.js SDK for the [Meibel API](https://docs.meibel.ai)
 
 ## Installation
 
+Install from Git (v2):
+
 ```bash
-npm install meibel@beta
+npm install git+https://github.com/meibel-ai/meibel-typescript.git#v2.0.0
 ```
 
 ## Quick Start
@@ -14,20 +16,20 @@ npm install meibel@beta
 import { MeibelClient } from 'meibel';
 import fs from 'fs';
 
-const client = new MeibelClient({
-  apiKey: 'your-api-key',
-});
+const client = new MeibelClient({ apiKey: 'your-api-key' });
 
 // Parse a document
-const job = await client.documents.parseDocument({
-  file: fs.createReadStream('document.pdf'),
-});
+const job = await client.documents.parseDocument(
+  fs.createReadStream('document.pdf'),
+  'document.pdf',
+);
 console.log(job.jobId);
 
 // Process a document synchronously (waits for completion)
-const result = await client.documents.processDocument({
-  file: fs.createReadStream('document.pdf'),
-});
+const result = await client.documents.processDocument(
+  fs.createReadStream('document.pdf'),
+  'document.pdf',
+);
 console.log(result);
 
 // List datasources
@@ -36,23 +38,27 @@ for await (const ds of client.datasources.listDatasources()) {
 }
 ```
 
-## Authentication
+## Nested Resources
 
-The SDK authenticates via an API key sent in the `Meibel-API-Key` header. You can also use a bearer token.
+Resources are organized hierarchically. Content, downloads, data elements, and table descriptions are accessed through `datasources`:
 
 ```typescript
-// API key authentication
-const client = new MeibelClient({
-  apiKey: 'your-api-key',
-});
+// Upload content to a datasource
+const upload = await client.datasources.content.uploadContent(file, 'data.csv');
 
-// Bearer token authentication
-const client = new MeibelClient({
-  bearerToken: 'your-token',
-});
+// List data elements
+const elements = await client.datasources.dataElements.listDataElements('ds-123');
 ```
 
-Get your API key from the [Meibel Dashboard](https://app.meibel.ai).
+Agent sessions (chat) are accessed through `agents`:
+
+```typescript
+const session = await client.agents.sessions.createSession({ agentId: 'agent-123' });
+const response = await client.agents.sessions.sendChatMessage({
+  sessionId: session.id,
+  message: 'Hello',
+});
+```
 
 ## Configuration
 
@@ -68,7 +74,7 @@ Get your API key from the [Meibel Dashboard](https://app.meibel.ai).
 ## Documentation
 
 - [API Reference](https://docs.meibel.ai/api-reference/overview)
-- [SDK Guide](https://docs.meibel.ai/sdk/typescript)
+- [SDK Guide](https://docs.meibel.ai/sdk/nodejs)
 
 ## License
 
