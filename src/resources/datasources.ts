@@ -6,26 +6,44 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
-import { ContentResource } from './content.js';
-import { DataelementsResource } from './dataelements.js';
-import { RagResource } from './rag.js';
-import { TagResource } from './tag.js';
+import { DataElementsResource } from './data-elements.js';
+import { DownloadsResource } from './downloads.js';
+import { FileUploadResource } from './file-upload.js';
+import { IngestResource } from './ingest.js';
+import { TableDescriptionsResource } from './table-descriptions.js';
 
 export class DatasourcesResource {
-  public readonly content: ContentResource;
-  public readonly dataelements: DataelementsResource;
-  public readonly rag: RagResource;
-  public readonly tag: TagResource;
+  public readonly dataElements: DataElementsResource;
+  public readonly downloads: DownloadsResource;
+  public readonly fileUpload: FileUploadResource;
+  public readonly ingest: IngestResource;
+  public readonly tableDescriptions: TableDescriptionsResource;
 
   constructor(private readonly http: HttpClient) {
-    this.content = new ContentResource(http);
-    this.dataelements = new DataelementsResource(http);
-    this.rag = new RagResource(http);
-    this.tag = new TagResource(http);
+    this.dataElements = new DataElementsResource(http);
+    this.downloads = new DownloadsResource(http);
+    this.fileUpload = new FileUploadResource(http);
+    this.ingest = new IngestResource(http);
+    this.tableDescriptions = new TableDescriptionsResource(http);
   }
 
 /**
- * Add Datasource
+ * List Datasources
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async listDatasources(): Promise<models.DatasourceListResponse> {
+    const response = await this.http.request<models.DatasourceListResponse>("/datasources", {
+      method: "GET",
+    });
+
+    return response;
+  }
+
+/**
+ * Create Datasource
  *
  * @param body - Request body
  *
@@ -33,8 +51,8 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async addDatasource(body: models.AddDatasourceRequest): Promise<models.AddDatasourceResponse> {
-    const response = await this.http.request<models.AddDatasourceResponse>("/datasource", {
+  async createDatasource(body: models.CreateDatasourceRequest): Promise<models.DatasourceResponse> {
+    const response = await this.http.request<models.DatasourceResponse>("/datasources", {
       method: "POST",
       body,
     });
@@ -46,14 +64,20 @@ export class DatasourcesResource {
  * Get Datasource
  *
  * @param datasourceId - The datasource_id parameter
+ * @param includeTables - Include table and column details (structured datasources only)
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async getDatasource(datasourceId: string): Promise<models.Datasource> {
-    const response = await this.http.request<models.Datasource>(`/datasource/${datasourceId}`, {
+  async getDatasource(datasourceId: string, options?: { includeTables?: boolean }): Promise<models.DatasourceResponse> {
+    const queryParams: Record<string, string | number | boolean | undefined> = {
+      include_tables: options?.includeTables ?? undefined,
+    };
+
+    const response = await this.http.request<models.DatasourceResponse>(`/datasources/${datasourceId}`, {
       method: "GET",
+      params: queryParams,
     });
 
     return response;
@@ -69,8 +93,8 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateDatasource(datasourceId: string, body: models.UpdateDatasourceRequest): Promise<models.UpdateDatasourceResponse> {
-    const response = await this.http.request<models.UpdateDatasourceResponse>(`/datasource/${datasourceId}`, {
+  async updateDatasource(datasourceId: string, body: models.UpdateDatasourceRequest): Promise<models.DatasourceResponse> {
+    const response = await this.http.request<models.DatasourceResponse>(`/datasources/${datasourceId}`, {
       method: "PUT",
       body,
     });
@@ -87,24 +111,9 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async deleteDatasource(datasourceId: string): Promise<models.DeleteDatasourceResponse> {
-    const response = await this.http.request<models.DeleteDatasourceResponse>(`/datasource/${datasourceId}`, {
+  async deleteDatasource(datasourceId: string): Promise<string> {
+    const response = await this.http.request<string>(`/datasources/${datasourceId}`, {
       method: "DELETE",
-    });
-
-    return response;
-  }
-
-/**
- * Get All Datasource Ids
- *
- * @returns Successful Response
- *
- * @throws {ApiError} If the request fails
- */
-  async getAllDatasourceIds(): Promise<models.GetAllDatasourceIdsResponse> {
-    const response = await this.http.request<models.GetAllDatasourceIdsResponse>("/project_datasource_ids", {
-      method: "POST",
     });
 
     return response;

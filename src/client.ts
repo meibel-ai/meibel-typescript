@@ -5,14 +5,19 @@
  */
 
 import { HttpClient, type HttpClientOptions } from './http.js';
-import { BlueprintsResource } from './resources/blueprints.js';
-import { ExecutionsResource } from './resources/executions.js';
-import { InstancesResource } from './resources/instances.js';
+import { AgentsResource } from './resources/agents.js';
+import { SessionsResource } from './resources/sessions.js';
+import { ArtifactSchemasResource } from './resources/artifact-schemas.js';
+import { ConfidenceScoringResource } from './resources/confidence-scoring.js';
 import { DatasourcesResource } from './resources/datasources.js';
-import { ContentResource } from './resources/content.js';
-import { DataelementsResource } from './resources/dataelements.js';
-import { RagResource } from './resources/rag.js';
-import { TagResource } from './resources/tag.js';
+import { DataElementsResource } from './resources/data-elements.js';
+import { DownloadsResource } from './resources/downloads.js';
+import { FileUploadResource } from './resources/file-upload.js';
+import { IngestResource } from './resources/ingest.js';
+import { TableDescriptionsResource } from './resources/table-descriptions.js';
+import { DocumentsResource } from './resources/documents.js';
+import { MetadataModelCatalogResource } from './resources/metadata-model-catalog.js';
+import { PromptsResource } from './resources/prompts.js';
 
 export interface ClientOptions extends HttpClientOptions {
   /** API key for authentication */
@@ -24,11 +29,16 @@ export interface ClientOptions extends HttpClientOptions {
 export class MeibelClient {
   private readonly http: HttpClient;
 
-  public readonly blueprints: BlueprintsResource;
+  public readonly agents: AgentsResource;
+  public readonly artifactSchemas: ArtifactSchemasResource;
+  public readonly confidenceScoring: ConfidenceScoringResource;
   public readonly datasources: DatasourcesResource;
+  public readonly documents: DocumentsResource;
+  public readonly metadataModelCatalog: MetadataModelCatalogResource;
+  public readonly prompts: PromptsResource;
 
   constructor(options: ClientOptions = {}) {
-    const baseUrl = options.baseUrl ?? "https://api.meibel.ai/v1";
+    const baseUrl = options.baseUrl ?? "https://api.meibel.ai/v2";
     const headers: Record<string, string> = { ...options.headers };
 
     if (options.apiKey) {
@@ -44,7 +54,12 @@ export class MeibelClient {
       headers,
     });
 
-    this.blueprints = new BlueprintsResource(this.http);
+    this.agents = new AgentsResource(this.http);
+    this.artifactSchemas = new ArtifactSchemasResource(this.http);
+    this.confidenceScoring = new ConfidenceScoringResource(this.http);
     this.datasources = new DatasourcesResource(this.http);
+    this.documents = new DocumentsResource(this.http);
+    this.metadataModelCatalog = new MetadataModelCatalogResource(this.http);
+    this.prompts = new PromptsResource(this.http);
   }
 }
