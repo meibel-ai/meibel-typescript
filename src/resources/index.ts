@@ -12,6 +12,7 @@ export { DatasourcesResource } from './datasources.js';
 export { DataElementsResource } from './data-elements.js';
 export { DownloadsResource } from './downloads.js';
 export { FileUploadsResource } from './file-uploads.js';
+export { IngestResource } from './ingest.js';
 export { TablesResource } from './tables.js';
 export { DocumentsResource } from './documents.js';
 export { MetadataModelCatalogResource } from './metadata-model-catalog.js';

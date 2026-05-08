@@ -9,18 +9,21 @@ import * as models from '../models.js';
 import { DataElementsResource } from './data-elements.js';
 import { DownloadsResource } from './downloads.js';
 import { FileUploadsResource } from './file-uploads.js';
+import { IngestResource } from './ingest.js';
 import { TablesResource } from './tables.js';
 
 export class DatasourcesResource {
   public readonly dataElements: DataElementsResource;
   public readonly downloads: DownloadsResource;
   public readonly fileUploads: FileUploadsResource;
+  public readonly ingest: IngestResource;
   public readonly tables: TablesResource;
 
   constructor(private readonly http: HttpClient) {
     this.dataElements = new DataElementsResource(http);
     this.downloads = new DownloadsResource(http);
     this.fileUploads = new FileUploadsResource(http);
+    this.ingest = new IngestResource(http);
     this.tables = new TablesResource(http);
   }
 

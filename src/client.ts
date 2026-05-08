@@ -13,6 +13,7 @@ import { DatasourcesResource } from './resources/datasources.js';
 import { DataElementsResource } from './resources/data-elements.js';
 import { DownloadsResource } from './resources/downloads.js';
 import { FileUploadsResource } from './resources/file-uploads.js';
+import { IngestResource } from './resources/ingest.js';
 import { TablesResource } from './resources/tables.js';
 import { DocumentsResource } from './resources/documents.js';
 import { MetadataModelCatalogResource } from './resources/metadata-model-catalog.js';
