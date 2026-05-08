@@ -852,6 +852,16 @@ export const WebDomainSchema = z.object({
   excludePattern: z.string().optional(),
 });
 
+export const BodyParseDocumentSchema = z.object({
+  /** The document file to parse */
+  file: z.instanceof(Uint8Array),
+});
+
+export const BodyProcessDocumentSchema = z.object({
+  /** The document file to process */
+  file: z.instanceof(Uint8Array),
+});
+
 export const AgentListResponseSchema = z.object({
   data: z.array(AgentSummarySchema),
   total: z.number().int(),
@@ -1263,6 +1273,32 @@ export const LegacyBatchSpecJsonSchema = z.object({
   additionalProperties: z.string().optional(),
 });
 
+export const BodyUploadContentSchema = z.object({
+  /** One or more files to upload */
+  files: z.array(z.instanceof(Uint8Array)),
+  /** ID of an existing datasource to upload to. Provide this or name. */
+  datasourceId: z.string().optional(),
+  /** Name for a new datasource to create. Provide this or datasource_id. */
+  name: z.string().optional(),
+  /** Description of the new datasource (only used when creating with name). */
+  description: z.string().optional(),
+  metadataConfig: MetadataConfigRequestSchema.optional(),
+});
+
+export const BodyUploadAndListContentSchema = z.object({
+  /** One or more files to upload */
+  files: z.array(z.instanceof(Uint8Array)),
+  /** ID of an existing datasource to upload to. Provide this or name. */
+  datasourceId: z.string().optional(),
+  /** Name for a new datasource to create. Provide this or datasource_id. */
+  name: z.string().optional(),
+  /** Description of the new datasource (only used when creating with name). */
+  description: z.string().optional(),
+  metadataConfig: MetadataConfigRequestSchema.optional(),
+  /** Start ingestion after upload completes. Returns ingest_url to poll for status. */
+  triggerIngest: z.boolean().optional(),
+});
+
 /**
  * ListMetadataModelCatalogResponse
  */
@@ -1534,6 +1570,8 @@ export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type UploadContentResponse = z.infer<typeof UploadContentResponseSchema>;
 export type UpdateDataElementRequest = z.infer<typeof UpdateDataElementRequestSchema>;
 export type WebDomain = z.infer<typeof WebDomainSchema>;
+export type BodyParseDocument = z.infer<typeof BodyParseDocumentSchema>;
+export type BodyProcessDocument = z.infer<typeof BodyProcessDocumentSchema>;
 export type AgentListResponse = z.infer<typeof AgentListResponseSchema>;
 export type CreateAgentDefinitionRequest = z.infer<typeof CreateAgentDefinitionRequestSchema>;
 export type UpdateAgentDefinitionRequest = z.infer<typeof UpdateAgentDefinitionRequestSchema>;
@@ -1570,6 +1608,8 @@ export type GetBatchExecutionsResponse = z.infer<typeof GetBatchExecutionsRespon
 export type Table = z.infer<typeof TableSchema>;
 export type ArtifactSchemaListResponse = z.infer<typeof ArtifactSchemaListResponseSchema>;
 export type LegacyBatchSpecJson = z.infer<typeof LegacyBatchSpecJsonSchema>;
+export type BodyUploadContent = z.infer<typeof BodyUploadContentSchema>;
+export type BodyUploadAndListContent = z.infer<typeof BodyUploadAndListContentSchema>;
 export type ListMetadataModelCatalogResponse = z.infer<typeof ListMetadataModelCatalogResponseSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 export type ChatMessageResponse = z.infer<typeof ChatMessageResponseSchema>;

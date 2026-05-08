@@ -22,11 +22,24 @@ export class FileUploadsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async uploadContent(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.UploadContentResponse> {
+  async uploadContent(files: ReadableStream<Uint8Array> | Blob | File, filesName: string, options?: { datasourceId?: string; name?: string; description?: string; metadataConfig?: models.MetadataConfigRequest }): Promise<models.UploadContentResponse> {
     const path = "/datasources/uploads";
+    const formFields: Record<string, string> = {};
+    if (options?.datasourceId !== undefined) {
+      formFields['datasource_id'] = String(options.datasourceId);
+    }
+    if (options?.name !== undefined) {
+      formFields['name'] = String(options.name);
+    }
+    if (options?.description !== undefined) {
+      formFields['description'] = String(options.description);
+    }
+    if (options?.metadataConfig !== undefined) {
+      formFields['metadata_config'] = String(options.metadataConfig);
+    }
     return this.http.upload<models.UploadContentResponse>(path, [
-      { fieldName: 'file', fileName: fileName, content: file },
-    ]);
+      { fieldName: 'files', fileName: filesName, content: files },
+    ], { formFields });
   }
 
 /**
@@ -38,11 +51,27 @@ export class FileUploadsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async uploadAndListContent(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.FileUploadSyncResponse> {
+  async uploadAndListContent(files: ReadableStream<Uint8Array> | Blob | File, filesName: string, options?: { datasourceId?: string; name?: string; description?: string; metadataConfig?: models.MetadataConfigRequest; triggerIngest?: boolean }): Promise<models.FileUploadSyncResponse> {
     const path = "/datasources/uploads/process";
+    const formFields: Record<string, string> = {};
+    if (options?.datasourceId !== undefined) {
+      formFields['datasource_id'] = String(options.datasourceId);
+    }
+    if (options?.name !== undefined) {
+      formFields['name'] = String(options.name);
+    }
+    if (options?.description !== undefined) {
+      formFields['description'] = String(options.description);
+    }
+    if (options?.metadataConfig !== undefined) {
+      formFields['metadata_config'] = String(options.metadataConfig);
+    }
+    if (options?.triggerIngest !== undefined) {
+      formFields['trigger_ingest'] = String(options.triggerIngest);
+    }
     return this.http.upload<models.FileUploadSyncResponse>(path, [
-      { fieldName: 'file', fileName: fileName, content: file },
-    ]);
+      { fieldName: 'files', fileName: filesName, content: files },
+    ], { formFields });
   }
 
 /**

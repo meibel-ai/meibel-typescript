@@ -96,11 +96,27 @@ export class AgentsSessionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async sendChatMessageStream(sessionId: string, file: ReadableStream<Uint8Array> | Blob | File, fileName: string, userMessage: string | null, timeoutSeconds: number | null, includeThinking: boolean | null, includeToolActivity: boolean | null, files: Uint8Array[] | null): Promise<void> {
+  async sendChatMessageStream(sessionId: string, file: ReadableStream<Uint8Array> | Blob | File, fileName: string, options?: { userMessage?: string | null; timeoutSeconds?: number | null; includeThinking?: boolean | null; includeToolActivity?: boolean | null; files?: Uint8Array[] | null }): Promise<void> {
     const path = `/sessions/${sessionId}/chat/stream`;
+    const formFields: Record<string, string> = {};
+    if (options?.userMessage !== undefined) {
+      formFields['user_message'] = String(options.userMessage);
+    }
+    if (options?.timeoutSeconds !== undefined) {
+      formFields['timeout_seconds'] = String(options.timeoutSeconds);
+    }
+    if (options?.includeThinking !== undefined) {
+      formFields['include_thinking'] = String(options.includeThinking);
+    }
+    if (options?.includeToolActivity !== undefined) {
+      formFields['include_tool_activity'] = String(options.includeToolActivity);
+    }
+    if (options?.files !== undefined) {
+      formFields['files'] = String(options.files);
+    }
     return this.http.upload<void>(path, [
       { fieldName: 'file', fileName: fileName, content: file },
-    ]);
+    ], { formFields });
   }
 
 }
