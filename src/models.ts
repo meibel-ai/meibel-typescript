@@ -55,6 +55,7 @@ export const AgentSummarySchema = z.object({
   id: z.string(),
   name: z.union([z.string(), z.null()]).optional(),
   displayName: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
   llmModel: z.string(),
   toolCount: z.number().int(),
   datasourceCount: z.number().int(),
@@ -150,6 +151,65 @@ export const ArtifactStorageStrategySchema = z.object({
 export const ArtifactTypeSchema = z.object({
 });
 
+/**
+ * Recipe-level filters. element_ids belongs here; per-execution overrides use BatchInputOverrides on the execution row.
+ */
+export const BatchDefinitionFiltersSchema = z.object({
+  /** Filter Data Elements by name pattern (regex) */
+  regex: z.union([z.string(), z.null()]).optional(),
+  /** Filter Data Elements by content type */
+  mediaTypes: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Recipe-pinned subset of Data Element IDs. */
+  elementIds: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+/**
+ * Full BatchDefinition snapshot.
+ */
+export const BatchDefinitionResponseSchema = z.object({
+  id: z.string(),
+  customerId: z.string(),
+  projectId: z.string(),
+  name: z.string(),
+  version: z.string(),
+  parentVersion: z.union([z.string(), z.null()]),
+  catalogUrn: z.string(),
+  agentUrn: z.string(),
+  agentSpecJson: z.string(),
+  inputDatasourceId: z.string(),
+  /** Optional override for the tool's parameters schema */
+  filters: z.union([z.string(), z.null()]).optional(),
+  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  userMessage: z.union([z.string(), z.null()]).optional(),
+  concurrency: z.number().int(),
+  retryLimit: z.number().int(),
+  recurrenceCron: z.union([z.string(), z.null()]).optional(),
+  description: z.union([z.string(), z.null()]).optional(),
+  createdAt: z.coerce.date(),
+  createdBy: z.string(),
+  deletedAt: z.union([z.coerce.date(), z.null()]).optional(),
+});
+
+/**
+ * Per-item result from the Temporal workflow.
+ */
+export const BatchItemResultSchema = z.object({
+  inputDataElementId: z.string(),
+  filename: z.string(),
+  status: z.string(),
+  error: z.union([z.string(), z.null()]).optional(),
+  outputArtifacts: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
+  attempts: z.union([z.number().int(), z.null()]).optional(),
+});
+
+export const BodySendChatMessageStreamSchema = z.object({
+  userMessage: z.union([z.string(), z.null()]).optional(),
+  timeoutSeconds: z.union([z.number().int(), z.null()]).optional(),
+  includeThinking: z.union([z.boolean(), z.null()]).optional(),
+  includeToolActivity: z.union([z.boolean(), z.null()]).optional(),
+  files: z.union([z.array(z.instanceof(Uint8Array)), z.null()]).optional(),
+});
+
 export const BoundingBoxSchema = z.object({
   x: z.number(),
   y: z.number(),
@@ -219,6 +279,16 @@ export const CreateArtifactSchemaResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
   displayName: z.string(),
+  version: z.string(),
+});
+
+/**
+ * Compact post-create payload mirroring CreateAgentDefinitionResponse.
+ */
+export const CreateBatchDefinitionResponseSchema = z.object({
+  id: z.string(),
+  catalogUrn: z.string(),
+  name: z.string(),
   version: z.string(),
 });
 
@@ -313,6 +383,14 @@ export const DownloadJobResponseSchema = z.object({
   statusUrl: z.string(),
 });
 
+/**
+ * ExecuteBatchDefinitionResponse
+ */
+export const ExecuteBatchDefinitionResponseSchema = z.object({
+  executionId: z.string(),
+  workflowId: z.string(),
+});
+
 export const FieldSummarySchema = z.object({
   name: z.string(),
   type: z.string(),
@@ -369,6 +447,31 @@ export const JudgeConfigSchema = z.object({
 });
 
 /**
+ * LegacyBatchExecutionParams
+ */
+export const LegacyBatchExecutionParamsSchema = z.object({
+  concurrency: z.union([z.number().int(), z.null()]).optional(),
+  retryLimit: z.union([z.number().int(), z.null()]).optional(),
+});
+
+/**
+ * LegacyBatchInputFilters
+ */
+export const LegacyBatchInputFiltersSchema = z.object({
+  regex: z.union([z.string(), z.null()]).optional(),
+  mediaTypes: z.union([z.array(z.string()), z.null()]).optional(),
+  elementIds: z.union([z.array(z.string()), z.null()]).optional(),
+  additionalProperties: z.string().optional(),
+});
+
+/**
+ * LegacyBatchOutputConfig
+ */
+export const LegacyBatchOutputConfigSchema = z.object({
+  datasourceId: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
  * MessageEntry
  */
 export const MessageEntrySchema = z.object({
@@ -415,6 +518,18 @@ export const NBootstrapsSchema = z.object({
 export const OcrConfigSchema = z.object({
   calibrationModel: z.union([z.string(), z.null()]).optional(),
   ocrConfidenceScores: z.union([z.array(z.union([z.number(), z.number().int()])), z.null()]).optional(),
+});
+
+/**
+ * Pagination metadata included in list responses.
+ */
+export const PaginationMetaSchema = z.object({
+  /** Total number of items matching the query */
+  total: z.number().int(),
+  /** Number of items skipped */
+  offset: z.number().int(),
+  /** Maximum number of items returned (None means no limit applied) */
+  limit: z.union([z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -608,6 +723,38 @@ export const UpdateArtifactSchemaResponseSchema = z.object({
   version: z.string(),
 });
 
+/**
+ * New version metadata returned after a successful update fork.
+ */
+export const UpdateBatchDefinitionResponseSchema = z.object({
+  id: z.string(),
+  catalogUrn: z.string(),
+  version: z.string(),
+});
+
+/**
+ * Runtime-only patch fields. Identity, definition link, and overrides are immutable.
+ */
+export const UpdateBatchExecutionRequestSchema = z.object({
+  /** Execution status */
+  status: z.union([z.string(), z.null()]).optional(),
+  /** Execution end time */
+  endTime: z.union([z.coerce.date(), z.null()]).optional(),
+  /** Total items in batch */
+  totalItems: z.union([z.number().int(), z.null()]).optional(),
+  /** Number of succeeded items */
+  succeeded: z.union([z.number().int(), z.null()]).optional(),
+  /** Number of failed items */
+  failed: z.union([z.number().int(), z.null()]).optional(),
+  /** Output datasource ID */
+  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  /** Per-item results */
+  items: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
+  /** Overall error message */
+  error: z.union([z.string(), z.null()]).optional(),
+  additionalProperties: z.string().optional(),
+});
+
 export const UpdatePromptResponseSchema = z.object({
   id: z.string(),
   version: z.string(),
@@ -685,7 +832,6 @@ export const UploadContentResponseSchema = z.object({
   sseUrl: z.string(),
   estimatedFiles: z.union([z.number().int(), z.null()]).optional(),
   estimatedSize: z.union([z.number().int(), z.null()]).optional(),
-  ingestUrl: z.union([z.string(), z.null()]).optional(),
 });
 
 export const UpdateDataElementRequestSchema = z.object({
@@ -826,6 +972,74 @@ export const UpdateAgentArtifactRequestSchema = z.object({
   storageStrategy: z.union([ArtifactStorageStrategySchema, z.null()]).optional(),
 });
 
+/**
+ * Create a new BatchDefinition lineage.
+ */
+export const CreateBatchDefinitionRequestSchema = z.object({
+  /** Kebab-case label (non-unique within tenant) */
+  name: z.string(),
+  /** AgentDefinition ID; resolved + pinned at creation time */
+  agentId: z.string(),
+  /** Datasource holding the input Data Elements */
+  inputDatasourceId: z.string(),
+  filters: z.union([BatchDefinitionFiltersSchema, z.null()]).optional(),
+  /** Pinned output sink. NULL = workflow auto-creates per execution. */
+  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  userMessage: z.union([z.string(), z.null()]).optional(),
+  concurrency: z.union([z.number().int(), z.null()]).optional(),
+  retryLimit: z.union([z.number().int(), z.null()]).optional(),
+  /** Cron expression validated by croniter; not yet scheduled in DEL-1376. */
+  recurrenceCron: z.union([z.string(), z.null()]).optional(),
+  description: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
+ * Patch a BatchDefinition; the service forks a new version row.
+ */
+export const UpdateBatchDefinitionRequestSchema = z.object({
+  name: z.union([z.string(), z.null()]).optional(),
+  /** If set, re-resolves and re-pins the agent spec */
+  agentId: z.union([z.string(), z.null()]).optional(),
+  inputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  filters: z.union([BatchDefinitionFiltersSchema, z.null()]).optional(),
+  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  userMessage: z.union([z.string(), z.null()]).optional(),
+  concurrency: z.union([z.number().int(), z.null()]).optional(),
+  retryLimit: z.union([z.number().int(), z.null()]).optional(),
+  recurrenceCron: z.union([z.string(), z.null()]).optional(),
+  description: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
+ * Response shape for a single batch execution. The legacy `batch_spec_json` / `agent_spec_json` / `agent_urn` / `input_datasource_id` fields are kept for client compatibility (DEL-1376 §5.5) — they are reconstructed from the linked BatchDefinition by the router, not stored on the execution row.
+ */
+export const BatchExecutionResponseSchema = z.object({
+  /** Execution ID — also the Temporal workflow ID for direct queries */
+  id: z.string(),
+  /** FK to the BatchDefinition this execution ran against */
+  batchDefinitionId: z.string(),
+  customerId: z.string(),
+  projectId: z.string(),
+  agentUrn: z.union([z.string(), z.null()]).optional(),
+  /** Optional override for the tool's parameters schema */
+  batchSpecJson: z.union([z.string(), z.null()]).optional(),
+  agentSpecJson: z.union([z.string(), z.null()]).optional(),
+  inputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  /** Optional override for the tool's parameters schema */
+  inputOverrides: z.union([z.string(), z.null()]).optional(),
+  totalItems: z.union([z.number().int(), z.null()]).optional(),
+  succeeded: z.union([z.number().int(), z.null()]).optional(),
+  failed: z.union([z.number().int(), z.null()]).optional(),
+  startTime: z.coerce.date(),
+  endTime: z.union([z.coerce.date(), z.null()]).optional(),
+  status: z.string(),
+  /** Overall error message */
+  error: z.union([z.string(), z.null()]).optional(),
+  /** Per-item results (populated on completion by status callback) */
+  items: z.union([z.array(BatchItemResultSchema), z.null()]).optional(),
+});
+
 export const TableCellSchema = z.object({
   text: z.string(),
   row: z.number().int(),
@@ -871,6 +1085,14 @@ export const IngestStatusResponseSchema = z.object({
   startedAt: z.union([z.string(), z.null()]).optional(),
   completedAt: z.union([z.string(), z.null()]).optional(),
   methods: z.array(IngestMethodSummarySchema).optional(),
+});
+
+/**
+ * LegacyBatchInputConfig
+ */
+export const LegacyBatchInputConfigSchema = z.object({
+  datasourceId: z.string(),
+  filters: z.union([LegacyBatchInputFiltersSchema, z.null()]).optional(),
 });
 
 /**
@@ -921,6 +1143,14 @@ export const OcConfigSchema = z.object({
   tokenLimit: z.union([z.number().int(), z.null()]).optional(),
   originalCompletion: z.union([z.string(), z.null()]).optional(),
   comparisonCompletions: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+/**
+ * GetBatchDefinitionsResponse
+ */
+export const GetBatchDefinitionsResponseSchema = z.object({
+  data: z.array(BatchDefinitionResponseSchema),
+  pagination: PaginationMetaSchema,
 });
 
 export const PromptListResponseSchema = z.object({
@@ -998,6 +1228,14 @@ export const WebCrawlConnectorSchema = z.object({
   domains: z.union([z.array(WebDomainSchema), z.null()]).optional(),
 });
 
+/**
+ * Response model for listing batch executions.
+ */
+export const GetBatchExecutionsResponseSchema = z.object({
+  data: z.array(BatchExecutionResponseSchema),
+  pagination: PaginationMetaSchema,
+});
+
 export const TableSchema = z.object({
   cells: z.array(TableCellSchema),
   rows: z.number().int(),
@@ -1008,6 +1246,21 @@ export const TableSchema = z.object({
 export const ArtifactSchemaListResponseSchema = z.object({
   data: z.array(ArtifactSchemaSummarySchema),
   total: z.number().int(),
+});
+
+/**
+ * LegacyBatchSpecJson
+ */
+export const LegacyBatchSpecJsonSchema = z.object({
+  name: z.string(),
+  version: z.union([z.string(), z.null()]).optional(),
+  /** AgentDefinition ID */
+  agent: z.string(),
+  userMessage: z.union([z.string(), z.null()]).optional(),
+  input: LegacyBatchInputConfigSchema,
+  output: z.union([LegacyBatchOutputConfigSchema, z.null()]).optional(),
+  execution: z.union([LegacyBatchExecutionParamsSchema, z.null()]).optional(),
+  additionalProperties: z.string().optional(),
 });
 
 /**
@@ -1086,6 +1339,13 @@ export const DocumentElementSchema = z.object({
   bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
   confidence: z.union([z.number(), z.null()]).optional(),
   page: z.union([z.number().int(), z.null()]).optional(),
+});
+
+/**
+ * Legacy request body for POST /batch-execution/ (pre-DEL-1376 compat shim).
+ */
+export const CreateBatchExecutionRequestSchema = z.object({
+  batchSpecJson: LegacyBatchSpecJsonSchema,
 });
 
 /**
@@ -1201,6 +1461,10 @@ export type ArtifactEntry = z.infer<typeof ArtifactEntrySchema>;
 export type ArtifactSchemaResponse = z.infer<typeof ArtifactSchemaResponseSchema>;
 export type ArtifactStorageStrategy = z.infer<typeof ArtifactStorageStrategySchema>;
 export type ArtifactType = z.infer<typeof ArtifactTypeSchema>;
+export type BatchDefinitionFilters = z.infer<typeof BatchDefinitionFiltersSchema>;
+export type BatchDefinitionResponse = z.infer<typeof BatchDefinitionResponseSchema>;
+export type BatchItemResult = z.infer<typeof BatchItemResultSchema>;
+export type BodySendChatMessageStream = z.infer<typeof BodySendChatMessageStreamSchema>;
 export type BoundingBox = z.infer<typeof BoundingBoxSchema>;
 export type CallToAction = z.infer<typeof CallToActionSchema>;
 export type ChatMessageRequest = z.infer<typeof ChatMessageRequestSchema>;
@@ -1208,6 +1472,7 @@ export type CloudStorageConnector = z.infer<typeof CloudStorageConnectorSchema>;
 export type CreateAgentPromptRequest = z.infer<typeof CreateAgentPromptRequestSchema>;
 export type CreateAgentResponse = z.infer<typeof CreateAgentResponseSchema>;
 export type CreateArtifactSchemaResponse = z.infer<typeof CreateArtifactSchemaResponseSchema>;
+export type CreateBatchDefinitionResponse = z.infer<typeof CreateBatchDefinitionResponseSchema>;
 export type CreatePromptResponse = z.infer<typeof CreatePromptResponseSchema>;
 export type CreateSessionRequest = z.infer<typeof CreateSessionRequestSchema>;
 export type CreateSessionResponse = z.infer<typeof CreateSessionResponseSchema>;
@@ -1218,6 +1483,7 @@ export type DocumentChild = z.infer<typeof DocumentChildSchema>;
 export type DocumentStatus = z.infer<typeof DocumentStatusSchema>;
 export type DownloadJobRequest = z.infer<typeof DownloadJobRequestSchema>;
 export type DownloadJobResponse = z.infer<typeof DownloadJobResponseSchema>;
+export type ExecuteBatchDefinitionResponse = z.infer<typeof ExecuteBatchDefinitionResponseSchema>;
 export type FieldSummary = z.infer<typeof FieldSummarySchema>;
 export type FileParseCompleteInfo = z.infer<typeof FileParseCompleteInfoSchema>;
 export type FileParseStartInfo = z.infer<typeof FileParseStartInfoSchema>;
@@ -1225,11 +1491,15 @@ export type FilesSummaryResponse = z.infer<typeof FilesSummaryResponseSchema>;
 export type IngestMethodCountsResponse = z.infer<typeof IngestMethodCountsResponseSchema>;
 export type IngestMethodSummary = z.infer<typeof IngestMethodSummarySchema>;
 export type JudgeConfig = z.infer<typeof JudgeConfigSchema>;
+export type LegacyBatchExecutionParams = z.infer<typeof LegacyBatchExecutionParamsSchema>;
+export type LegacyBatchInputFilters = z.infer<typeof LegacyBatchInputFiltersSchema>;
+export type LegacyBatchOutputConfig = z.infer<typeof LegacyBatchOutputConfigSchema>;
 export type MessageEntry = z.infer<typeof MessageEntrySchema>;
 export type MetadataField = z.infer<typeof MetadataFieldSchema>;
 export type MetadataModelField = z.infer<typeof MetadataModelFieldSchema>;
 export type NBootstraps = z.infer<typeof NBootstrapsSchema>;
 export type OcrConfig = z.infer<typeof OcrConfigSchema>;
+export type PaginationMeta = z.infer<typeof PaginationMetaSchema>;
 export type ParseDocumentResponse = z.infer<typeof ParseDocumentResponseSchema>;
 export type PromptResponse = z.infer<typeof PromptResponseSchema>;
 export type PromptSummary = z.infer<typeof PromptSummarySchema>;
@@ -1250,6 +1520,8 @@ export type ToolResultInfo = z.infer<typeof ToolResultInfoSchema>;
 export type UpdateAgentDefinitionResponse = z.infer<typeof UpdateAgentDefinitionResponseSchema>;
 export type UpdateAgentPromptRequest = z.infer<typeof UpdateAgentPromptRequestSchema>;
 export type UpdateArtifactSchemaResponse = z.infer<typeof UpdateArtifactSchemaResponseSchema>;
+export type UpdateBatchDefinitionResponse = z.infer<typeof UpdateBatchDefinitionResponseSchema>;
+export type UpdateBatchExecutionRequest = z.infer<typeof UpdateBatchExecutionRequestSchema>;
 export type UpdatePromptResponse = z.infer<typeof UpdatePromptResponseSchema>;
 export type ValidationErrorDetail = z.infer<typeof ValidationErrorSchema>;
 export type ConnectedEvent = z.infer<typeof ConnectedEventSchema>;
@@ -1268,16 +1540,21 @@ export type UpdateAgentDefinitionRequest = z.infer<typeof UpdateAgentDefinitionR
 export type AgentVersionListResponse = z.infer<typeof AgentVersionListResponseSchema>;
 export type CreateAgentArtifactRequest = z.infer<typeof CreateAgentArtifactRequestSchema>;
 export type UpdateAgentArtifactRequest = z.infer<typeof UpdateAgentArtifactRequestSchema>;
+export type CreateBatchDefinitionRequest = z.infer<typeof CreateBatchDefinitionRequestSchema>;
+export type UpdateBatchDefinitionRequest = z.infer<typeof UpdateBatchDefinitionRequestSchema>;
+export type BatchExecutionResponse = z.infer<typeof BatchExecutionResponseSchema>;
 export type TableCell = z.infer<typeof TableCellSchema>;
 export type DataElementListResponse = z.infer<typeof DataElementListResponseSchema>;
 export type ArtifactSchemaSummary = z.infer<typeof ArtifactSchemaSummarySchema>;
 export type FileParseEntry = z.infer<typeof FileParseEntrySchema>;
 export type IngestCountsResponse = z.infer<typeof IngestCountsResponseSchema>;
 export type IngestStatusResponse = z.infer<typeof IngestStatusResponseSchema>;
+export type LegacyBatchInputConfig = z.infer<typeof LegacyBatchInputConfigSchema>;
 export type MetadataConfigRequest = z.infer<typeof MetadataConfigRequestSchema>;
 export type MetadataConfigResponse = z.infer<typeof MetadataConfigResponseSchema>;
 export type MetadataModelCatalogEntry = z.infer<typeof MetadataModelCatalogEntrySchema>;
 export type OcConfig = z.infer<typeof OcConfigSchema>;
+export type GetBatchDefinitionsResponse = z.infer<typeof GetBatchDefinitionsResponseSchema>;
 export type PromptListResponse = z.infer<typeof PromptListResponseSchema>;
 export type SessionMessagesResponse = z.infer<typeof SessionMessagesResponseSchema>;
 export type SessionListResponse = z.infer<typeof SessionListResponseSchema>;
@@ -1289,14 +1566,17 @@ export type HttpValidationError = z.infer<typeof HttpValidationErrorSchema>;
 export type FileUploadSyncResponse = z.infer<typeof FileUploadSyncResponseSchema>;
 export type ListContentResponse = z.infer<typeof ListContentResponseSchema>;
 export type WebCrawlConnector = z.infer<typeof WebCrawlConnectorSchema>;
+export type GetBatchExecutionsResponse = z.infer<typeof GetBatchExecutionsResponseSchema>;
 export type Table = z.infer<typeof TableSchema>;
 export type ArtifactSchemaListResponse = z.infer<typeof ArtifactSchemaListResponseSchema>;
+export type LegacyBatchSpecJson = z.infer<typeof LegacyBatchSpecJsonSchema>;
 export type ListMetadataModelCatalogResponse = z.infer<typeof ListMetadataModelCatalogResponseSchema>;
 export type Config = z.infer<typeof ConfigSchema>;
 export type ChatMessageResponse = z.infer<typeof ChatMessageResponseSchema>;
 export type AgentExecutionDetailsResponse = z.infer<typeof AgentExecutionDetailsResponseSchema>;
 export type ConnectorConfig = z.infer<typeof ConnectorConfigSchema>;
 export type DocumentElement = z.infer<typeof DocumentElementSchema>;
+export type CreateBatchExecutionRequest = z.infer<typeof CreateBatchExecutionRequestSchema>;
 export type ConfidenceScoringConfig = z.infer<typeof ConfidenceScoringConfigSchema>;
 export type CreateDatasourceRequest = z.infer<typeof CreateDatasourceRequestSchema>;
 export type DatasourceResponse = z.infer<typeof DatasourceResponseSchema>;

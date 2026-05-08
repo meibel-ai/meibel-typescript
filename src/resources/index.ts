@@ -5,15 +5,15 @@
  */
 
 export { AgentsResource } from './agents.js';
-export { SessionsResource } from './sessions.js';
+export { AgentsSessionsResource } from './agents-sessions.js';
 export { ArtifactSchemasResource } from './artifact-schemas.js';
 export { ConfidenceScoringResource } from './confidence-scoring.js';
 export { DatasourcesResource } from './datasources.js';
 export { DataElementsResource } from './data-elements.js';
 export { DownloadsResource } from './downloads.js';
-export { FileUploadResource } from './file-upload.js';
-export { IngestResource } from './ingest.js';
-export { TableDescriptionsResource } from './table-descriptions.js';
+export { FileUploadsResource } from './file-uploads.js';
+export { TablesResource } from './tables.js';
 export { DocumentsResource } from './documents.js';
 export { MetadataModelCatalogResource } from './metadata-model-catalog.js';
 export { PromptsResource } from './prompts.js';
+export { SessionsResource } from './sessions.js';
