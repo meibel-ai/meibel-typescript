@@ -96,7 +96,7 @@ export class AgentsSessionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async sendChatMessageStream(sessionId: string, file: ReadableStream<Uint8Array> | Blob | File, fileName: string, options?: { userMessage?: string | null; timeoutSeconds?: number | null; includeThinking?: boolean | null; includeToolActivity?: boolean | null; files?: Uint8Array[] | null }): Promise<void> {
+  async *sendChatMessageStream(sessionId: string, files?: ReadableStream<Uint8Array> | Blob | File, filesName?: string, options?: { userMessage?: string | null; timeoutSeconds?: number | null; includeThinking?: boolean | null; includeToolActivity?: boolean | null }): AsyncIterable<models.ConnectedEvent | models.StatusEvent | models.ToolCallEvent | models.ToolResultEvent | models.PartialResponseEvent | models.CompletionEvent | models.ErrorEvent> {
     const path = `/sessions/${sessionId}/chat/stream`;
     const formFields: Record<string, string> = {};
     if (options?.userMessage !== undefined) {
@@ -111,12 +111,19 @@ export class AgentsSessionsResource {
     if (options?.includeToolActivity !== undefined) {
       formFields['include_tool_activity'] = String(options.includeToolActivity);
     }
-    if (options?.files !== undefined) {
-      formFields['files'] = String(options.files);
+    if (files) {
+      const response = await this.http.upload<Response>(path, [
+        { fieldName: 'files', fileName: filesName ?? 'file', content: files },
+      ], { formFields, stream: true });
+      yield* streamSSE(response);
+    } else {
+      const response = await this.http.request<Response>(path, {
+        method: "POST",
+        formData: formFields,
+        stream: true,
+      });
+      yield* streamSSE(response);
     }
-    return this.http.upload<void>(path, [
-      { fieldName: 'file', fileName: fileName, content: file },
-    ], { formFields });
   }
 
 }

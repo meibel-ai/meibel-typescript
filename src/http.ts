@@ -59,6 +59,8 @@ export interface RequestOptions {
   params?: Record<string, string | number | boolean | undefined>;
   /** Request body (will be JSON stringified) */
   body?: unknown;
+  /** Form data to send as application/x-www-form-urlencoded (mutually exclusive with body) */
+  formData?: Record<string, string>;
   /** Whether to return the raw response for streaming */
   stream?: boolean;
   /** Request timeout in milliseconds */
@@ -97,7 +99,10 @@ export class HttpClient {
         headers,
         signal: controller.signal,
       };
-      if (options.body !== undefined) {
+      if (options.formData !== undefined) {
+        requestInit.body = new URLSearchParams(options.formData).toString();
+        (requestInit.headers as Record<string, string>)['Content-Type'] = 'application/x-www-form-urlencoded';
+      } else if (options.body !== undefined) {
         requestInit.body = JSON.stringify(transformKeys(options.body, camelToSnake));
       }
       const response = await this.fetchFn(url, requestInit);
