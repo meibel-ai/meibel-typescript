@@ -13,3 +13,4 @@ export * from './models.js';
 export { ApiError, AuthenticationError, AuthorizationError, NotFoundError, ValidationError, RateLimitError, ServerError, TimeoutError, NetworkError } from './errors.js';
 export * from './resources/index.js';
 export { metadataSchemaFromZod } from './metadata.js';
+export { artifactSchema } from './artifacts.js';
