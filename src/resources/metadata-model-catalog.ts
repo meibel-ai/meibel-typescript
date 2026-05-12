@@ -19,7 +19,7 @@ export class MetadataModelCatalogResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async listMetadataModelCatalog(options?: { scope?: string | null }): Promise<models.ListMetadataModelCatalogResponse> {
+  async list(options?: { scope?: string | null }): Promise<models.ListMetadataModelCatalogResponse> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       scope: options?.scope ?? undefined,
     };
@@ -41,7 +41,7 @@ export class MetadataModelCatalogResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getMetadataModelCatalogEntry(modelId: string): Promise<models.MetadataModelCatalogEntry> {
+  async getEntry(modelId: string): Promise<models.MetadataModelCatalogEntry> {
     const response = await this.http.request<models.MetadataModelCatalogEntry>(`/metadata-model-catalog/${modelId}`, {
       method: "GET",
     });

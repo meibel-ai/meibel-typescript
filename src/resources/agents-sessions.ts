@@ -27,7 +27,7 @@ export class AgentsSessionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listSessions(agentId: string, options?: { offset?: number; limit?: number | null; sortBy?: string; sortOrder?: string; status?: string | null }): AsyncIterable<models.SessionSummary> {
+  async *list(agentId: string, options?: { offset?: number; limit?: number | null; sortBy?: string; sortOrder?: string; status?: string | null }): AsyncIterable<models.SessionSummary> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       offset: options?.offset ?? undefined,
       limit: options?.limit ?? undefined,
@@ -60,7 +60,7 @@ export class AgentsSessionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async createSession(agentId: string, body?: models.CreateSessionRequest | null): Promise<models.CreateSessionResponse> {
+  async create(agentId: string, body?: models.CreateSessionRequest | null): Promise<models.CreateSessionResponse> {
     const response = await this.http.request<models.CreateSessionResponse>(`/agents/${agentId}/sessions`, {
       method: "POST",
       body,

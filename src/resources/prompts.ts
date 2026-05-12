@@ -17,7 +17,7 @@ export class PromptsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async listPrompts(): Promise<models.PromptListResponse> {
+  async list(): Promise<models.PromptListResponse> {
     const response = await this.http.request<models.PromptListResponse>("/prompts/", {
       method: "GET",
     });
@@ -34,7 +34,7 @@ export class PromptsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async createPrompt(body: models.CreateAgentPromptRequest): Promise<models.CreatePromptResponse> {
+  async create(body: models.CreateAgentPromptRequest): Promise<models.CreatePromptResponse> {
     const response = await this.http.request<models.CreatePromptResponse>("/prompts/", {
       method: "POST",
       body,
@@ -52,7 +52,7 @@ export class PromptsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getPrompt(promptId: string): Promise<models.PromptResponse> {
+  async get(promptId: string): Promise<models.PromptResponse> {
     const response = await this.http.request<models.PromptResponse>(`/prompts/${promptId}`, {
       method: "GET",
     });
@@ -70,7 +70,7 @@ export class PromptsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updatePrompt(promptId: string, body: models.UpdateAgentPromptRequest): Promise<models.UpdatePromptResponse> {
+  async update(promptId: string, body: models.UpdateAgentPromptRequest): Promise<models.UpdatePromptResponse> {
     const response = await this.http.request<models.UpdatePromptResponse>(`/prompts/${promptId}`, {
       method: "PUT",
       body,
@@ -86,7 +86,7 @@ export class PromptsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async deletePrompt(promptId: string): Promise<void> {
+  async delete(promptId: string): Promise<void> {
     const response = await this.http.request<void>(`/prompts/${promptId}`, {
       method: "DELETE",
     });

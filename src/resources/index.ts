@@ -7,6 +7,8 @@
 export { AgentsResource } from './agents.js';
 export { AgentsSessionsResource } from './agents-sessions.js';
 export { ArtifactSchemasResource } from './artifact-schemas.js';
+export { BatchDefinitionsResource } from './batch-definitions.js';
+export { BatchExecutionsResource } from './batch-executions.js';
 export { ConfidenceScoringResource } from './confidence-scoring.js';
 export { DatasourcesResource } from './datasources.js';
 export { DataElementsResource } from './data-elements.js';

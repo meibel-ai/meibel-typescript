@@ -34,7 +34,7 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async listDatasources(): Promise<models.DatasourceListResponse> {
+  async list(): Promise<models.DatasourceListResponse> {
     const response = await this.http.request<models.DatasourceListResponse>("/datasources", {
       method: "GET",
     });
@@ -51,7 +51,7 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async createDatasource(body: models.CreateDatasourceRequest): Promise<models.DatasourceResponse> {
+  async create(body: models.CreateDatasourceRequest): Promise<models.DatasourceResponse> {
     const response = await this.http.request<models.DatasourceResponse>("/datasources", {
       method: "POST",
       body,
@@ -70,7 +70,7 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getDatasource(datasourceId: string, options?: { includeTables?: boolean }): Promise<models.DatasourceResponse> {
+  async get(datasourceId: string, options?: { includeTables?: boolean }): Promise<models.DatasourceResponse> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       include_tables: options?.includeTables ?? undefined,
     };
@@ -93,7 +93,7 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateDatasource(datasourceId: string, body: models.UpdateDatasourceRequest): Promise<models.DatasourceResponse> {
+  async update(datasourceId: string, body: models.UpdateDatasourceRequest): Promise<models.DatasourceResponse> {
     const response = await this.http.request<models.DatasourceResponse>(`/datasources/${datasourceId}`, {
       method: "PUT",
       body,
@@ -111,7 +111,7 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async deleteDatasource(datasourceId: string): Promise<string> {
+  async delete(datasourceId: string): Promise<string> {
     const response = await this.http.request<string>(`/datasources/${datasourceId}`, {
       method: "DELETE",
     });

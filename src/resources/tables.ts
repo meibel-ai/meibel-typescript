@@ -20,7 +20,7 @@ export class TablesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async listTables(datasourceId: string, options?: { includeColumns?: boolean }): Promise<models.TagTable[]> {
+  async list(datasourceId: string, options?: { includeColumns?: boolean }): Promise<models.TagTable[]> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       include_columns: options?.includeColumns ?? undefined,
     };
@@ -43,7 +43,7 @@ export class TablesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateTableDescriptions(datasourceId: string, body: models.TagTableUpdateItem[]): Promise<models.TagTable[]> {
+  async updateDescriptions(datasourceId: string, body: models.TagTableUpdateItem[]): Promise<models.TagTable[]> {
     const response = await this.http.request<models.TagTable[]>(`/datasources/${datasourceId}/tables`, {
       method: "PUT",
       body,

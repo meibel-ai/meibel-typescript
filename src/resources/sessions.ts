@@ -19,7 +19,7 @@ export class SessionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getSession(sessionId: string): Promise<models.AgentExecutionDetailsResponse> {
+  async get(sessionId: string): Promise<models.AgentExecutionDetailsResponse> {
     const response = await this.http.request<models.AgentExecutionDetailsResponse>(`/sessions/${sessionId}`, {
       method: "GET",
     });
@@ -36,7 +36,7 @@ export class SessionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getSessionMessages(sessionId: string): Promise<models.SessionMessagesResponse> {
+  async getMessages(sessionId: string): Promise<models.SessionMessagesResponse> {
     const response = await this.http.request<models.SessionMessagesResponse>(`/sessions/${sessionId}/messages`, {
       method: "GET",
     });

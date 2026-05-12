@@ -23,7 +23,7 @@ export class ArtifactSchemasResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listArtifactSchemas(options?: { offset?: number; limit?: number | null; sortBy?: string | null; sortOrder?: string | null }): AsyncIterable<models.ArtifactSchemaSummary> {
+  async *list(options?: { offset?: number; limit?: number | null; sortBy?: string | null; sortOrder?: string | null }): AsyncIterable<models.ArtifactSchemaSummary> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       offset: options?.offset ?? undefined,
       limit: options?.limit ?? undefined,
@@ -54,7 +54,7 @@ export class ArtifactSchemasResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async createArtifactSchema(body: models.CreateAgentArtifactRequest): Promise<models.CreateArtifactSchemaResponse> {
+  async create(body: models.CreateAgentArtifactRequest): Promise<models.CreateArtifactSchemaResponse> {
     const response = await this.http.request<models.CreateArtifactSchemaResponse>("/artifact-schemas/", {
       method: "POST",
       body,
@@ -72,7 +72,7 @@ export class ArtifactSchemasResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getArtifactSchema(artifactId: string): Promise<models.ArtifactSchemaResponse> {
+  async get(artifactId: string): Promise<models.ArtifactSchemaResponse> {
     const response = await this.http.request<models.ArtifactSchemaResponse>(`/artifact-schemas/${artifactId}`, {
       method: "GET",
     });
@@ -90,7 +90,7 @@ export class ArtifactSchemasResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateArtifactSchema(artifactId: string, body: models.UpdateAgentArtifactRequest): Promise<models.UpdateArtifactSchemaResponse> {
+  async update(artifactId: string, body: models.UpdateAgentArtifactRequest): Promise<models.UpdateArtifactSchemaResponse> {
     const response = await this.http.request<models.UpdateArtifactSchemaResponse>(`/artifact-schemas/${artifactId}`, {
       method: "PUT",
       body,
@@ -106,7 +106,7 @@ export class ArtifactSchemasResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async deleteArtifactSchema(artifactId: string): Promise<void> {
+  async delete(artifactId: string): Promise<void> {
     const response = await this.http.request<void>(`/artifact-schemas/${artifactId}`, {
       method: "DELETE",
     });

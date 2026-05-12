@@ -23,7 +23,7 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async parseDocument(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.ParseDocumentResponse> {
+  async parse(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.ParseDocumentResponse> {
     const path = "/documents";
     return this.http.upload<models.ParseDocumentResponse>(path, [
       { fieldName: 'file', fileName: fileName, content: file },
@@ -42,7 +42,7 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async processDocument(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.ProcessDocumentResponse> {
+  async process(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.ProcessDocumentResponse> {
     const path = "/documents/process";
     return this.http.upload<models.ProcessDocumentResponse>(path, [
       { fieldName: 'file', fileName: fileName, content: file },
@@ -60,7 +60,7 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getDocumentStatus(jobId: string): Promise<models.DocumentStatus> {
+  async getStatus(jobId: string): Promise<models.DocumentStatus> {
     const response = await this.http.request<models.DocumentStatus>(`/documents/${jobId}`, {
       method: "GET",
     });
@@ -80,7 +80,7 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getDocumentResult(jobId: string, options?: { format?: string }): Promise<string> {
+  async getResult(jobId: string, options?: { format?: string }): Promise<string> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       format: options?.format ?? undefined,
     };
@@ -104,7 +104,7 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async listDocumentChildren(jobId: string): Promise<models.DocumentChild[]> {
+  async listChildren(jobId: string): Promise<models.DocumentChild[]> {
     const response = await this.http.request<models.DocumentChild[]>(`/documents/${jobId}/children`, {
       method: "GET",
     });
@@ -121,7 +121,7 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *streamDocumentTrace(jobId: string): AsyncIterable<models.LayoutDetectedEvent | models.TableExtractedEvent | models.OcrPageEvent | models.CompletedEvent | models.ErrorEvent> {
+  async *streamTrace(jobId: string): AsyncIterable<models.LayoutDetectedEvent | models.TableExtractedEvent | models.OcrPageEvent | models.CompletedEvent | models.ErrorEvent> {
     const response = await this.http.request<Response>(`/documents/${jobId}/trace`, {
       method: "GET",
       stream: true,

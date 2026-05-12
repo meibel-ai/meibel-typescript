@@ -19,7 +19,7 @@ export class IngestResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async triggerIngest(datasourceId: string): Promise<string> {
+  async trigger(datasourceId: string): Promise<string> {
     const response = await this.http.request<string>(`/datasources/${datasourceId}/trigger-ingest`, {
       method: "POST",
     });
@@ -36,7 +36,7 @@ export class IngestResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getIngestStatus(datasourceId: string): Promise<models.IngestStatusResponse> {
+  async getStatus(datasourceId: string): Promise<models.IngestStatusResponse> {
     const response = await this.http.request<models.IngestStatusResponse>(`/datasources/${datasourceId}/ingest-status`, {
       method: "GET",
     });

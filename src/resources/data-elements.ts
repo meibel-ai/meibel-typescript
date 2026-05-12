@@ -21,7 +21,7 @@ export class DataElementsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getDataElement(datasourceId: string, dataElementId: string): Promise<models.DataElementResponse> {
+  async get(datasourceId: string, dataElementId: string): Promise<models.DataElementResponse> {
     const response = await this.http.request<models.DataElementResponse>(`/datasources/${datasourceId}/data-elements/${dataElementId}`, {
       method: "GET",
     });
@@ -40,7 +40,7 @@ export class DataElementsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateDataElement(datasourceId: string, dataElementId: string, body: models.UpdateDataElementRequest): Promise<models.DataElementResponse> {
+  async update(datasourceId: string, dataElementId: string, body: models.UpdateDataElementRequest): Promise<models.DataElementResponse> {
     const response = await this.http.request<models.DataElementResponse>(`/datasources/${datasourceId}/data-elements/${dataElementId}`, {
       method: "PUT",
       body,
@@ -60,7 +60,7 @@ export class DataElementsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listDataElements(datasourceId: string, options?: { cursor?: string | null; limit?: number }): AsyncIterable<models.DataElementResponse> {
+  async *list(datasourceId: string, options?: { cursor?: string | null; limit?: number }): AsyncIterable<models.DataElementResponse> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       cursor: options?.cursor ?? undefined,
       limit: options?.limit ?? undefined,
@@ -92,7 +92,7 @@ export class DataElementsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async searchDataElements(datasourceId: string, body: models.DataElementSearchRequest, options?: { cursor?: string | null; limit?: number }): Promise<models.DataElementListResponse> {
+  async search(datasourceId: string, body: models.DataElementSearchRequest, options?: { cursor?: string | null; limit?: number }): Promise<models.DataElementListResponse> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       cursor: options?.cursor ?? undefined,
       limit: options?.limit ?? undefined,

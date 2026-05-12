@@ -26,7 +26,7 @@ export class AgentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listAgents(options?: { offset?: number; limit?: number | null }): AsyncIterable<models.AgentSummary> {
+  async *list(options?: { offset?: number; limit?: number | null }): AsyncIterable<models.AgentSummary> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       offset: options?.offset ?? undefined,
       limit: options?.limit ?? undefined,
@@ -55,7 +55,7 @@ export class AgentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async createAgent(body: models.CreateAgentDefinitionRequest): Promise<models.CreateAgentResponse> {
+  async create(body: models.CreateAgentDefinitionRequest): Promise<models.CreateAgentResponse> {
     const response = await this.http.request<models.CreateAgentResponse>("/agents/", {
       method: "POST",
       body,
@@ -73,7 +73,7 @@ export class AgentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getAgent(agentId: string): Promise<models.AgentDetailResponse> {
+  async get(agentId: string): Promise<models.AgentDetailResponse> {
     const response = await this.http.request<models.AgentDetailResponse>(`/agents/${agentId}`, {
       method: "GET",
     });
@@ -91,7 +91,7 @@ export class AgentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateAgent(agentId: string, body: models.UpdateAgentDefinitionRequest): Promise<models.UpdateAgentDefinitionResponse> {
+  async update(agentId: string, body: models.UpdateAgentDefinitionRequest): Promise<models.UpdateAgentDefinitionResponse> {
     const response = await this.http.request<models.UpdateAgentDefinitionResponse>(`/agents/${agentId}`, {
       method: "PUT",
       body,
@@ -107,7 +107,7 @@ export class AgentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async deleteAgent(agentId: string): Promise<void> {
+  async delete(agentId: string): Promise<void> {
     const response = await this.http.request<void>(`/agents/${agentId}`, {
       method: "DELETE",
     });
@@ -126,7 +126,7 @@ export class AgentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async publishAgent(agentId: string, body: models.PublishAgentDefinitionRequest, options?: { overrideDraft?: boolean }): Promise<models.PublishAgentDefinitionResponse> {
+  async publish(agentId: string, body: models.PublishAgentDefinitionRequest, options?: { overrideDraft?: boolean }): Promise<models.PublishAgentDefinitionResponse> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       override_draft: options?.overrideDraft ?? undefined,
     };
@@ -152,7 +152,7 @@ export class AgentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listAgentVersions(agentId: string, options?: { published?: boolean | null; offset?: number; limit?: number | null }): AsyncIterable<models.AgentVersionSummary> {
+  async *listVersions(agentId: string, options?: { published?: boolean | null; offset?: number; limit?: number | null }): AsyncIterable<models.AgentVersionSummary> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       published: options?.published ?? undefined,
       offset: options?.offset ?? undefined,

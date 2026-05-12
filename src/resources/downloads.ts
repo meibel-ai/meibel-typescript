@@ -21,7 +21,7 @@ export class DownloadsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async createDownloadJob(datasourceId: string, body?: models.DownloadJobRequest | null): Promise<models.DownloadJobResponse> {
+  async createJob(datasourceId: string, body?: models.DownloadJobRequest | null): Promise<models.DownloadJobResponse> {
     const response = await this.http.request<models.DownloadJobResponse>(`/datasources/${datasourceId}/downloads`, {
       method: "POST",
       body,
@@ -38,7 +38,7 @@ export class DownloadsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *streamDownloadProgress(datasourceId: string, jobId: string): AsyncIterable<models.ConnectedEvent | models.ProgressEvent | models.StreamCompleteEvent | models.ErrorEvent> {
+  async *streamProgress(datasourceId: string, jobId: string): AsyncIterable<models.ConnectedEvent | models.ProgressEvent | models.StreamCompleteEvent | models.ErrorEvent> {
     const response = await this.http.request<Response>(`/datasources/${datasourceId}/downloads/${jobId}/progress`, {
       method: "GET",
       stream: true,
@@ -75,7 +75,7 @@ export class DownloadsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async processDownload(datasourceId: string, body?: models.DownloadJobRequest | null): Promise<string> {
+  async process(datasourceId: string, body?: models.DownloadJobRequest | null): Promise<string> {
     const response = await this.http.request<string>(`/datasources/${datasourceId}/downloads/process`, {
       method: "POST",
       body,
