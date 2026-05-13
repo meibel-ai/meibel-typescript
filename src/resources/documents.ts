@@ -8,6 +8,8 @@ import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
 import { streamSSE } from '../streaming.js';
 import type { UploadFile } from '../upload.js';
+import { z } from 'zod';
+import { zodToJsonSchema } from '../schema.js';
 
 export class DocumentsResource {
   constructor(private readonly http: HttpClient) {}
@@ -141,7 +143,19 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async transform(body: models.TransformDocumentRequest): Promise<models.TransformDocumentResponse> {
+  async transform(options: { file: string; schema: string | Record<string, unknown> | z.ZodType; model?: string | null; prompt?: string | null; promptId?: string | null; timeoutSeconds?: number | null }): Promise<models.TransformDocumentResponse> {
+    const _schema = options.schema instanceof z.ZodType
+      ? zodToJsonSchema(options.schema)
+      : options.schema;
+    const body = {
+      file: options.file,
+      artifact_schema: _schema,
+      model: options.model,
+      prompt: options.prompt,
+      prompt_id: options.promptId,
+      timeout_seconds: options.timeoutSeconds,
+    };
+
     const response = await this.http.request<models.TransformDocumentResponse>("/documents/transform", {
       method: "POST",
       body,
@@ -161,7 +175,19 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async submitTransform(body: models.TransformDocumentRequest): Promise<models.SubmitDocumentTransformResponse> {
+  async submitTransform(options: { file: string; schema: string | Record<string, unknown> | z.ZodType; model?: string | null; prompt?: string | null; promptId?: string | null; timeoutSeconds?: number | null }): Promise<models.SubmitDocumentTransformResponse> {
+    const _schema = options.schema instanceof z.ZodType
+      ? zodToJsonSchema(options.schema)
+      : options.schema;
+    const body = {
+      file: options.file,
+      artifact_schema: _schema,
+      model: options.model,
+      prompt: options.prompt,
+      prompt_id: options.promptId,
+      timeout_seconds: options.timeoutSeconds,
+    };
+
     const response = await this.http.request<models.SubmitDocumentTransformResponse>("/documents/transform/submit", {
       method: "POST",
       body,

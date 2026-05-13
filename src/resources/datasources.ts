@@ -6,6 +6,7 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
+import { metadataSchemaFromZod } from '../metadata.js';
 import { DataElementsResource } from './data-elements.js';
 import { DownloadsResource } from './downloads.js';
 import { FileUploadsResource } from './file-uploads.js';
@@ -51,7 +52,17 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async create(body: models.CreateDatasourceRequest): Promise<models.DatasourceResponse> {
+  async create(options: { name: string; description?: string; connector: models.ConnectorConfig; metadataConfig?: Record<string, unknown> | z.ZodType }): Promise<models.DatasourceResponse> {
+    const _metadataConfig = options.metadataConfig instanceof z.ZodType
+      ? metadataSchemaFromZod(options.metadataConfig)
+      : options.metadataConfig;
+    const body = {
+      name: options.name,
+      description: options.description,
+      connector: options.connector,
+      metadata_config: _metadataConfig,
+    };
+
     const response = await this.http.request<models.DatasourceResponse>("/datasources", {
       method: "POST",
       body,
