@@ -232,6 +232,12 @@ function buildSchemaDef(
   schema: z.ZodObject<any> | null,
   type: string
 ): string {
+  if (schema !== null && !(schema instanceof z.ZodObject)) {
+    throw new TypeError(
+      `Expected a Zod object schema (z.object({...})), got ${typeof schema === "function" ? schema.name || "a class" : typeof schema}. ` +
+        `Define your schema as: const MySchema = z.object({ ... })`
+    );
+  }
   if (schema === null) {
     if (SCHEMA_REQUIRED_TYPES.has(type)) {
       throw new Error(
