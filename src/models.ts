@@ -19,7 +19,7 @@ export const AgentDetailResponseSchema = z.object({
   fallbackModels: z.array(z.string()),
   datasources: z.array(z.string()),
   instructions: z.string(),
-  tools: z.array(z.string()),
+  tools: z.array(z.record(z.string(), z.unknown())),
   artifacts: z.array(z.string()),
   confidenceConfigs: z.array(z.string()),
   temperature: z.union([z.number(), z.number().int()]),
@@ -74,9 +74,9 @@ export const AgentToolDefinitionSchema = z.object({
   /** Description shown to LLM */
   description: z.union([z.string(), z.null()]).optional(),
   /** Tool config passed to activity via tool_context (datasource_id, base_prompt, etc.) */
-  config: z.union([z.string(), z.null()]).optional(),
+  config: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   /** Optional override for the tool's parameters schema */
-  parametersSchema: z.union([z.string(), z.null()]).optional(),
+  parametersSchema: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   /** When to use this tool (injected into system prompt) */
   useFor: z.union([z.array(z.string()), z.null()]).optional(),
   /** When NOT to use this tool (injected into system prompt) */
@@ -132,7 +132,7 @@ export const ArtifactSchemaResponseSchema = z.object({
   type: z.string(),
   description: z.string(),
   required: z.boolean(),
-  schemaDef: z.string(),
+  schemaDef: z.record(z.string(), z.unknown()),
   maxSizeBytes: z.union([z.number().int(), z.null()]).optional(),
   storageStrategy: z.string(),
   createdBy: z.union([z.string(), z.null()]).optional(),
@@ -175,10 +175,10 @@ export const BatchDefinitionResponseSchema = z.object({
   parentVersion: z.union([z.string(), z.null()]),
   catalogUrn: z.string(),
   agentUrn: z.string(),
-  agentSpecJson: z.string(),
+  agentSpecJson: z.record(z.string(), z.unknown()),
   inputDatasourceId: z.string(),
   /** Optional override for the tool's parameters schema */
-  filters: z.union([z.string(), z.null()]).optional(),
+  filters: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   outputDatasourceId: z.union([z.string(), z.null()]).optional(),
   userMessage: z.union([z.string(), z.null()]).optional(),
   concurrency: z.number().int(),
@@ -198,7 +198,7 @@ export const BatchItemResultSchema = z.object({
   filename: z.string(),
   status: z.string(),
   error: z.union([z.string(), z.null()]).optional(),
-  outputArtifacts: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
+  outputArtifacts: z.union([z.array(z.union([z.record(z.string(), z.unknown()), z.null()])), z.null()]).optional(),
   attempts: z.union([z.number().int(), z.null()]).optional(),
 });
 
@@ -225,7 +225,7 @@ export const CallToActionSchema = z.object({
   label: z.string(),
   action: z.string(),
   /** Optional override for the tool's parameters schema */
-  actionData: z.union([z.string(), z.null()]).optional(),
+  actionData: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
 });
 
 /**
@@ -301,7 +301,7 @@ export const CreatePromptResponseSchema = z.object({
 
 export const CreateSessionRequestSchema = z.object({
   prompt: z.union([z.string(), z.null()]).optional(),
-  initialContext: z.union([z.string(), z.null()]).optional(),
+  initialContext: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   maxIterationsPerUserMessage: z.union([z.number().int(), z.null()]).optional(),
 });
 
@@ -315,7 +315,7 @@ export const DataElementResponseSchema = z.object({
   name: z.string(),
   description: z.union([z.string(), z.null()]).optional(),
   mediaType: z.union([z.string(), z.null()]).optional(),
-  metadata: z.union([z.string(), z.null()]).optional(),
+  metadata: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   createdAt: z.union([z.string(), z.null()]).optional(),
   updatedAt: z.union([z.string(), z.null()]).optional(),
 });
@@ -461,7 +461,7 @@ export const LegacyBatchInputFiltersSchema = z.object({
   regex: z.union([z.string(), z.null()]).optional(),
   mediaTypes: z.union([z.array(z.string()), z.null()]).optional(),
   elementIds: z.union([z.array(z.string()), z.null()]).optional(),
-  additionalProperties: z.string().optional(),
+  additionalProperties: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -603,7 +603,7 @@ export const SessionMessageItemSchema = z.object({
   signalId: z.union([z.string(), z.null()]).optional(),
   toolId: z.union([z.string(), z.null()]).optional(),
   toolName: z.union([z.string(), z.null()]).optional(),
-  arguments: z.union([z.string(), z.null()]).optional(),
+  arguments: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   result: z.union([z.string(), z.null()]).optional(),
 });
 
@@ -615,8 +615,8 @@ export const SessionSummarySchema = z.object({
   agentName: z.union([z.string(), z.null()]).optional(),
   agentVersion: z.union([z.string(), z.null()]).optional(),
   messagesCount: z.number().int().optional(),
-  tokenUsage: z.union([z.string(), z.null()]).optional(),
-  result: z.array(z.string()).optional(),
+  tokenUsage: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+  result: z.array(z.record(z.string(), z.unknown())).optional(),
 });
 
 /**
@@ -669,9 +669,9 @@ export const TokenConfigSchema = z.object({
 export const ToolActivitySchema = z.object({
   toolId: z.string(),
   toolName: z.string(),
-  arguments: z.string(),
+  arguments: z.record(z.string(), z.unknown()),
   /** Optional override for the tool's parameters schema */
-  result: z.union([z.string(), z.null()]).optional(),
+  result: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   timestamp: z.string(),
 });
 
@@ -681,7 +681,7 @@ export const ToolActivitySchema = z.object({
 export const ToolCallInfoSchema = z.object({
   toolName: z.union([z.string(), z.null()]),
   /** Optional override for the tool's parameters schema */
-  arguments: z.union([z.string(), z.null()]),
+  arguments: z.union([z.record(z.string(), z.unknown()), z.null()]),
   sequence: z.union([z.string(), z.null()]),
   timestamp: z.union([z.string(), z.null()]),
 });
@@ -749,10 +749,10 @@ export const UpdateBatchExecutionRequestSchema = z.object({
   /** Output datasource ID */
   outputDatasourceId: z.union([z.string(), z.null()]).optional(),
   /** Per-item results */
-  items: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
+  items: z.union([z.array(z.union([z.record(z.string(), z.unknown()), z.null()])), z.null()]).optional(),
   /** Overall error message */
   error: z.union([z.string(), z.null()]).optional(),
-  additionalProperties: z.string().optional(),
+  additionalProperties: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const UpdatePromptResponseSchema = z.object({
@@ -840,7 +840,7 @@ export const UpdateDataElementRequestSchema = z.object({
   /** Updated description */
   description: z.union([z.string(), z.null()]).optional(),
   /** Metadata key-value pairs — replaces all existing metadata */
-  metadata: z.union([z.string(), z.null()]).optional(),
+  metadata: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
 });
 
 export const WebDomainSchema = z.object({
@@ -899,7 +899,7 @@ export const CreateAgentDefinitionRequestSchema = z.object({
   tags: z.union([z.array(z.string()), z.null()]).optional(),
   /** UI icon identifier */
   icon: z.union([z.string(), z.null()]).optional(),
-  additionalProperties: z.string().optional(),
+  additionalProperties: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -954,12 +954,12 @@ export const CreateAgentArtifactRequestSchema = z.object({
   /** Whether agent must produce this artifact */
   required: z.union([z.boolean(), z.null()]).optional(),
   /** Schema definition */
-  schemaDef: z.string(),
+  schemaDef: z.record(z.string(), z.unknown()),
   /** Maximum artifact size in bytes */
   maxSizeBytes: z.union([z.number().int(), z.null()]).optional(),
   /** Storage strategy (inline, gcs, auto) */
   storageStrategy: z.union([ArtifactStorageStrategySchema, z.null()]).optional(),
-  additionalProperties: z.string().optional(),
+  additionalProperties: z.record(z.string(), z.unknown()).optional(),
 });
 
 /**
@@ -975,7 +975,7 @@ export const UpdateAgentArtifactRequestSchema = z.object({
   /** Whether agent must produce this artifact */
   required: z.union([z.boolean(), z.null()]).optional(),
   /** Optional override for the tool's parameters schema */
-  schemaDef: z.union([z.string(), z.null()]).optional(),
+  schemaDef: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   /** Maximum artifact size in bytes */
   maxSizeBytes: z.union([z.number().int(), z.null()]).optional(),
   /** Storage strategy */
@@ -1032,12 +1032,12 @@ export const BatchExecutionResponseSchema = z.object({
   projectId: z.string(),
   agentUrn: z.union([z.string(), z.null()]).optional(),
   /** Optional override for the tool's parameters schema */
-  batchSpecJson: z.union([z.string(), z.null()]).optional(),
-  agentSpecJson: z.union([z.string(), z.null()]).optional(),
+  batchSpecJson: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+  agentSpecJson: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   inputDatasourceId: z.union([z.string(), z.null()]).optional(),
   outputDatasourceId: z.union([z.string(), z.null()]).optional(),
   /** Optional override for the tool's parameters schema */
-  inputOverrides: z.union([z.string(), z.null()]).optional(),
+  inputOverrides: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
   totalItems: z.union([z.number().int(), z.null()]).optional(),
   succeeded: z.union([z.number().int(), z.null()]).optional(),
   failed: z.union([z.number().int(), z.null()]).optional(),
@@ -1148,7 +1148,7 @@ export const OcConfigSchema = z.object({
   maxTokens: z.union([z.number().int(), z.null()]).optional(),
   temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
   models: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
-  nliModelConfig: z.string(),
+  nliModelConfig: z.record(z.string(), z.unknown()),
   nBootstraps: z.union([NBootstrapsSchema, z.null()]).optional(),
   tokenLimit: z.union([z.number().int(), z.null()]).optional(),
   originalCompletion: z.union([z.string(), z.null()]).optional(),
@@ -1270,7 +1270,7 @@ export const LegacyBatchSpecJsonSchema = z.object({
   input: LegacyBatchInputConfigSchema,
   output: z.union([LegacyBatchOutputConfigSchema, z.null()]).optional(),
   execution: z.union([LegacyBatchExecutionParamsSchema, z.null()]).optional(),
-  additionalProperties: z.string().optional(),
+  additionalProperties: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const BodyUploadContentSchema = z.object({
@@ -1346,7 +1346,7 @@ export const AgentExecutionDetailsResponseSchema = z.object({
   status: z.string(),
   messages: z.array(MessageEntrySchema),
   toolActivity: z.array(ToolActivityEntrySchema),
-  tokenUsage: z.array(z.union([z.string(), z.null()])),
+  tokenUsage: z.array(z.union([z.record(z.string(), z.unknown()), z.null()])),
   fileParsing: z.array(FileParseEntrySchema),
   result: z.array(ArtifactEntrySchema),
 });
@@ -1439,7 +1439,7 @@ export const MeibelDocumentResultSchema = z.object({
   elements: z.array(DocumentElementSchema),
   pages: z.number().int(),
   tables: z.number().int(),
-  metadata: z.union([z.string(), z.null()]).optional(),
+  metadata: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
 });
 
 /**
