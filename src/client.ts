@@ -8,8 +8,8 @@ import { HttpClient, type HttpClientOptions } from './http.js';
 import { AgentsResource } from './resources/agents.js';
 import { AgentsSessionsResource } from './resources/agents-sessions.js';
 import { ArtifactSchemasResource } from './resources/artifact-schemas.js';
-import { BatchDefinitionsResource } from './resources/batch-definitions.js';
-import { BatchExecutionsResource } from './resources/batch-executions.js';
+import { BatchesResource } from './resources/batches.js';
+import { ExecutionsResource } from './resources/executions.js';
 import { ConfidenceScoringResource } from './resources/confidence-scoring.js';
 import { DatasourcesResource } from './resources/datasources.js';
 import { DataElementsResource } from './resources/data-elements.js';
@@ -34,8 +34,7 @@ export class MeibelClient {
 
   public readonly agents: AgentsResource;
   public readonly artifactSchemas: ArtifactSchemasResource;
-  public readonly batchDefinitions: BatchDefinitionsResource;
-  public readonly batchExecutions: BatchExecutionsResource;
+  public readonly batches: BatchesResource;
   public readonly confidenceScoring: ConfidenceScoringResource;
   public readonly datasources: DatasourcesResource;
   public readonly documents: DocumentsResource;
@@ -62,8 +61,7 @@ export class MeibelClient {
 
     this.agents = new AgentsResource(this.http);
     this.artifactSchemas = new ArtifactSchemasResource(this.http);
-    this.batchDefinitions = new BatchDefinitionsResource(this.http);
-    this.batchExecutions = new BatchExecutionsResource(this.http);
+    this.batches = new BatchesResource(this.http);
     this.confidenceScoring = new ConfidenceScoringResource(this.http);
     this.datasources = new DatasourcesResource(this.http);
     this.documents = new DocumentsResource(this.http);

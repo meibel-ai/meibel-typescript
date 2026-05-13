@@ -6,9 +6,8 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
-import { paginate } from '../pagination.js';
 
-export class BatchExecutionsResource {
+export class ExecutionsResource {
   constructor(private readonly http: HttpClient) {}
 
 /**
@@ -24,7 +23,7 @@ export class BatchExecutionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *list(options?: { inputDatasourceId?: string | null; offset?: number; limit?: number | null; sortBy?: string; sortOrder?: string }): AsyncIterable<models.BatchExecutionResponse> {
+  async list(options?: { inputDatasourceId?: string | null; offset?: number; limit?: number | null; sortBy?: string; sortOrder?: string }): Promise<models.GetBatchExecutionsResponse> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       input_datasource_id: options?.inputDatasourceId ?? undefined,
       offset: options?.offset ?? undefined,
@@ -33,18 +32,12 @@ export class BatchExecutionsResource {
       sort_order: options?.sortOrder ?? undefined,
     };
 
-    yield* paginate<models.BatchExecutionResponse>(async (cursor) => {
-      const response = await this.http.request<models.GetBatchExecutionsResponse>("/batch-executions/", {
-        method: "GET",
-        params: {
-          ...queryParams,
-          offset: cursor,
-        },
-      });
-      return {
-        items: response.data ?? [],
-      };
+    const response = await this.http.request<models.GetBatchExecutionsResponse>("/batch-executions/", {
+      method: "GET",
+      params: queryParams,
     });
+
+    return response;
   }
 
 /**
@@ -110,7 +103,7 @@ export class BatchExecutionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getBatchRealtimeProgress(executionId: string): Promise<string> {
+  async getRealtimeProgress(executionId: string): Promise<string> {
     const response = await this.http.request<string>(`/batch-executions/id/${executionId}/realtime-progress`, {
       method: "GET",
     });

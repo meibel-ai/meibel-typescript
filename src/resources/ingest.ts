@@ -19,8 +19,8 @@ export class IngestResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async trigger(datasourceId: string): Promise<string> {
-    const response = await this.http.request<string>(`/datasources/${datasourceId}/trigger-ingest`, {
+  async trigger(datasourceId: string): Promise<models.TriggerIngestResponse> {
+    const response = await this.http.request<models.TriggerIngestResponse>(`/datasources/${datasourceId}/trigger-ingest`, {
       method: "POST",
     });
 

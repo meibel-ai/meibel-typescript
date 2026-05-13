@@ -130,4 +130,44 @@ export class DocumentsResource {
     yield* streamSSE(response);
   }
 
+/**
+ * Transform a document using AI extraction (sync)
+ *
+ * Submit a document for AI-powered structured extraction and block until complete. Internally orchestrates a system agent session, polls for completion, and returns the extracted data.
+ *
+ * @param body - Request body
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async transform(body: models.TransformDocumentRequest): Promise<models.TransformDocumentResponse> {
+    const response = await this.http.request<models.TransformDocumentResponse>("/documents/transform", {
+      method: "POST",
+      body,
+    });
+
+    return response;
+  }
+
+/**
+ * Submit a document transform (async)
+ *
+ * Submit a document for AI-powered extraction and return immediately. Poll for completion via client.sessions.get(execution_id).
+ *
+ * @param body - Request body
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async submitTransform(body: models.TransformDocumentRequest): Promise<models.SubmitDocumentTransformResponse> {
+    const response = await this.http.request<models.SubmitDocumentTransformResponse>("/documents/transform/submit", {
+      method: "POST",
+      body,
+    });
+
+    return response;
+  }
+
 }

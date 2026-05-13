@@ -111,9 +111,27 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async delete(datasourceId: string): Promise<string> {
-    const response = await this.http.request<string>(`/datasources/${datasourceId}`, {
+  async delete(datasourceId: string): Promise<models.DeleteDatasourceResponse> {
+    const response = await this.http.request<models.DeleteDatasourceResponse>(`/datasources/${datasourceId}`, {
       method: "DELETE",
+    });
+
+    return response;
+  }
+
+/**
+ * Chat with datasources via AI (streaming)
+ *
+ * Ask a question against one or more datasources. Returns a streaming SSE response with the AI-generated answer.
+ *
+ * @param body - Request body
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async chatWith(body: models.ChatWithDatasourceRequest): Promise<void> {
+    const response = await this.http.request<void>("/datasources/chat", {
+      method: "POST",
+      body,
     });
 
     return response;

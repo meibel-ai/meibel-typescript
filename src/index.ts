@@ -14,3 +14,4 @@ export { ApiError, AuthenticationError, AuthorizationError, NotFoundError, Valid
 export * from './resources/index.js';
 export { metadataSchemaFromZod } from './metadata.js';
 export { artifactSchemaFromZod } from './artifacts.js';
+export { transformDocument, submitDocumentTransform } from './system-agents.js';

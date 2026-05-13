@@ -43,7 +43,7 @@ export class TablesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateDescriptions(datasourceId: string, body: models.TagTableUpdateItem[]): Promise<models.TagTable[]> {
+  async updateDescriptions(datasourceId: string, body: models.UpdateTagTablesRequest): Promise<models.TagTable[]> {
     const response = await this.http.request<models.TagTable[]>(`/datasources/${datasourceId}/tables`, {
       method: "PUT",
       body,
@@ -81,7 +81,7 @@ export class TablesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async updateColumnDescriptions(datasourceId: string, tableName: string, body: models.TagColumnUpdateItem[]): Promise<models.TagColumn[]> {
+  async updateColumnDescriptions(datasourceId: string, tableName: string, body: models.UpdateTagColumnsRequest): Promise<models.TagColumn[]> {
     const response = await this.http.request<models.TagColumn[]>(`/datasources/${datasourceId}/tables/${tableName}/columns`, {
       method: "PUT",
       body,

@@ -6,10 +6,14 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
-import { paginate } from '../pagination.js';
+import { ExecutionsResource } from './executions.js';
 
-export class BatchDefinitionsResource {
-  constructor(private readonly http: HttpClient) {}
+export class BatchesResource {
+  public readonly executions: ExecutionsResource;
+
+  constructor(private readonly http: HttpClient) {
+    this.executions = new ExecutionsResource(http);
+  }
 
 /**
  * List Batch Definitions
@@ -21,24 +25,18 @@ export class BatchDefinitionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *list(options?: { offset?: number; limit?: number }): AsyncIterable<models.BatchDefinitionResponse> {
+  async list(options?: { offset?: number; limit?: number }): Promise<models.GetBatchDefinitionsResponse> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       offset: options?.offset ?? undefined,
       limit: options?.limit ?? undefined,
     };
 
-    yield* paginate<models.BatchDefinitionResponse>(async (cursor) => {
-      const response = await this.http.request<models.GetBatchDefinitionsResponse>("/batch-definitions/", {
-        method: "GET",
-        params: {
-          ...queryParams,
-          offset: cursor,
-        },
-      });
-      return {
-        items: response.data ?? [],
-      };
+    const response = await this.http.request<models.GetBatchDefinitionsResponse>("/batch-definitions/", {
+      method: "GET",
+      params: queryParams,
     });
+
+    return response;
   }
 
 /**
@@ -143,24 +141,18 @@ export class BatchDefinitionsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *listVersions(definitionId: string, options?: { offset?: number; limit?: number | null }): AsyncIterable<models.BatchDefinitionResponse> {
+  async listVersions(definitionId: string, options?: { offset?: number; limit?: number | null }): Promise<models.GetBatchDefinitionsResponse> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       offset: options?.offset ?? undefined,
       limit: options?.limit ?? undefined,
     };
 
-    yield* paginate<models.BatchDefinitionResponse>(async (cursor) => {
-      const response = await this.http.request<models.GetBatchDefinitionsResponse>(`/batch-definitions/id/${definitionId}/versions`, {
-        method: "GET",
-        params: {
-          ...queryParams,
-          offset: cursor,
-        },
-      });
-      return {
-        items: response.data ?? [],
-      };
+    const response = await this.http.request<models.GetBatchDefinitionsResponse>(`/batch-definitions/id/${definitionId}/versions`, {
+      method: "GET",
+      params: queryParams,
     });
+
+    return response;
   }
 
 /**

@@ -53,7 +53,6 @@ export const AgentIdentityContextSchema = z.object({
 
 export const AgentSummarySchema = z.object({
   id: z.string(),
-  name: z.union([z.string(), z.null()]).optional(),
   displayName: z.string(),
   description: z.union([z.string(), z.null()]).optional(),
   llmModel: z.string(),
@@ -242,6 +241,15 @@ export const ChatMessageRequestSchema = z.object({
   includeToolActivity: z.union([z.boolean(), z.null()]).optional(),
 });
 
+export const ChatWithDatasourceRequestSchema = z.object({
+  /** Datasources to query */
+  datasourceIds: z.array(z.string()),
+  /** User question */
+  message: z.string(),
+  /** LLM model override */
+  model: z.union([z.string(), z.null()]).optional(),
+});
+
 /**
  * Connect to a cloud storage bucket.
  */
@@ -309,17 +317,31 @@ export const CreateSessionResponseSchema = z.object({
   sessionId: z.string(),
 });
 
+/**
+ * A single data element on a datasource.
+ */
 export const DataElementResponseSchema = z.object({
+  /** Unique data element ID */
   id: z.string(),
+  /** ID of the datasource this element belongs to */
   datasourceId: z.string(),
+  /** Data element name */
   name: z.string(),
+  /** Human-authored description */
   description: z.union([z.string(), z.null()]).optional(),
+  /** MIME type of the underlying content */
   mediaType: z.union([z.string(), z.null()]).optional(),
+  /** Arbitrary metadata key-value pairs */
   metadata: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+  /** ISO 8601 creation timestamp */
   createdAt: z.union([z.string(), z.null()]).optional(),
+  /** ISO 8601 last-update timestamp */
   updatedAt: z.union([z.string(), z.null()]).optional(),
 });
 
+/**
+ * Body for searching data elements on a datasource.
+ */
 export const DataElementSearchRequestSchema = z.object({
   /** Regex pattern to filter by name */
   regexFilter: z.union([z.string(), z.null()]).optional(),
@@ -368,6 +390,9 @@ export const DocumentStatusSchema = z.object({
   error: z.union([z.string(), z.null()]).optional(),
 });
 
+/**
+ * Body for creating a download job. Omit both fields to download all files.
+ */
 export const DownloadJobRequestSchema = z.object({
   /** Content to include: files, parsed_content, or files_and_parsed_content */
   content: z.union([z.string(), z.null()]).optional(),
@@ -375,7 +400,11 @@ export const DownloadJobRequestSchema = z.object({
   dataElementIds: z.union([z.array(z.string()), z.null()]).optional(),
 });
 
+/**
+ * Result of creating a download job.
+ */
 export const DownloadJobResponseSchema = z.object({
+  /** Identifier for the job — use with the status_url to track progress */
   jobId: z.string(),
   /** Current job status */
   status: z.string(),
@@ -416,25 +445,52 @@ export const FileParseStartInfoSchema = z.object({
   timestamp: z.union([z.string(), z.null()]),
 });
 
+/**
+ * File-count summary across the datasource's content.
+ */
 export const FilesSummaryResponseSchema = z.object({
+  /** Total files currently tracked on the datasource */
   total: z.number().int(),
+  /** Files that have been removed since the last ingest */
   deleted: z.union([z.number().int(), z.null()]).optional(),
 });
 
+/**
+ * Per-method file counts produced by the latest ingest run.
+ */
 export const IngestMethodCountsResponseSchema = z.object({
+  /** Total files processed by this ingest method */
   total: z.number().int(),
+  /** Files newly added in this run */
   new: z.union([z.number().int(), z.null()]).optional(),
+  /** Files re-processed because they changed */
   updated: z.union([z.number().int(), z.null()]).optional(),
 });
 
+/**
+ * Per-method aggregate counts for the current ingest run.
+ */
 export const IngestMethodSummarySchema = z.object({
+  /** Ingest method name (e.g. 'rag', 'tag', 'ref_graph') */
   method: z.string(),
+  /** Total files this method intends to process */
   totalFiles: z.number().int().optional(),
+  /** Files this method has finished processing */
   processedFiles: z.number().int().optional(),
+  /** Files added in this run */
   adds: z.number().int().optional(),
+  /** Files re-processed because they changed */
   updates: z.number().int().optional(),
+  /** Files that errored during processing */
   errors: z.number().int().optional(),
+  /** Files that produced warnings during processing */
   warnings: z.number().int().optional(),
+});
+
+/**
+ * Lifecycle state of an ingest run.
+ */
+export const IngestStatusSchema = z.object({
 });
 
 /**
@@ -481,6 +537,9 @@ export const MessageEntrySchema = z.object({
   timestamp: z.coerce.date(),
 });
 
+/**
+ * A single field extracted from documents during ingest.
+ */
 export const MetadataFieldSchema = z.object({
   /** Field name (snake_case) */
   name: z.string(),
@@ -490,16 +549,6 @@ export const MetadataFieldSchema = z.object({
   description: z.string(),
   /** Whether this field is indexed for filtering */
   index: z.boolean().optional(),
-});
-
-/**
- * MetadataModelField
- */
-export const MetadataModelFieldSchema = z.object({
-  name: z.string(),
-  type: z.string(),
-  description: z.string(),
-  index: z.union([z.boolean(), z.null()]).optional(),
 });
 
 /**
@@ -630,25 +679,52 @@ export const SourceSchema = z.object({
   relevanceScore: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
+export const SubmitDocumentTransformResponseSchema = z.object({
+  /** Poll via client.sessions.get(execution_id) */
+  executionId: z.string(),
+});
+
+/**
+ * Summary of a single table discovered on a structured datasource.
+ */
 export const TableSummaryResponseSchema = z.object({
+  /** Table name */
   name: z.string(),
+  /** Human-authored description of the table */
   description: z.union([z.string(), z.null()]).optional(),
+  /** Number of columns on the table */
   columnCount: z.number().int(),
 });
 
+/**
+ * A column on a structured-datasource table, with its description.
+ */
 export const TagColumnSchema = z.object({
+  /** Column name as defined in the source table */
   columnName: z.string(),
+  /** SQL data type of the column (e.g. 'varchar', 'integer') */
   type: z.union([z.string(), z.null()]).optional(),
+  /** Human-authored description of what this column represents */
   description: z.union([z.string(), z.null()]).optional(),
 });
 
+/**
+ * A single column-description update entry within an UpdateTagColumnsRequest.
+ */
 export const TagColumnUpdateItemSchema = z.object({
+  /** Name of the column to update */
   columnName: z.string(),
+  /** New description for the column */
   description: z.string(),
 });
 
+/**
+ * A single table-description update entry within an UpdateTagTablesRequest.
+ */
 export const TagTableUpdateItemSchema = z.object({
+  /** Name of the table to update */
   tableName: z.string(),
+  /** New description for the table */
   description: z.string(),
 });
 
@@ -694,6 +770,40 @@ export const ToolResultInfoSchema = z.object({
   result: z.union([z.string(), z.null()]).optional(),
   sequence: z.union([z.string(), z.null()]),
   timestamp: z.union([z.string(), z.null()]),
+});
+
+export const TransformDocumentRequestSchema = z.object({
+  /** File path, URL, or GCS URI to transform */
+  file: z.string(),
+  /** Schema name/ID or inline JSON Schema */
+  artifactSchema: z.union([z.string(), z.record(z.string(), z.unknown())]),
+  /** LLM model override */
+  model: z.union([z.string(), z.null()]).optional(),
+  /** Extraction instructions override */
+  prompt: z.union([z.string(), z.null()]).optional(),
+  /** Prompt template reference */
+  promptId: z.union([z.string(), z.null()]).optional(),
+  /** Max wait time in seconds (sync only) */
+  timeoutSeconds: z.union([z.number().int(), z.null()]).optional(),
+});
+
+export const TransformDocumentResponseSchema = z.object({
+  /** Execution ID for debugging/tracing */
+  executionId: z.string(),
+  /** Extracted artifact data */
+  data: z.record(z.string(), z.unknown()),
+  /** LLM token consumption */
+  tokenUsage: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+});
+
+/**
+ * Acknowledgement that ingest was kicked off for a datasource.
+ */
+export const TriggerIngestResponseSchema = z.object({
+  /** Human-readable confirmation message */
+  message: z.string(),
+  /** ID of the datasource ingest was triggered on */
+  datasourceId: z.string(),
 });
 
 /**
@@ -814,26 +924,49 @@ export const CompletionEventSchema = z.object({
   data: z.string(),
 });
 
+/**
+ * A single file in a datasource's content store.
+ */
 export const ContentItemSchema = z.object({
+  /** Filename */
   name: z.string(),
+  /** Object-storage path to the file relative to the datasource */
   path: z.string(),
+  /** Object kind reported by storage (e.g. 'file', 'directory') */
   type: z.union([z.string(), z.null()]).optional(),
+  /** File size in bytes */
   size: z.union([z.number().int(), z.null()]).optional(),
+  /** MIME type of the file */
   mediaType: z.union([z.string(), z.null()]).optional(),
+  /** ISO 8601 timestamp of last modification in object storage */
   lastModified: z.union([z.string(), z.null()]).optional(),
+  /** Object-storage ETag for the file */
   etag: z.union([z.string(), z.null()]).optional(),
 });
 
+/**
+ * Result of an async upload — files are accepted and streamed asynchronously.
+ */
 export const UploadContentResponseSchema = z.object({
+  /** True if the upload was accepted for processing */
   success: z.boolean(),
+  /** Human-readable status message */
   message: z.string(),
+  /** ID of the datasource the files were uploaded to (created on the fly if `name` was supplied) */
   datasourceId: z.string(),
+  /** Identifier for this upload batch — use with the SSE stream to track progress */
   uploadId: z.string(),
+  /** Server-sent-events URL to stream upload progress until 'stream_complete' */
   sseUrl: z.string(),
+  /** Number of files the server expects to process for this upload */
   estimatedFiles: z.union([z.number().int(), z.null()]).optional(),
+  /** Total estimated size of the upload in bytes */
   estimatedSize: z.union([z.number().int(), z.null()]).optional(),
 });
 
+/**
+ * Body for updating a data element. Omit a field to leave it unchanged.
+ */
 export const UpdateDataElementRequestSchema = z.object({
   /** Updated name */
   name: z.union([z.string(), z.null()]).optional(),
@@ -843,6 +976,17 @@ export const UpdateDataElementRequestSchema = z.object({
   metadata: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
 });
 
+/**
+ * Result of deleting a datasource.
+ */
+export const DeleteDatasourceResponseSchema = z.object({
+  /** ID of the datasource that was deleted */
+  id: z.string(),
+});
+
+/**
+ * An allowed domain for a web-crawl datasource, with include/exclude URL patterns.
+ */
 export const WebDomainSchema = z.object({
   /** Domain to crawl (e.g. example.com) */
   domain: z.string(),
@@ -1059,9 +1203,15 @@ export const TableCellSchema = z.object({
   bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
 });
 
+/**
+ * Paginated list of data elements.
+ */
 export const DataElementListResponseSchema = z.object({
+  /** Page of data elements */
   items: z.array(DataElementResponseSchema),
+  /** Pass to the next request as `cursor` to fetch the next page. Null when there are no more pages */
   nextCursor: z.union([z.string(), z.null()]).optional(),
+  /** True if more pages are available */
   hasNext: z.boolean().optional(),
 });
 
@@ -1083,17 +1233,31 @@ export const FileParseEntrySchema = z.object({
   parseComplete: z.union([FileParseCompleteInfoSchema, z.null()]),
 });
 
+/**
+ * File counts broken down by ingest method for the latest run.
+ */
 export const IngestCountsResponseSchema = z.object({
+  /** Counts for the RAG ingest method */
   rag: z.union([IngestMethodCountsResponseSchema, z.null()]).optional(),
+  /** Counts for the TAG (tables/columns) ingest method */
   tag: z.union([IngestMethodCountsResponseSchema, z.null()]).optional(),
+  /** Counts for the reference-graph ingest method */
   refGraph: z.union([IngestMethodCountsResponseSchema, z.null()]).optional(),
 });
 
+/**
+ * Status of the most recent ingest run for a datasource.
+ */
 export const IngestStatusResponseSchema = z.object({
+  /** ID of the datasource */
   datasourceId: z.string(),
-  status: z.string(),
+  /** Overall run status */
+  status: IngestStatusSchema,
+  /** ISO 8601 timestamp when this run started */
   startedAt: z.union([z.string(), z.null()]).optional(),
+  /** ISO 8601 timestamp when this run finished — null while still running */
   completedAt: z.union([z.string(), z.null()]).optional(),
+  /** Per-method progress and counts for this run */
   methods: z.array(IngestMethodSummarySchema).optional(),
 });
 
@@ -1117,27 +1281,32 @@ export const MetadataConfigRequestSchema = z.object({
   fields: z.union([z.array(MetadataFieldSchema), z.null()]).optional(),
 });
 
+/**
+ * Current metadata extraction configuration on a datasource.
+ */
 export const MetadataConfigResponseSchema = z.object({
+  /** 'catalog' = using a pre-built model, 'custom' = user-defined fields, 'default' = no extraction configured */
   type: z.enum(["catalog", "custom", "default"]),
+  /** Catalog model ID — only set when type is 'catalog' */
   modelId: z.union([z.string(), z.null()]).optional(),
+  /** Resolved field definitions in effect. Empty when type is 'default' */
   fields: z.array(MetadataFieldSchema),
 });
 
 /**
- * MetadataModelCatalogEntry
+ * A pre-built metadata extraction model from the catalog, selectable by model_id.
  */
 export const MetadataModelCatalogEntrySchema = z.object({
+  /** Stable ID used to reference this model when configuring a datasource */
   modelId: z.string(),
+  /** Human-readable model name */
   name: z.string(),
+  /** What this model is designed to extract */
   description: z.union([z.string(), z.null()]).optional(),
+  /** Visibility of the model (e.g. 'global', 'customer', 'project') */
   scope: z.string(),
-  customerId: z.union([z.string(), z.null()]).optional(),
-  projectId: z.union([z.string(), z.null()]).optional(),
-  fields: z.array(MetadataModelFieldSchema),
-  createdBy: z.union([z.string(), z.null()]).optional(),
-  updatedBy: z.union([z.string(), z.null()]).optional(),
-  createdAt: z.union([z.coerce.date(), z.null()]).optional(),
-  updatedAt: z.union([z.coerce.date(), z.null()]).optional(),
+  /** Field definitions this model extracts */
+  fields: z.array(MetadataFieldSchema),
 });
 
 /**
@@ -1190,16 +1359,44 @@ export const ChatResponseSchema = z.object({
   artifacts: z.union([z.array(ArtifactSchema), z.null()]).optional(),
 });
 
+/**
+ * A table on a structured datasource, with its description and optionally its columns.
+ */
 export const TagTableSchema = z.object({
+  /** Table name as defined on the datasource */
   tableName: z.string(),
+  /** Human-authored description of what this table represents */
   description: z.union([z.string(), z.null()]).optional(),
+  /** Columns on the table — only populated when explicitly requested via include_columns */
   columns: z.union([z.array(TagColumnSchema), z.null()]).optional(),
 });
 
+/**
+ * A nested table-update entry used inside UpdateDatasourceRequest.tables.
+ */
 export const TableDescriptionUpdateSchema = z.object({
+  /** Name of the table to update */
   tableName: z.string(),
+  /** Updated description for the table (omit to leave unchanged) */
   description: z.union([z.string(), z.null()]).optional(),
+  /** Optional list of column-description updates for this table */
   columns: z.union([z.array(TagColumnUpdateItemSchema), z.null()]).optional(),
+});
+
+/**
+ * Bulk update of column descriptions on a single table.
+ */
+export const UpdateTagColumnsRequestSchema = z.object({
+  /** One entry per column to update on the target table */
+  columns: z.array(TagColumnUpdateItemSchema),
+});
+
+/**
+ * Bulk update of table descriptions on a datasource.
+ */
+export const UpdateTagTablesRequestSchema = z.object({
+  /** One entry per table to update */
+  tables: z.array(TagTableUpdateItemSchema),
 });
 
 /**
@@ -1215,15 +1412,27 @@ export const HttpValidationErrorSchema = z.object({
   detail: z.array(ValidationErrorSchema).optional(),
 });
 
+/**
+ * Result of a synchronous upload — waits until files are persisted, optionally triggers ingest, and returns the resulting content listing.
+ */
 export const FileUploadSyncResponseSchema = z.object({
+  /** ID of the datasource the files were uploaded to */
   datasourceId: z.string(),
+  /** Content items present on the datasource after the upload completes */
   items: z.array(ContentItemSchema),
+  /** Set when the listing is truncated — pass to GET /datasources/{id}/content to fetch the rest */
   continuationToken: z.union([z.string(), z.null()]).optional(),
+  /** URL to poll for ingest status. Only set when `trigger_ingest=true` was supplied */
   ingestUrl: z.union([z.string(), z.null()]).optional(),
 });
 
+/**
+ * Paginated list of files in a datasource's content store.
+ */
 export const ListContentResponseSchema = z.object({
+  /** Page of content items */
   items: z.array(ContentItemSchema),
+  /** Pass to the next request as `continuation_token` to fetch the next page. Null when there are no more pages */
   continuationToken: z.union([z.string(), z.null()]).optional(),
 });
 
@@ -1235,6 +1444,7 @@ export const WebCrawlConnectorSchema = z.object({
   baseUrl: z.string(),
   /** Enable JavaScript rendering */
   javascriptRender: z.boolean().optional(),
+  /** Per-domain include/exclude rules. If omitted, the crawler stays on the base_url's domain */
   domains: z.union([z.array(WebDomainSchema), z.null()]).optional(),
 });
 
@@ -1300,9 +1510,10 @@ export const BodyUploadAndListContentSchema = z.object({
 });
 
 /**
- * ListMetadataModelCatalogResponse
+ * List of available metadata-extraction models in the catalog.
  */
 export const ListMetadataModelCatalogResponseSchema = z.object({
+  /** Catalog entries visible to the caller, filtered by the optional scope query param */
   models: z.array(MetadataModelCatalogEntrySchema),
 });
 
@@ -1392,6 +1603,9 @@ export const ConfidenceScoringConfigSchema = z.object({
   config: ConfigSchema,
 });
 
+/**
+ * Body for creating a new datasource.
+ */
 export const CreateDatasourceRequestSchema = z.object({
   /** Human-readable datasource name */
   name: z.string(),
@@ -1403,22 +1617,41 @@ export const CreateDatasourceRequestSchema = z.object({
   metadataConfig: z.union([MetadataConfigRequestSchema, z.null()]).optional(),
 });
 
+/**
+ * A datasource with its latest sync/ingest state and (optionally) table details.
+ */
 export const DatasourceResponseSchema = z.object({
+  /** Unique datasource ID */
   id: z.string(),
+  /** Human-readable datasource name */
   name: z.string(),
+  /** What this datasource contains */
   description: z.string(),
+  /** Connection configuration */
   connector: ConnectorConfigSchema,
+  /** ISO 8601 creation timestamp */
   createdAt: z.string(),
+  /** ISO 8601 last-update timestamp */
   updatedAt: z.string(),
+  /** ISO 8601 timestamp of the most recent ingest run */
   lastSyncAt: z.union([z.string(), z.null()]).optional(),
+  /** Status of the most recent ingest run (e.g. 'completed', 'failed') */
   lastSyncStatus: z.union([z.string(), z.null()]).optional(),
+  /** Total number of files ingested across all runs */
   totalIngestedFiles: z.union([z.number().int(), z.null()]).optional(),
+  /** Current metadata extraction configuration */
   metadataConfig: z.union([MetadataConfigResponseSchema, z.null()]).optional(),
+  /** File counts for the datasource */
   files: z.union([FilesSummaryResponseSchema, z.null()]).optional(),
+  /** Per-method counts from the latest ingest run */
   ingestCounts: z.union([IngestCountsResponseSchema, z.null()]).optional(),
+  /** Tables discovered on a structured datasource — only populated when include_tables=true */
   tables: z.union([z.array(TableSummaryResponseSchema), z.null()]).optional(),
 });
 
+/**
+ * Body for updating a datasource. Omit a field to leave it unchanged.
+ */
 export const UpdateDatasourceRequestSchema = z.object({
   /** Updated datasource name */
   name: z.union([z.string(), z.null()]).optional(),
@@ -1456,7 +1689,11 @@ export const ScoringJobRecordSchema = z.object({
   score: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
+/**
+ * List of datasources visible to the caller.
+ */
 export const DatasourceListResponseSchema = z.object({
+  /** Datasources in the caller's project */
   datasources: z.array(DatasourceResponseSchema),
 });
 
@@ -1504,6 +1741,7 @@ export type BodySendChatMessageStream = z.infer<typeof BodySendChatMessageStream
 export type BoundingBox = z.infer<typeof BoundingBoxSchema>;
 export type CallToAction = z.infer<typeof CallToActionSchema>;
 export type ChatMessageRequest = z.infer<typeof ChatMessageRequestSchema>;
+export type ChatWithDatasourceRequest = z.infer<typeof ChatWithDatasourceRequestSchema>;
 export type CloudStorageConnector = z.infer<typeof CloudStorageConnectorSchema>;
 export type CreateAgentPromptRequest = z.infer<typeof CreateAgentPromptRequestSchema>;
 export type CreateAgentResponse = z.infer<typeof CreateAgentResponseSchema>;
@@ -1526,13 +1764,13 @@ export type FileParseStartInfo = z.infer<typeof FileParseStartInfoSchema>;
 export type FilesSummaryResponse = z.infer<typeof FilesSummaryResponseSchema>;
 export type IngestMethodCountsResponse = z.infer<typeof IngestMethodCountsResponseSchema>;
 export type IngestMethodSummary = z.infer<typeof IngestMethodSummarySchema>;
+export type IngestStatus = z.infer<typeof IngestStatusSchema>;
 export type JudgeConfig = z.infer<typeof JudgeConfigSchema>;
 export type LegacyBatchExecutionParams = z.infer<typeof LegacyBatchExecutionParamsSchema>;
 export type LegacyBatchInputFilters = z.infer<typeof LegacyBatchInputFiltersSchema>;
 export type LegacyBatchOutputConfig = z.infer<typeof LegacyBatchOutputConfigSchema>;
 export type MessageEntry = z.infer<typeof MessageEntrySchema>;
 export type MetadataField = z.infer<typeof MetadataFieldSchema>;
-export type MetadataModelField = z.infer<typeof MetadataModelFieldSchema>;
 export type NBootstraps = z.infer<typeof NBootstrapsSchema>;
 export type OcrConfig = z.infer<typeof OcrConfigSchema>;
 export type PaginationMeta = z.infer<typeof PaginationMetaSchema>;
@@ -1545,6 +1783,7 @@ export type ScoringStatus = z.infer<typeof ScoringStatusSchema>;
 export type SessionMessageItem = z.infer<typeof SessionMessageItemSchema>;
 export type SessionSummary = z.infer<typeof SessionSummarySchema>;
 export type Source = z.infer<typeof SourceSchema>;
+export type SubmitDocumentTransformResponse = z.infer<typeof SubmitDocumentTransformResponseSchema>;
 export type TableSummaryResponse = z.infer<typeof TableSummaryResponseSchema>;
 export type TagColumn = z.infer<typeof TagColumnSchema>;
 export type TagColumnUpdateItem = z.infer<typeof TagColumnUpdateItemSchema>;
@@ -1553,6 +1792,9 @@ export type TokenConfig = z.infer<typeof TokenConfigSchema>;
 export type ToolActivity = z.infer<typeof ToolActivitySchema>;
 export type ToolCallInfo = z.infer<typeof ToolCallInfoSchema>;
 export type ToolResultInfo = z.infer<typeof ToolResultInfoSchema>;
+export type TransformDocumentRequest = z.infer<typeof TransformDocumentRequestSchema>;
+export type TransformDocumentResponse = z.infer<typeof TransformDocumentResponseSchema>;
+export type TriggerIngestResponse = z.infer<typeof TriggerIngestResponseSchema>;
 export type UpdateAgentDefinitionResponse = z.infer<typeof UpdateAgentDefinitionResponseSchema>;
 export type UpdateAgentPromptRequest = z.infer<typeof UpdateAgentPromptRequestSchema>;
 export type UpdateArtifactSchemaResponse = z.infer<typeof UpdateArtifactSchemaResponseSchema>;
@@ -1569,6 +1811,7 @@ export type CompletionEvent = z.infer<typeof CompletionEventSchema>;
 export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type UploadContentResponse = z.infer<typeof UploadContentResponseSchema>;
 export type UpdateDataElementRequest = z.infer<typeof UpdateDataElementRequestSchema>;
+export type DeleteDatasourceResponse = z.infer<typeof DeleteDatasourceResponseSchema>;
 export type WebDomain = z.infer<typeof WebDomainSchema>;
 export type BodyParseDocument = z.infer<typeof BodyParseDocumentSchema>;
 export type BodyProcessDocument = z.infer<typeof BodyProcessDocumentSchema>;
@@ -1599,6 +1842,8 @@ export type SessionListResponse = z.infer<typeof SessionListResponseSchema>;
 export type ChatResponse = z.infer<typeof ChatResponseSchema>;
 export type TagTable = z.infer<typeof TagTableSchema>;
 export type TableDescriptionUpdate = z.infer<typeof TableDescriptionUpdateSchema>;
+export type UpdateTagColumnsRequest = z.infer<typeof UpdateTagColumnsRequestSchema>;
+export type UpdateTagTablesRequest = z.infer<typeof UpdateTagTablesRequestSchema>;
 export type ToolActivityEntry = z.infer<typeof ToolActivityEntrySchema>;
 export type HttpValidationError = z.infer<typeof HttpValidationErrorSchema>;
 export type FileUploadSyncResponse = z.infer<typeof FileUploadSyncResponseSchema>;
