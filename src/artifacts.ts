@@ -231,7 +231,7 @@ const SCHEMA_REQUIRED_TYPES = new Set(["json", "csv", "yaml"]);
 function buildSchemaDef(
   schema: z.ZodObject<any> | null,
   type: string
-): string {
+): Record<string, unknown> | unknown[] {
   if (schema !== null && !(schema instanceof z.ZodObject)) {
     throw new TypeError(
       `Expected a Zod object schema (z.object({...})), got ${typeof schema === "function" ? schema.name || "a class" : typeof schema}. ` +
@@ -245,18 +245,18 @@ function buildSchemaDef(
           `Only markdown, text, html, and pdf support freeform (no schema).`
       );
     }
-    return JSON.stringify({ freeform: true, sections: [] });
+    return { freeform: true, sections: [] };
   }
 
   if (type === "json" || type === "yaml") {
-    return JSON.stringify(zodObjectToJsonSchema(schema));
+    return zodObjectToJsonSchema(schema);
   } else if (type === "csv") {
-    return JSON.stringify(zodToCsvColumns(schema));
+    return zodToCsvColumns(schema);
   } else if (type === "markdown") {
-    return JSON.stringify({ sections: zodToMarkdownSections(schema) });
+    return { sections: zodToMarkdownSections(schema) };
   } else {
     // text, html, pdf — use JSON Schema as validation hints
-    return JSON.stringify(zodObjectToJsonSchema(schema));
+    return zodObjectToJsonSchema(schema);
   }
 }
 
