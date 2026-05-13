@@ -264,7 +264,7 @@ function buildSchemaDef(
  * @example
  * ```typescript
  * import { z } from "zod";
- * import { artifactSchema } from "meibel";
+ * import { artifactSchemaFromZod } from "meibel";
  *
  * const InvoiceOutput = z.object({
  *   vendorName: z.string().describe("Name of the vendor"),
@@ -272,18 +272,18 @@ function buildSchemaDef(
  *   lineItems: z.array(z.string()).describe("Extracted line items"),
  * });
  *
- * const request = artifactSchema(InvoiceOutput, {
+ * const request = artifactSchemaFromZod(InvoiceOutput, {
  *   displayName: "Invoice Output",
  *   type: "json",
  *   description: "Structured invoice data",
  * });
  *
- * await client.artifactSchemas.create(request);
+ * await client.artifactSchemaFromZods.create(request);
  * ```
  *
  * For freeform markdown (no schema):
  * ```typescript
- * const request = artifactSchema(null, {
+ * const request = artifactSchemaFromZod(null, {
  *   displayName: "Exploration Report",
  *   type: "markdown",
  * });
@@ -293,7 +293,7 @@ function buildSchemaDef(
  * @param options Configuration for the artifact schema request.
  * @returns An object matching the CreateAgentArtifactRequest shape.
  */
-export function artifactSchema(
+export function artifactSchemaFromZod(
   schema: z.ZodObject<any> | null,
   options: ArtifactSchemaOptions
 ): Record<string, unknown> {
