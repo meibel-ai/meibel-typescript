@@ -11,16 +11,18 @@ export class ConfidenceScoringResource {
   constructor(private readonly http: HttpClient) {}
 
 /**
- * Get Scoring Job
+ * Get a scoring job
  *
- * @param jobId - The job_id parameter
+ * Retrieve a single confidence scoring job by its ID, including its current status and score if completed.
+ *
+ * @param jobId - Unique identifier of the scoring job to retrieve.
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async getScoringJob(jobId: string): Promise<string> {
-    const response = await this.http.request<string>(`/confidence-scoring/job/${jobId}`, {
+  async getScoringJob(jobId: string): Promise<models.ScoringJobRecord> {
+    const response = await this.http.request<models.ScoringJobRecord>(`/confidence-scoring/job/${jobId}`, {
       method: "GET",
     });
 
@@ -28,36 +30,38 @@ export class ConfidenceScoringResource {
   }
 
 /**
- * List Scoring Jobs
+ * List scoring jobs
  *
- * @param agentName - The agent_name parameter
- * @param agentVersion - The agent_version parameter
- * @param agentExecutionId - The agent_execution_id parameter
- * @param agentWorkflowName - The agent_workflow_name parameter
- * @param agentWorkflowVersion - The agent_workflow_version parameter
- * @param agentWorkflowExecutionId - The agent_workflow_execution_id parameter
- * @param toolId - The tool_id parameter
- * @param toolInstanceId - The tool_instance_id parameter
- * @param toolExecutionId - The tool_execution_id parameter
+ * List confidence scoring jobs, optionally filtered by identity context fields. All filters are combined with AND logic.
+ *
+ * @param agentName - Filter by agent name.
+ * @param agentVersion - Filter by agent version.
+ * @param agentSessionId - Filter by agent session ID.
+ * @param agentWorkflowName - Filter by workflow name.
+ * @param agentWorkflowVersion - Filter by workflow version.
+ * @param agentWorkflowSessionId - Filter by workflow session ID.
+ * @param toolId - Filter by tool identifier.
+ * @param toolInstanceId - Filter by tool instance identifier.
+ * @param toolExecutionId - Filter by tool execution identifier.
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async listScoringJobs(options?: { agentName?: string | null; agentVersion?: string | null; agentExecutionId?: string | null; agentWorkflowName?: string | null; agentWorkflowVersion?: string | null; agentWorkflowExecutionId?: string | null; toolId?: string | null; toolInstanceId?: string | null; toolExecutionId?: string | null }): Promise<string> {
+  async listScoringJobs(options?: { agentName?: string | null; agentVersion?: string | null; agentSessionId?: string | null; agentWorkflowName?: string | null; agentWorkflowVersion?: string | null; agentWorkflowSessionId?: string | null; toolId?: string | null; toolInstanceId?: string | null; toolExecutionId?: string | null }): Promise<models.ScoringJobRecord[]> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       agent_name: options?.agentName ?? undefined,
       agent_version: options?.agentVersion ?? undefined,
-      agent_execution_id: options?.agentExecutionId ?? undefined,
+      agent_session_id: options?.agentSessionId ?? undefined,
       agent_workflow_name: options?.agentWorkflowName ?? undefined,
       agent_workflow_version: options?.agentWorkflowVersion ?? undefined,
-      agent_workflow_execution_id: options?.agentWorkflowExecutionId ?? undefined,
+      agent_workflow_session_id: options?.agentWorkflowSessionId ?? undefined,
       tool_id: options?.toolId ?? undefined,
       tool_instance_id: options?.toolInstanceId ?? undefined,
       tool_execution_id: options?.toolExecutionId ?? undefined,
     };
 
-    const response = await this.http.request<string>("/confidence-scoring/jobs", {
+    const response = await this.http.request<models.ScoringJobRecord[]>("/confidence-scoring/jobs", {
       method: "GET",
       params: queryParams,
     });
@@ -66,10 +70,12 @@ export class ConfidenceScoringResource {
   }
 
 /**
- * Get Scoring Jobs Summary
+ * Get scoring summary
  *
- * @param primary - The primary parameter
- * @param secondary - The secondary parameter
+ * Get an aggregated summary of confidence scores. Requires a primary filter; an optional secondary filter narrows results further. Filters use the format "field:value", where field is any identity context field name.
+ *
+ * @param primary - Primary filter in "field:value" format, where field is an identity context field name (e.g. "agent_name:my-agent" or "agent_session_id:sess_abc123").
+ * @param secondary - Optional secondary filter in the same "field:value" format to further narrow results (e.g. "agent_version:1.2.0").
  *
  * @returns Successful Response
  *

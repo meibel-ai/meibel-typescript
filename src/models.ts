@@ -32,25 +32,6 @@ export const AgentDetailResponseSchema = z.object({
   lastExecutionTime: z.union([z.coerce.date(), z.null()]).optional(),
 });
 
-/**
- * Identity context for agent execution.  Contains only immutable identity fields that answer: - WHO: customer_id, project_id (tenant identity) - WHAT: agent_name, agent_version, agent_execution_id (agent identity, optional) - WHERE: agent_workflow_name, agent_workflow_version, agent_workflow_execution_id (parent workflow, optional) - WHICH TOOL: tool_id, tool_instance_id, tool_execution_id (tool identity, optional)  This model is FLAT - no inheritance, all fields in one model. Agent, workflow, and tool fields are optional, making this suitable for all execution contexts.  This model does NOT contain: - Configuration (see AgentExecutionConfig in agent-platform) - Runtime state (see AgentExecutionState in agent-platform)  Design Pattern - Progressive Enhancement: - Callers provide only tenant/project identity - FSMWorkflow fills in agent_workflow_* fields from AgentWorkflowSpec - ReactAgent fills in agent_* fields from AgentSpec and workflow.info().workflow_id - Tool activities add tool_* fields via model_copy() - Context gains fields as it flows through the system  Examples:     # Starting FSMWorkflow (caller provides minimal context)     context = AgentIdentityContext(         customer_id="cust_123",         project_id="proj_456"     )     # FSM fills in workflow identity     context = context.model_copy(update={         "agent_workflow_name": "support_fsm",         "agent_workflow_version": "3.0.0",         "agent_workflow_execution_id": workflow.info().workflow_id     })      # Starting ReactAgent standalone (caller provides minimal context)     context = AgentIdentityContext(         customer_id="cust_123",         project_id="proj_456"     )     # ReactAgent fills in agent identity     context = context.model_copy(update={         "agent_name": "sales_assistant",         "agent_version": "2.0.0",         "agent_execution_id": workflow.info().workflow_id     })      # ReactAgent as FSM child (inherits workflow context, adds agent identity)     child_context = parent_context.model_copy(update={         "agent_name": "router",         "agent_version": "1.0.0",         "agent_execution_id": workflow.info().workflow_id         # agent_workflow_* fields inherited from parent     })      # Tool execution (adds tool identity to agent context)     tool_context = context.model_copy(update={         'tool_id': "tool_xyz",         'tool_instance_id': "tool_inst_123",         'tool_execution_id': "tool_exec_456"     })
- */
-export const AgentIdentityContextSchema = z.object({
-  /** Customer/tenant identifier */
-  customerId: z.string(),
-  /** Project identifier */
-  projectId: z.string(),
-  agentName: z.union([z.string(), z.null()]).optional(),
-  agentVersion: z.union([z.string(), z.null()]).optional(),
-  agentExecutionId: z.union([z.string(), z.null()]).optional(),
-  agentWorkflowName: z.union([z.string(), z.null()]).optional(),
-  agentWorkflowVersion: z.union([z.string(), z.null()]).optional(),
-  agentWorkflowExecutionId: z.union([z.string(), z.null()]).optional(),
-  toolId: z.union([z.string(), z.null()]).optional(),
-  toolInstanceId: z.union([z.string(), z.null()]).optional(),
-  toolExecutionId: z.union([z.string(), z.null()]).optional(),
-});
-
 export const AgentSummarySchema = z.object({
   id: z.string(),
   displayName: z.string(),
@@ -494,15 +475,6 @@ export const IngestStatusSchema = z.object({
 });
 
 /**
- * Configuration for judge-based confidence scoring (LLM-as-judge patterns).
- */
-export const JudgeConfigSchema = z.object({
-  prompt: z.string(),
-  temperatureMax: z.union([z.number(), z.number().int(), z.null()]).optional(),
-  temperatureStep: z.union([z.number(), z.number().int(), z.null()]).optional(),
-});
-
-/**
  * LegacyBatchExecutionParams
  */
 export const LegacyBatchExecutionParamsSchema = z.object({
@@ -549,24 +521,6 @@ export const MetadataFieldSchema = z.object({
   description: z.string(),
   /** Whether this field is indexed for filtering */
   index: z.boolean().optional(),
-});
-
-/**
- * NBootstraps
- */
-export const NBootstrapsSchema = z.object({
-  anyofSchema_1Validator: z.union([z.number().int(), z.null()]).optional(),
-  anyofSchema_2Validator: z.union([z.string(), z.null()]).optional(),
-  actualInstance: z.string().optional(),
-  anyOfSchemas: z.array(z.string()).optional(),
-});
-
-/**
- * Configuration for OCR confidence scoring.
- */
-export const OcrConfigSchema = z.object({
-  calibrationModel: z.union([z.string(), z.null()]).optional(),
-  ocrConfidenceScores: z.union([z.array(z.union([z.number(), z.number().int()])), z.null()]).optional(),
 });
 
 /**
@@ -637,12 +591,6 @@ export const PublishAgentDefinitionResponseSchema = z.object({
   publishedAt: z.coerce.date(),
   /** User who published */
   publishedBy: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
- * ScoringStatus
- */
-export const ScoringStatusSchema = z.object({
 });
 
 export const SessionMessageItemSchema = z.object({
@@ -729,17 +677,6 @@ export const TagTableUpdateItemSchema = z.object({
 });
 
 /**
- * Configuration for token-based confidence scoring (TF-IDF).
- */
-export const TokenConfigSchema = z.object({
-  model: z.union([z.string(), z.null()]).optional(),
-  removeStopWords: z.union([z.boolean(), z.null()]).optional(),
-  lowerCase: z.union([z.boolean(), z.null()]).optional(),
-  maxNgrams: z.union([z.number().int(), z.null()]).optional(),
-  nInfluencers: z.union([z.number().int(), z.null()]).optional(),
-});
-
-/**
  * Record of a tool call and its result.
  */
 export const ToolActivitySchema = z.object({
@@ -770,21 +707,6 @@ export const ToolResultInfoSchema = z.object({
   result: z.union([z.string(), z.null()]).optional(),
   sequence: z.union([z.string(), z.null()]),
   timestamp: z.union([z.string(), z.null()]),
-});
-
-export const TransformDocumentRequestSchema = z.object({
-  /** File path, URL, or GCS URI to transform */
-  file: z.string(),
-  /** Schema name/ID or inline JSON Schema */
-  artifactSchema: z.union([z.string(), z.record(z.string(), z.unknown())]),
-  /** LLM model override */
-  model: z.union([z.string(), z.null()]).optional(),
-  /** Extraction instructions override */
-  prompt: z.union([z.string(), z.null()]).optional(),
-  /** Prompt template reference */
-  promptId: z.union([z.string(), z.null()]).optional(),
-  /** Max wait time in seconds (sync only) */
-  timeoutSeconds: z.union([z.number().int(), z.null()]).optional(),
 });
 
 export const TransformDocumentResponseSchema = z.object({
@@ -925,6 +847,34 @@ export const CompletionEventSchema = z.object({
 });
 
 /**
+ * Identifies the agent, workflow, and tool context that produced the scored output.
+ */
+export const AgentIdentityContextSchema = z.object({
+  /** Your customer identifier. */
+  customerId: z.string(),
+  /** The project this scoring job belongs to. */
+  projectId: z.string(),
+  /** Name of the agent that produced the scored output. */
+  agentName: z.union([z.string(), z.null()]).optional(),
+  /** Version of the agent that produced the scored output. */
+  agentVersion: z.union([z.string(), z.null()]).optional(),
+  /** Unique identifier for the agent session that produced the scored output. */
+  agentSessionId: z.union([z.string(), z.null()]).optional(),
+  /** Name of the workflow the agent is part of, if applicable. */
+  agentWorkflowName: z.union([z.string(), z.null()]).optional(),
+  /** Version of the workflow the agent is part of. */
+  agentWorkflowVersion: z.union([z.string(), z.null()]).optional(),
+  /** Unique identifier for the workflow session, if the agent runs within a workflow. */
+  agentWorkflowSessionId: z.union([z.string(), z.null()]).optional(),
+  /** Identifier of the tool that produced the scored output, if applicable. */
+  toolId: z.union([z.string(), z.null()]).optional(),
+  /** Identifier of the specific tool instance. */
+  toolInstanceId: z.union([z.string(), z.null()]).optional(),
+  /** Unique identifier for the tool execution that produced the scored output. */
+  toolExecutionId: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
  * A single file in a datasource's content store.
  */
 export const ContentItemSchema = z.object({
@@ -1004,6 +954,36 @@ export const BodyParseDocumentSchema = z.object({
 export const BodyProcessDocumentSchema = z.object({
   /** The document file to process */
   file: z.instanceof(Uint8Array),
+});
+
+export const BodyTransformDocumentSchema = z.object({
+  /** Document file to transform */
+  file: z.instanceof(Uint8Array),
+  /** JSON Schema dict (as JSON string) or schema name/ID */
+  artifactSchema: z.string(),
+  /** LLM model override */
+  model: z.string().optional(),
+  /** Extraction instructions override */
+  prompt: z.string().optional(),
+  /** Prompt template reference */
+  promptId: z.string().optional(),
+  /** Max wait time in seconds (sync only) */
+  timeoutSeconds: z.number().int().optional(),
+});
+
+export const BodySubmitDocumentTransformSchema = z.object({
+  /** Document file to transform */
+  file: z.instanceof(Uint8Array),
+  /** JSON Schema dict (as JSON string) or schema name/ID */
+  artifactSchema: z.string(),
+  /** LLM model override */
+  model: z.string().optional(),
+  /** Extraction instructions override */
+  prompt: z.string().optional(),
+  /** Prompt template reference */
+  promptId: z.string().optional(),
+  /** Max wait time in seconds (sync only) */
+  timeoutSeconds: z.number().int().optional(),
 });
 
 export const AgentListResponseSchema = z.object({
@@ -1310,21 +1290,6 @@ export const MetadataModelCatalogEntrySchema = z.object({
 });
 
 /**
- * Configuration for Observed Consistency confidence scoring.
- */
-export const OcConfigSchema = z.object({
-  nCompletions: z.union([z.number().int(), z.null()]).optional(),
-  maxTokens: z.union([z.number().int(), z.null()]).optional(),
-  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
-  models: z.union([z.array(z.union([z.string(), z.null()])), z.null()]).optional(),
-  nliModelConfig: z.record(z.string(), z.unknown()),
-  nBootstraps: z.union([NBootstrapsSchema, z.null()]).optional(),
-  tokenLimit: z.union([z.number().int(), z.null()]).optional(),
-  originalCompletion: z.union([z.string(), z.null()]).optional(),
-  comparisonCompletions: z.union([z.array(z.string()), z.null()]).optional(),
-});
-
-/**
  * GetBatchDefinitionsResponse
  */
 export const GetBatchDefinitionsResponseSchema = z.object({
@@ -1410,6 +1375,28 @@ export const ToolActivityEntrySchema = z.object({
 
 export const HttpValidationErrorSchema = z.object({
   detail: z.array(ValidationErrorSchema).optional(),
+});
+
+/**
+ * A single confidence scoring job and its result.
+ */
+export const ScoringJobRecordSchema = z.object({
+  /** Unique identifier for this scoring job. */
+  jobId: z.string(),
+  /** The agent, workflow, and tool context that produced the scored output. */
+  agentIdentityContext: AgentIdentityContextSchema,
+  /** The scoring module used to evaluate the output. Judge-based modules (e.g. correctness, coherence, faithfulness) produce scores on a 0–10 scale. Statistical modules (e.g. observed_consistency, data_grounding) produce scores on a 0.0–1.0 scale. */
+  module: z.string(),
+  /** Configuration parameters for the scoring module. Structure varies by module. */
+  scoringConfig: z.string().optional(),
+  /** The input that was provided to the agent or tool being scored. */
+  inputValue: z.string(),
+  /** The output produced by the agent or tool that was evaluated. */
+  outputValue: z.string(),
+  /** Current status of the scoring job: submitted, in_progress, completed, failed, or not_run. */
+  status: z.string(),
+  /** The computed confidence score, or null if the job has not completed. Range depends on the module: 0–10 (integer) for judge-based modules, 0.0–1.0 for statistical modules. */
+  score: z.union([z.number(), z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -1518,18 +1505,6 @@ export const ListMetadataModelCatalogResponseSchema = z.object({
 });
 
 /**
- * Config
- */
-export const ConfigSchema = z.object({
-  anyofSchema_1Validator: z.union([JudgeConfigSchema, z.null()]).optional(),
-  anyofSchema_2Validator: z.union([OcConfigSchema, z.null()]).optional(),
-  anyofSchema_3Validator: z.union([OcrConfigSchema, z.null()]).optional(),
-  anyofSchema_4Validator: z.union([TokenConfigSchema, z.null()]).optional(),
-  actualInstance: z.string().optional(),
-  anyOfSchemas: z.array(z.string()).optional(),
-});
-
-/**
  * Response from the non-streaming chat endpoint.
  */
 export const ChatMessageResponseSchema = z.object({
@@ -1563,6 +1538,30 @@ export const AgentExecutionDetailsResponseSchema = z.object({
 });
 
 /**
+ * Aggregated summary of scoring jobs matching one or two identity context filters.
+ */
+export const ScoreSummarySchema = z.object({
+  /** The identity context field used as the primary filter (e.g. "agent_name"). */
+  primaryField: z.string(),
+  /** The value matched by the primary filter. */
+  primaryValue: z.string(),
+  /** An optional second identity context field used to further narrow results. */
+  secondaryField: z.union([z.string(), z.null()]).optional(),
+  /** The value matched by the secondary filter. */
+  secondaryValue: z.union([z.string(), z.null()]).optional(),
+  /** Overall status across the matched scoring jobs. Null if no jobs matched the filters. */
+  status: z.union([z.string(), z.null()]).optional(),
+  /** Average score across all completed jobs matching the filters. */
+  aggregateScore: z.union([z.number(), z.number().int(), z.null()]).optional(),
+  /** Average score per scoring module, keyed by module name. */
+  moduleScores: z.union([z.record(z.string(), z.union([z.number(), z.number().int()])), z.null()]).optional(),
+  /** Number of completed scoring jobs per module. */
+  nJobsPerModule: z.union([z.record(z.string(), z.number().int()), z.null()]).optional(),
+  /** The individual scoring job records matching the filters. */
+  jobs: z.union([z.array(ScoringJobRecordSchema), z.null()]).optional(),
+});
+
+/**
  * Datasource connection configuration. Exactly one connector type must be set.
  */
 export const ConnectorConfigSchema = z.object({
@@ -1593,14 +1592,6 @@ export const DocumentElementSchema = z.object({
  */
 export const CreateBatchExecutionRequestSchema = z.object({
   batchSpecJson: LegacyBatchSpecJsonSchema,
-});
-
-/**
- * Simplified configuration wrapper that separates module name from config.  This model is shared between confidence-scoring-service and confidence-framework to ensure type consistency without OpenAPI Generator wrapper issues.
- */
-export const ConfidenceScoringConfigSchema = z.object({
-  module: z.string(),
-  config: ConfigSchema,
 });
 
 /**
@@ -1676,20 +1667,6 @@ export const MeibelDocumentResultSchema = z.object({
 });
 
 /**
- * ScoringJobRecord
- */
-export const ScoringJobRecordSchema = z.object({
-  jobId: z.string(),
-  agentIdentityContext: AgentIdentityContextSchema,
-  module: z.string(),
-  scoringConfig: ConfidenceScoringConfigSchema,
-  inputValue: z.string(),
-  outputValue: z.string(),
-  status: ScoringStatusSchema,
-  score: z.union([z.number(), z.number().int(), z.null()]).optional(),
-});
-
-/**
  * List of datasources visible to the caller.
  */
 export const DatasourceListResponseSchema = z.object({
@@ -1708,24 +1685,8 @@ export const ProcessDocumentResponseSchema = z.object({
   result: z.union([MeibelDocumentResultSchema, z.string()]),
 });
 
-/**
- * Aggregated summary of scoring jobs matching one or two AgentIdentityContext filters.  With one level (primary only): flat aggregate of all jobs matching primary_field=primary_value. With two levels (primary + secondary): both constraints are applied; primary is the higher level and secondary is the lower level.
- */
-export const ScoreSummarySchema = z.object({
-  primaryField: z.string(),
-  primaryValue: z.string(),
-  secondaryField: z.union([z.string(), z.null()]).optional(),
-  secondaryValue: z.union([z.string(), z.null()]).optional(),
-  status: z.union([ScoringStatusSchema, z.null()]).optional(),
-  aggregateScore: z.union([z.number(), z.number().int(), z.null()]).optional(),
-  moduleScores: z.union([z.record(z.string(), z.union([z.number(), z.number().int()])), z.null()]).optional(),
-  nJobsPerModule: z.union([z.record(z.string(), z.number().int()), z.null()]).optional(),
-  jobs: z.union([z.array(ScoringJobRecordSchema), z.null()]).optional(),
-});
-
 // Type exports
 export type AgentDetailResponse = z.infer<typeof AgentDetailResponseSchema>;
-export type AgentIdentityContext = z.infer<typeof AgentIdentityContextSchema>;
 export type AgentSummary = z.infer<typeof AgentSummarySchema>;
 export type AgentToolDefinition = z.infer<typeof AgentToolDefinitionSchema>;
 export type AgentVersionSummary = z.infer<typeof AgentVersionSummarySchema>;
@@ -1765,21 +1726,17 @@ export type FilesSummaryResponse = z.infer<typeof FilesSummaryResponseSchema>;
 export type IngestMethodCountsResponse = z.infer<typeof IngestMethodCountsResponseSchema>;
 export type IngestMethodSummary = z.infer<typeof IngestMethodSummarySchema>;
 export type IngestStatus = z.infer<typeof IngestStatusSchema>;
-export type JudgeConfig = z.infer<typeof JudgeConfigSchema>;
 export type LegacyBatchExecutionParams = z.infer<typeof LegacyBatchExecutionParamsSchema>;
 export type LegacyBatchInputFilters = z.infer<typeof LegacyBatchInputFiltersSchema>;
 export type LegacyBatchOutputConfig = z.infer<typeof LegacyBatchOutputConfigSchema>;
 export type MessageEntry = z.infer<typeof MessageEntrySchema>;
 export type MetadataField = z.infer<typeof MetadataFieldSchema>;
-export type NBootstraps = z.infer<typeof NBootstrapsSchema>;
-export type OcrConfig = z.infer<typeof OcrConfigSchema>;
 export type PaginationMeta = z.infer<typeof PaginationMetaSchema>;
 export type ParseDocumentResponse = z.infer<typeof ParseDocumentResponseSchema>;
 export type PromptResponse = z.infer<typeof PromptResponseSchema>;
 export type PromptSummary = z.infer<typeof PromptSummarySchema>;
 export type PublishAgentDefinitionRequest = z.infer<typeof PublishAgentDefinitionRequestSchema>;
 export type PublishAgentDefinitionResponse = z.infer<typeof PublishAgentDefinitionResponseSchema>;
-export type ScoringStatus = z.infer<typeof ScoringStatusSchema>;
 export type SessionMessageItem = z.infer<typeof SessionMessageItemSchema>;
 export type SessionSummary = z.infer<typeof SessionSummarySchema>;
 export type Source = z.infer<typeof SourceSchema>;
@@ -1788,11 +1745,9 @@ export type TableSummaryResponse = z.infer<typeof TableSummaryResponseSchema>;
 export type TagColumn = z.infer<typeof TagColumnSchema>;
 export type TagColumnUpdateItem = z.infer<typeof TagColumnUpdateItemSchema>;
 export type TagTableUpdateItem = z.infer<typeof TagTableUpdateItemSchema>;
-export type TokenConfig = z.infer<typeof TokenConfigSchema>;
 export type ToolActivity = z.infer<typeof ToolActivitySchema>;
 export type ToolCallInfo = z.infer<typeof ToolCallInfoSchema>;
 export type ToolResultInfo = z.infer<typeof ToolResultInfoSchema>;
-export type TransformDocumentRequest = z.infer<typeof TransformDocumentRequestSchema>;
 export type TransformDocumentResponse = z.infer<typeof TransformDocumentResponseSchema>;
 export type TriggerIngestResponse = z.infer<typeof TriggerIngestResponseSchema>;
 export type UpdateAgentDefinitionResponse = z.infer<typeof UpdateAgentDefinitionResponseSchema>;
@@ -1808,6 +1763,7 @@ export type ToolCallEvent = z.infer<typeof ToolCallEventSchema>;
 export type ToolResultEvent = z.infer<typeof ToolResultEventSchema>;
 export type PartialResponseEvent = z.infer<typeof PartialResponseEventSchema>;
 export type CompletionEvent = z.infer<typeof CompletionEventSchema>;
+export type AgentIdentityContext = z.infer<typeof AgentIdentityContextSchema>;
 export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type UploadContentResponse = z.infer<typeof UploadContentResponseSchema>;
 export type UpdateDataElementRequest = z.infer<typeof UpdateDataElementRequestSchema>;
@@ -1815,6 +1771,8 @@ export type DeleteDatasourceResponse = z.infer<typeof DeleteDatasourceResponseSc
 export type WebDomain = z.infer<typeof WebDomainSchema>;
 export type BodyParseDocument = z.infer<typeof BodyParseDocumentSchema>;
 export type BodyProcessDocument = z.infer<typeof BodyProcessDocumentSchema>;
+export type BodyTransformDocument = z.infer<typeof BodyTransformDocumentSchema>;
+export type BodySubmitDocumentTransform = z.infer<typeof BodySubmitDocumentTransformSchema>;
 export type AgentListResponse = z.infer<typeof AgentListResponseSchema>;
 export type CreateAgentDefinitionRequest = z.infer<typeof CreateAgentDefinitionRequestSchema>;
 export type UpdateAgentDefinitionRequest = z.infer<typeof UpdateAgentDefinitionRequestSchema>;
@@ -1834,7 +1792,6 @@ export type LegacyBatchInputConfig = z.infer<typeof LegacyBatchInputConfigSchema
 export type MetadataConfigRequest = z.infer<typeof MetadataConfigRequestSchema>;
 export type MetadataConfigResponse = z.infer<typeof MetadataConfigResponseSchema>;
 export type MetadataModelCatalogEntry = z.infer<typeof MetadataModelCatalogEntrySchema>;
-export type OcConfig = z.infer<typeof OcConfigSchema>;
 export type GetBatchDefinitionsResponse = z.infer<typeof GetBatchDefinitionsResponseSchema>;
 export type PromptListResponse = z.infer<typeof PromptListResponseSchema>;
 export type SessionMessagesResponse = z.infer<typeof SessionMessagesResponseSchema>;
@@ -1846,6 +1803,7 @@ export type UpdateTagColumnsRequest = z.infer<typeof UpdateTagColumnsRequestSche
 export type UpdateTagTablesRequest = z.infer<typeof UpdateTagTablesRequestSchema>;
 export type ToolActivityEntry = z.infer<typeof ToolActivityEntrySchema>;
 export type HttpValidationError = z.infer<typeof HttpValidationErrorSchema>;
+export type ScoringJobRecord = z.infer<typeof ScoringJobRecordSchema>;
 export type FileUploadSyncResponse = z.infer<typeof FileUploadSyncResponseSchema>;
 export type ListContentResponse = z.infer<typeof ListContentResponseSchema>;
 export type WebCrawlConnector = z.infer<typeof WebCrawlConnectorSchema>;
@@ -1856,18 +1814,15 @@ export type LegacyBatchSpecJson = z.infer<typeof LegacyBatchSpecJsonSchema>;
 export type BodyUploadContent = z.infer<typeof BodyUploadContentSchema>;
 export type BodyUploadAndListContent = z.infer<typeof BodyUploadAndListContentSchema>;
 export type ListMetadataModelCatalogResponse = z.infer<typeof ListMetadataModelCatalogResponseSchema>;
-export type Config = z.infer<typeof ConfigSchema>;
 export type ChatMessageResponse = z.infer<typeof ChatMessageResponseSchema>;
 export type AgentExecutionDetailsResponse = z.infer<typeof AgentExecutionDetailsResponseSchema>;
+export type ScoreSummary = z.infer<typeof ScoreSummarySchema>;
 export type ConnectorConfig = z.infer<typeof ConnectorConfigSchema>;
 export type DocumentElement = z.infer<typeof DocumentElementSchema>;
 export type CreateBatchExecutionRequest = z.infer<typeof CreateBatchExecutionRequestSchema>;
-export type ConfidenceScoringConfig = z.infer<typeof ConfidenceScoringConfigSchema>;
 export type CreateDatasourceRequest = z.infer<typeof CreateDatasourceRequestSchema>;
 export type DatasourceResponse = z.infer<typeof DatasourceResponseSchema>;
 export type UpdateDatasourceRequest = z.infer<typeof UpdateDatasourceRequestSchema>;
 export type MeibelDocumentResult = z.infer<typeof MeibelDocumentResultSchema>;
-export type ScoringJobRecord = z.infer<typeof ScoringJobRecordSchema>;
 export type DatasourceListResponse = z.infer<typeof DatasourceListResponseSchema>;
 export type ProcessDocumentResponse = z.infer<typeof ProcessDocumentResponseSchema>;
-export type ScoreSummary = z.infer<typeof ScoreSummarySchema>;

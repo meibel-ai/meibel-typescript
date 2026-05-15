@@ -135,7 +135,7 @@ export class DocumentsResource {
 /**
  * Transform a document using AI extraction (sync)
  *
- * Submit a document for AI-powered structured extraction and block until complete. Internally orchestrates a system agent session, polls for completion, and returns the extracted data.
+ * Upload a document for AI-powered structured extraction and block until complete. The file is uploaded to cloud storage and processed by a system agent.
  *
  * @param body - Request body
  *
@@ -143,31 +143,54 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async transform(options: { file: string; schema: string | Record<string, unknown> | z.ZodType; model?: string | null; prompt?: string | null; promptId?: string | null; timeoutSeconds?: number | null }): Promise<models.TransformDocumentResponse> {
+  async transform(options: { file: string | File | Blob | ReadableStream<Uint8Array>; schema: string | Record<string, unknown> | z.ZodType; model?: string; prompt?: string; promptId?: string; timeoutSeconds?: number }): Promise<models.TransformDocumentResponse> {
     const _schema = options.schema instanceof z.ZodType
       ? zodToJsonSchema(options.schema)
       : options.schema;
-    const body = {
-      file: options.file,
-      artifact_schema: _schema,
-      model: options.model,
-      prompt: options.prompt,
-      prompt_id: options.promptId,
-      timeout_seconds: options.timeoutSeconds,
-    };
+    const path = "/documents/transform";
 
-    const response = await this.http.request<models.TransformDocumentResponse>("/documents/transform", {
-      method: "POST",
-      body,
-    });
+    // Resolve file content
+    let _fileContent: ReadableStream<Uint8Array> | Blob | File;
+    let _fileName: string;
+    if (typeof options.file === 'string') {
+      const { createReadStream } = await import('node:fs');
+      const { Readable } = await import('node:stream');
+      _fileContent = Readable.toWeb(createReadStream(options.file)) as ReadableStream<Uint8Array>;
+      _fileName = options.file.split('/').pop() ?? options.file;
+    } else {
+      _fileContent = options.file;
+      _fileName = options.file instanceof File ? options.file.name : 'file';
+    }
 
-    return response;
+    // Build form fields from non-file smart params
+    const formFields: Record<string, string> = {};
+    if (typeof _schema === 'object' && _schema !== null) {
+      formFields['artifact_schema'] = JSON.stringify(_schema);
+    } else if (_schema != null) {
+      formFields['artifact_schema'] = String(_schema);
+    }
+    if (options.model != null) {
+      formFields['model'] = String(options.model);
+    }
+    if (options.prompt != null) {
+      formFields['prompt'] = String(options.prompt);
+    }
+    if (options.promptId != null) {
+      formFields['prompt_id'] = String(options.promptId);
+    }
+    if (options.timeoutSeconds != null) {
+      formFields['timeout_seconds'] = String(options.timeoutSeconds);
+    }
+
+    return this.http.upload<models.TransformDocumentResponse>(path, [
+      { fieldName: 'file', fileName: _fileName, content: _fileContent },
+    ], { formFields, timeout: options.timeoutSeconds ? options.timeoutSeconds * 1000 : undefined });
   }
 
 /**
  * Submit a document transform (async)
  *
- * Submit a document for AI-powered extraction and return immediately. Poll for completion via client.sessions.get(execution_id).
+ * Upload a document for AI-powered extraction and return immediately. Poll for completion via client.sessions.get(execution_id).
  *
  * @param body - Request body
  *
@@ -175,25 +198,48 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async submitTransform(options: { file: string; schema: string | Record<string, unknown> | z.ZodType; model?: string | null; prompt?: string | null; promptId?: string | null; timeoutSeconds?: number | null }): Promise<models.SubmitDocumentTransformResponse> {
+  async submitTransform(options: { file: string | File | Blob | ReadableStream<Uint8Array>; schema: string | Record<string, unknown> | z.ZodType; model?: string; prompt?: string; promptId?: string; timeoutSeconds?: number }): Promise<models.SubmitDocumentTransformResponse> {
     const _schema = options.schema instanceof z.ZodType
       ? zodToJsonSchema(options.schema)
       : options.schema;
-    const body = {
-      file: options.file,
-      artifact_schema: _schema,
-      model: options.model,
-      prompt: options.prompt,
-      prompt_id: options.promptId,
-      timeout_seconds: options.timeoutSeconds,
-    };
+    const path = "/documents/transform/submit";
 
-    const response = await this.http.request<models.SubmitDocumentTransformResponse>("/documents/transform/submit", {
-      method: "POST",
-      body,
-    });
+    // Resolve file content
+    let _fileContent: ReadableStream<Uint8Array> | Blob | File;
+    let _fileName: string;
+    if (typeof options.file === 'string') {
+      const { createReadStream } = await import('node:fs');
+      const { Readable } = await import('node:stream');
+      _fileContent = Readable.toWeb(createReadStream(options.file)) as ReadableStream<Uint8Array>;
+      _fileName = options.file.split('/').pop() ?? options.file;
+    } else {
+      _fileContent = options.file;
+      _fileName = options.file instanceof File ? options.file.name : 'file';
+    }
 
-    return response;
+    // Build form fields from non-file smart params
+    const formFields: Record<string, string> = {};
+    if (typeof _schema === 'object' && _schema !== null) {
+      formFields['artifact_schema'] = JSON.stringify(_schema);
+    } else if (_schema != null) {
+      formFields['artifact_schema'] = String(_schema);
+    }
+    if (options.model != null) {
+      formFields['model'] = String(options.model);
+    }
+    if (options.prompt != null) {
+      formFields['prompt'] = String(options.prompt);
+    }
+    if (options.promptId != null) {
+      formFields['prompt_id'] = String(options.promptId);
+    }
+    if (options.timeoutSeconds != null) {
+      formFields['timeout_seconds'] = String(options.timeoutSeconds);
+    }
+
+    return this.http.upload<models.SubmitDocumentTransformResponse>(path, [
+      { fieldName: 'file', fileName: _fileName, content: _fileContent },
+    ], { formFields, timeout: options.timeoutSeconds ? options.timeoutSeconds * 1000 : undefined });
   }
 
 }
