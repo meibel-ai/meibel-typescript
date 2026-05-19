@@ -55,6 +55,7 @@ export class MeibelClient {
       ...options,
       baseUrl,
       headers,
+      _sdkUserAgent: "meibel-typescript/0.4.0",
     });
 
     this.agents = new AgentsResource(this.http);

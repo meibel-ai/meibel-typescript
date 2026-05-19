@@ -73,10 +73,11 @@ export class HttpClient {
   private readonly timeout: number;
   private readonly fetchFn: typeof fetch;
 
-  constructor(options: HttpClientOptions = {}) {
+  constructor(options: HttpClientOptions & { _sdkUserAgent?: string } = {}) {
     this.baseUrl = (options.baseUrl ?? '').replace(/\/$/, '');
     this.defaultHeaders = {
       'Content-Type': 'application/json',
+      ...(options._sdkUserAgent ? { 'User-Agent': options._sdkUserAgent } : {}),
       ...options.headers,
     };
     this.timeout = options.timeout ?? 30000;
