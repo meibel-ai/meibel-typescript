@@ -1602,8 +1602,8 @@ export const CreateDatasourceRequestSchema = z.object({
   name: z.string(),
   /** What this datasource contains */
   description: z.string().optional(),
-  /** Connection configuration */
-  connector: ConnectorConfigSchema,
+  /** Connection configuration — omit for file-upload datasources */
+  connector: z.union([ConnectorConfigSchema, z.null()]).optional(),
   /** Optional metadata extraction config to apply after creation */
   metadataConfig: z.union([MetadataConfigRequestSchema, z.null()]).optional(),
 });

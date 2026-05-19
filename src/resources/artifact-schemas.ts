@@ -7,6 +7,8 @@
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
 import { paginate } from '../pagination.js';
+import { z } from 'zod';
+import { zodToJsonSchema } from '../schema.js';
 
 export class ArtifactSchemasResource {
   constructor(private readonly http: HttpClient) {}
@@ -54,7 +56,21 @@ export class ArtifactSchemasResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async create(body: models.CreateAgentArtifactRequest): Promise<models.CreateArtifactSchemaResponse> {
+  async create(options: { displayName: string; type?: models.ArtifactType; description?: string | null; required?: boolean | null; schema: string | Record<string, unknown> | z.ZodType; maxSizeBytes?: number | null; storageStrategy?: models.ArtifactStorageStrategy | null; additionalProperties?: Record<string, unknown> }): Promise<models.CreateArtifactSchemaResponse> {
+    const _schema = options.schema instanceof z.ZodType
+      ? zodToJsonSchema(options.schema)
+      : options.schema;
+    const body = {
+      display_name: options.displayName,
+      type: options.type,
+      description: options.description,
+      required: options.required,
+      schema_def: _schema,
+      max_size_bytes: options.maxSizeBytes,
+      storage_strategy: options.storageStrategy,
+      additional_properties: options.additionalProperties,
+    };
+
     const response = await this.http.request<models.CreateArtifactSchemaResponse>("/artifact-schemas/", {
       method: "POST",
       body,

@@ -52,7 +52,7 @@ export class DatasourcesResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async create(options: { name: string; description?: string; connector: models.ConnectorConfig; metadataConfig?: Record<string, unknown> | z.ZodType }): Promise<models.DatasourceResponse> {
+  async create(options: { name: string; description?: string; connector?: models.ConnectorConfig | null; metadataConfig?: Record<string, unknown> | z.ZodType }): Promise<models.DatasourceResponse> {
     const _metadataConfig = options.metadataConfig instanceof z.ZodType
       ? metadataSchemaFromZod(options.metadataConfig)
       : options.metadataConfig;
@@ -125,24 +125,6 @@ export class DatasourcesResource {
   async delete(datasourceId: string): Promise<models.DeleteDatasourceResponse> {
     const response = await this.http.request<models.DeleteDatasourceResponse>(`/datasources/${datasourceId}`, {
       method: "DELETE",
-    });
-
-    return response;
-  }
-
-/**
- * Chat with datasources via AI (streaming)
- *
- * Ask a question against one or more datasources. Returns a streaming SSE response with the AI-generated answer.
- *
- * @param body - Request body
- *
- * @throws {ApiError} If the request fails
- */
-  async chatWith(body: models.ChatWithDatasourceRequest): Promise<void> {
-    const response = await this.http.request<void>("/datasources/chat", {
-      method: "POST",
-      body,
     });
 
     return response;
