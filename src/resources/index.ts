@@ -18,5 +18,4 @@ export { IngestResource } from './ingest.js';
 export { TablesResource } from './tables.js';
 export { DocumentsResource } from './documents.js';
 export { MetadataModelCatalogResource } from './metadata-model-catalog.js';
-export { PromptsResource } from './prompts.js';
 export { SessionsResource } from './sessions.js';

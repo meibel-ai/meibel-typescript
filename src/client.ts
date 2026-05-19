@@ -19,7 +19,6 @@ import { IngestResource } from './resources/ingest.js';
 import { TablesResource } from './resources/tables.js';
 import { DocumentsResource } from './resources/documents.js';
 import { MetadataModelCatalogResource } from './resources/metadata-model-catalog.js';
-import { PromptsResource } from './resources/prompts.js';
 import { SessionsResource } from './resources/sessions.js';
 
 export interface ClientOptions extends HttpClientOptions {
@@ -39,7 +38,6 @@ export class MeibelClient {
   public readonly datasources: DatasourcesResource;
   public readonly documents: DocumentsResource;
   public readonly metadataModelCatalog: MetadataModelCatalogResource;
-  public readonly prompts: PromptsResource;
   public readonly sessions: SessionsResource;
 
   constructor(options: ClientOptions = {}) {
@@ -66,7 +64,6 @@ export class MeibelClient {
     this.datasources = new DatasourcesResource(this.http);
     this.documents = new DocumentsResource(this.http);
     this.metadataModelCatalog = new MetadataModelCatalogResource(this.http);
-    this.prompts = new PromptsResource(this.http);
     this.sessions = new SessionsResource(this.http);
   }
 }
