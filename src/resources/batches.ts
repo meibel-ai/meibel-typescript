@@ -31,7 +31,7 @@ export class BatchesResource {
       limit: options?.limit ?? undefined,
     };
 
-    const response = await this.http.request<models.GetBatchDefinitionsResponse>("/batch-definitions/", {
+    const response = await this.http.request<models.GetBatchDefinitionsResponse>("/batch-definitions", {
       method: "GET",
       params: queryParams,
     });
@@ -49,7 +49,7 @@ export class BatchesResource {
  * @throws {ApiError} If the request fails
  */
   async create(body: models.CreateBatchDefinitionRequest): Promise<models.CreateBatchDefinitionResponse> {
-    const response = await this.http.request<models.CreateBatchDefinitionResponse>("/batch-definitions/", {
+    const response = await this.http.request<models.CreateBatchDefinitionResponse>("/batch-definitions", {
       method: "POST",
       body,
     });

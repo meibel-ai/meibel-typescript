@@ -44,11 +44,15 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async process(file: ReadableStream<Uint8Array> | Blob | File, fileName: string): Promise<models.ProcessDocumentResponse> {
+  async process(file: ReadableStream<Uint8Array> | Blob | File, fileName: string, options?: { format?: string }): Promise<models.ProcessDocumentResponse> {
     const path = "/documents/process";
+    const queryParams: Record<string, string | number | boolean | undefined> = {};
+    if (options?.format !== undefined) {
+      queryParams['format'] = options.format;
+    }
     return this.http.upload<models.ProcessDocumentResponse>(path, [
       { fieldName: 'file', fileName: fileName, content: file },
-    ]);
+    ], { params: queryParams });
   }
 
 /**
@@ -123,7 +127,7 @@ export class DocumentsResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async *streamTrace(jobId: string): AsyncIterable<models.LayoutDetectedEvent | models.TableExtractedEvent | models.OcrPageEvent | models.CompletedEvent | models.ErrorEvent> {
+  async *streamTrace(jobId: string): AsyncIterable<Record<string, unknown>> {
     const response = await this.http.request<Response>(`/documents/${jobId}/trace`, {
       method: "GET",
       stream: true,

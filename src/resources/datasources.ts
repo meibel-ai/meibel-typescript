@@ -6,6 +6,7 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
+import { z } from 'zod';
 import { metadataSchemaFromZod } from '../metadata.js';
 import { DataElementsResource } from './data-elements.js';
 import { DownloadsResource } from './downloads.js';

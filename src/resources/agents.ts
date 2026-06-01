@@ -33,7 +33,7 @@ export class AgentsResource {
     };
 
     yield* paginate<models.AgentSummary>(async (cursor) => {
-      const response = await this.http.request<models.AgentListResponse>("/agents/", {
+      const response = await this.http.request<models.AgentListResponse>("/agents", {
         method: "GET",
         params: {
           ...queryParams,
@@ -56,7 +56,7 @@ export class AgentsResource {
  * @throws {ApiError} If the request fails
  */
   async create(body: models.CreateAgentDefinitionRequest): Promise<models.CreateAgentResponse> {
-    const response = await this.http.request<models.CreateAgentResponse>("/agents/", {
+    const response = await this.http.request<models.CreateAgentResponse>("/agents", {
       method: "POST",
       body,
     });

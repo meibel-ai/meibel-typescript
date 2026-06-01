@@ -98,7 +98,7 @@ function zodTypeToJsonSchema(zodType: z.ZodTypeAny): Record<string, unknown> {
   return { type: "string" };
 }
 
-function zodObjectToJsonSchema(
+export function zodObjectToJsonSchema(
   schema: z.ZodObject<any>
 ): Record<string, unknown> {
   const shape = schema.shape as Record<string, z.ZodTypeAny>;
@@ -229,12 +229,12 @@ const FREEFORM_TYPES = new Set(["markdown", "text", "html", "pdf"]);
 const SCHEMA_REQUIRED_TYPES = new Set(["json", "csv", "yaml"]);
 
 function buildSchemaDef(
-  schema: z.ZodObject<any> | null,
+  schema: z.ZodTypeAny | null,
   type: string
 ): Record<string, unknown> | unknown[] {
   if (schema !== null && !(schema instanceof z.ZodObject)) {
     throw new TypeError(
-      `Expected a Zod object schema (z.object({...})), got ${typeof schema === "function" ? schema.name || "a class" : typeof schema}. ` +
+      `Expected a Zod object schema (z.object({...})), got ${typeof schema === "function" ? (schema as unknown as { name?: string }).name || "a class" : typeof schema}. ` +
         `Define your schema as: const MySchema = z.object({ ... })`
     );
   }

@@ -32,7 +32,7 @@ export class ExecutionsResource {
       sort_order: options?.sortOrder ?? undefined,
     };
 
-    const response = await this.http.request<models.GetBatchExecutionsResponse>("/batch-executions/", {
+    const response = await this.http.request<models.GetBatchExecutionsResponse>("/batch-executions", {
       method: "GET",
       params: queryParams,
     });
@@ -50,7 +50,7 @@ export class ExecutionsResource {
  * @throws {ApiError} If the request fails
  */
   async create(body: models.CreateBatchExecutionRequest): Promise<models.BatchExecutionResponse> {
-    const response = await this.http.request<models.BatchExecutionResponse>("/batch-executions/", {
+    const response = await this.http.request<models.BatchExecutionResponse>("/batch-executions", {
       method: "POST",
       body,
     });

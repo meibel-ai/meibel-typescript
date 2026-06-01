@@ -14,14 +14,14 @@ export class DataElementsResource {
 /**
  * Get Data Element
  *
- * @param datasourceId - The datasource_id parameter
  * @param dataElementId - The data_element_id parameter
+ * @param datasourceId - The datasource_id parameter
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async get(datasourceId: string, dataElementId: string): Promise<models.DataElementResponse> {
+  async get(dataElementId: string, datasourceId: string): Promise<models.DataElementResponse> {
     const response = await this.http.request<models.DataElementResponse>(`/datasources/${datasourceId}/data-elements/${dataElementId}`, {
       method: "GET",
     });
@@ -32,15 +32,15 @@ export class DataElementsResource {
 /**
  * Update Data Element
  *
- * @param datasourceId - The datasource_id parameter
  * @param dataElementId - The data_element_id parameter
+ * @param datasourceId - The datasource_id parameter
  * @param body - Request body
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async update(datasourceId: string, dataElementId: string, body: models.UpdateDataElementRequest): Promise<models.DataElementResponse> {
+  async update(dataElementId: string, datasourceId: string, body: models.UpdateDataElementRequest): Promise<models.DataElementResponse> {
     const response = await this.http.request<models.DataElementResponse>(`/datasources/${datasourceId}/data-elements/${dataElementId}`, {
       method: "PUT",
       body,

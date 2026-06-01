@@ -34,7 +34,7 @@ export class ArtifactSchemasResource {
     };
 
     yield* paginate<models.ArtifactSchemaSummary>(async (cursor) => {
-      const response = await this.http.request<models.ArtifactSchemaListResponse>("/artifact-schemas/", {
+      const response = await this.http.request<models.ArtifactSchemaListResponse>("/artifact-schemas", {
         method: "GET",
         params: {
           ...queryParams,
@@ -71,7 +71,7 @@ export class ArtifactSchemasResource {
       additional_properties: options.additionalProperties,
     };
 
-    const response = await this.http.request<models.CreateArtifactSchemaResponse>("/artifact-schemas/", {
+    const response = await this.http.request<models.CreateArtifactSchemaResponse>("/artifact-schemas", {
       method: "POST",
       body,
     });

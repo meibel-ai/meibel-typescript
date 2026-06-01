@@ -33,12 +33,12 @@ export class DownloadsResource {
 /**
  * Stream Download Progress
  *
- * @param datasourceId - The datasource_id parameter
  * @param jobId - The job_id parameter
+ * @param datasourceId - The datasource_id parameter
  *
  * @throws {ApiError} If the request fails
  */
-  async *streamProgress(datasourceId: string, jobId: string): AsyncIterable<models.ConnectedEvent | models.ProgressEvent | models.StreamCompleteEvent | models.ErrorEvent> {
+  async *streamProgress(jobId: string, datasourceId: string): AsyncIterable<models.ConnectedEvent | Record<string, unknown>> {
     const response = await this.http.request<Response>(`/datasources/${datasourceId}/downloads/${jobId}/progress`, {
       method: "GET",
       stream: true,
@@ -50,14 +50,14 @@ export class DownloadsResource {
 /**
  * Download File
  *
- * @param datasourceId - The datasource_id parameter
  * @param jobId - The job_id parameter
+ * @param datasourceId - The datasource_id parameter
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async downloadFile(datasourceId: string, jobId: string): Promise<string> {
+  async downloadFile(jobId: string, datasourceId: string): Promise<string> {
     const response = await this.http.request<string>(`/datasources/${datasourceId}/downloads/${jobId}/file`, {
       method: "GET",
     });

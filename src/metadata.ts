@@ -114,12 +114,17 @@ function resolveMeibelType(
  * @returns A MetadataConfigRequest-shaped object with type "custom".
  */
 export function metadataSchemaFromZod(
-  schema: z.ZodObject<any>,
+  schema: z.ZodType,
   options?: {
     /** Fields to exclude from indexing (default: all indexed). */
     noIndex?: string[];
   }
 ): MetadataConfigCustom {
+  if (!(schema instanceof z.ZodObject)) {
+    throw new TypeError(
+      "metadataSchemaFromZod expects a Zod object schema (z.object({ ... }))."
+    );
+  }
   const shape = schema.shape as Record<string, z.ZodTypeAny>;
   const noIndex = new Set(options?.noIndex ?? []);
   const fields: MetadataField[] = [];

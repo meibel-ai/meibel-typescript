@@ -21,8 +21,8 @@ export class ConfidenceScoringResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async getScoringJob(jobId: string): Promise<models.ScoringJobRecord> {
-    const response = await this.http.request<models.ScoringJobRecord>(`/confidence-scoring/job/${jobId}`, {
+  async getScoringJob(jobId: string): Promise<models.ScoringJobResponse> {
+    const response = await this.http.request<models.ScoringJobResponse>(`/confidence-scoring/job/${jobId}`, {
       method: "GET",
     });
 
@@ -48,7 +48,7 @@ export class ConfidenceScoringResource {
  *
  * @throws {ApiError} If the request fails
  */
-  async listScoringJobs(options?: { agentName?: string | null; agentVersion?: string | null; agentSessionId?: string | null; agentWorkflowName?: string | null; agentWorkflowVersion?: string | null; agentWorkflowSessionId?: string | null; toolId?: string | null; toolInstanceId?: string | null; toolExecutionId?: string | null }): Promise<models.ScoringJobRecord[]> {
+  async listScoringJobs(options?: { agentName?: string | null; agentVersion?: string | null; agentSessionId?: string | null; agentWorkflowName?: string | null; agentWorkflowVersion?: string | null; agentWorkflowSessionId?: string | null; toolId?: string | null; toolInstanceId?: string | null; toolExecutionId?: string | null }): Promise<models.ScoringJobResponse[]> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       agent_name: options?.agentName ?? undefined,
       agent_version: options?.agentVersion ?? undefined,
@@ -61,33 +61,7 @@ export class ConfidenceScoringResource {
       tool_execution_id: options?.toolExecutionId ?? undefined,
     };
 
-    const response = await this.http.request<models.ScoringJobRecord[]>("/confidence-scoring/jobs", {
-      method: "GET",
-      params: queryParams,
-    });
-
-    return response;
-  }
-
-/**
- * Get scoring summary
- *
- * Get an aggregated summary of confidence scores. Requires a primary filter; an optional secondary filter narrows results further. Filters use the format "field:value", where field is any identity context field name.
- *
- * @param primary - Primary filter in "field:value" format, where field is an identity context field name (e.g. "agent_name:my-agent" or "agent_session_id:sess_abc123").
- * @param secondary - Optional secondary filter in the same "field:value" format to further narrow results (e.g. "agent_version:1.2.0").
- *
- * @returns Successful Response
- *
- * @throws {ApiError} If the request fails
- */
-  async getScoringJobsSummary(primary: string, options?: { secondary?: string | null }): Promise<models.ScoreSummary> {
-    const queryParams: Record<string, string | number | boolean | undefined> = {
-      primary: primary,
-      secondary: options?.secondary ?? undefined,
-    };
-
-    const response = await this.http.request<models.ScoreSummary>("/confidence-scoring/summary", {
+    const response = await this.http.request<models.ScoringJobResponse[]>("/confidence-scoring/jobs", {
       method: "GET",
       params: queryParams,
     });

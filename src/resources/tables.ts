@@ -55,14 +55,14 @@ export class TablesResource {
 /**
  * List Columns
  *
- * @param datasourceId - The datasource_id parameter
  * @param tableName - The table_name parameter
+ * @param datasourceId - The datasource_id parameter
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async listColumns(datasourceId: string, tableName: string): Promise<models.TagColumn[]> {
+  async listColumns(tableName: string, datasourceId: string): Promise<models.TagColumn[]> {
     const response = await this.http.request<models.TagColumn[]>(`/datasources/${datasourceId}/tables/${tableName}/columns`, {
       method: "GET",
     });
@@ -73,15 +73,15 @@ export class TablesResource {
 /**
  * Update Column Descriptions
  *
- * @param datasourceId - The datasource_id parameter
  * @param tableName - The table_name parameter
+ * @param datasourceId - The datasource_id parameter
  * @param body - Request body
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async updateColumnDescriptions(datasourceId: string, tableName: string, body: models.UpdateTagColumnsRequest): Promise<models.TagColumn[]> {
+  async updateColumnDescriptions(tableName: string, datasourceId: string, body: models.UpdateTagColumnsRequest): Promise<models.TagColumn[]> {
     const response = await this.http.request<models.TagColumn[]>(`/datasources/${datasourceId}/tables/${tableName}/columns`, {
       method: "PUT",
       body,

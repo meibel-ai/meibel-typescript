@@ -14,83 +14,6 @@ export class FileUploadsResource {
   constructor(private readonly http: HttpClient) {}
 
 /**
- * Upload Content (async)
- *
- * @param body - Request body
- *
- * @returns Successful Response
- *
- * @throws {ApiError} If the request fails
- */
-  async uploadContent(files: ReadableStream<Uint8Array> | Blob | File, filesName: string, options?: { datasourceId?: string; name?: string; description?: string; metadataConfig?: models.MetadataConfigRequest }): Promise<models.UploadContentResponse> {
-    const path = "/datasources/uploads";
-    const formFields: Record<string, string> = {};
-    if (options?.datasourceId !== undefined) {
-      formFields['datasource_id'] = String(options.datasourceId);
-    }
-    if (options?.name !== undefined) {
-      formFields['name'] = String(options.name);
-    }
-    if (options?.description !== undefined) {
-      formFields['description'] = String(options.description);
-    }
-    if (options?.metadataConfig !== undefined) {
-      formFields['metadata_config'] = String(options.metadataConfig);
-    }
-    return this.http.upload<models.UploadContentResponse>(path, [
-      { fieldName: 'files', fileName: filesName, content: files },
-    ], { formFields });
-  }
-
-/**
- * Upload Content (sync)
- *
- * @param body - Request body
- *
- * @returns Successful Response
- *
- * @throws {ApiError} If the request fails
- */
-  async uploadAndListContent(files: ReadableStream<Uint8Array> | Blob | File, filesName: string, options?: { datasourceId?: string; name?: string; description?: string; metadataConfig?: models.MetadataConfigRequest; triggerIngest?: boolean }): Promise<models.FileUploadSyncResponse> {
-    const path = "/datasources/uploads/process";
-    const formFields: Record<string, string> = {};
-    if (options?.datasourceId !== undefined) {
-      formFields['datasource_id'] = String(options.datasourceId);
-    }
-    if (options?.name !== undefined) {
-      formFields['name'] = String(options.name);
-    }
-    if (options?.description !== undefined) {
-      formFields['description'] = String(options.description);
-    }
-    if (options?.metadataConfig !== undefined) {
-      formFields['metadata_config'] = String(options.metadataConfig);
-    }
-    if (options?.triggerIngest !== undefined) {
-      formFields['trigger_ingest'] = String(options.triggerIngest);
-    }
-    return this.http.upload<models.FileUploadSyncResponse>(path, [
-      { fieldName: 'files', fileName: filesName, content: files },
-    ], { formFields });
-  }
-
-/**
- * Stream Upload Progress
- *
- * @param uploadId - The upload_id parameter
- *
- * @throws {ApiError} If the request fails
- */
-  async *streamUploadProgress(uploadId: string): AsyncIterable<models.ConnectedEvent | models.ProgressEvent | models.StreamCompleteEvent | models.ErrorEvent> {
-    const response = await this.http.request<Response>(`/datasources/uploads/${uploadId}/progress`, {
-      method: "GET",
-      stream: true,
-    });
-
-    yield* streamSSE(response);
-  }
-
-/**
  * List Content
  *
  * @param datasourceId - The datasource_id parameter
@@ -121,6 +44,61 @@ export class FileUploadsResource {
         items: response.items ?? [],
       };
     });
+  }
+
+/**
+ * Upload Content (async)
+ *
+ * @param datasourceId - The datasource_id parameter
+ * @param body - Request body
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async uploadContent(datasourceId: string, files: ReadableStream<Uint8Array> | Blob | File, filesName: string): Promise<models.UploadContentResponse> {
+    const path = `/datasources/${datasourceId}/content`;
+    return this.http.upload<models.UploadContentResponse>(path, [
+      { fieldName: 'files', fileName: filesName, content: files },
+    ]);
+  }
+
+/**
+ * Upload Content (sync)
+ *
+ * @param datasourceId - The datasource_id parameter
+ * @param triggerIngest - Start ingestion after upload completes. Returns ingest_url to poll for status.
+ * @param body - Request body
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async uploadAndListContent(datasourceId: string, files: ReadableStream<Uint8Array> | Blob | File, filesName: string, options?: { triggerIngest?: boolean }): Promise<models.FileUploadSyncResponse> {
+    const path = `/datasources/${datasourceId}/content/process`;
+    const queryParams: Record<string, string | number | boolean | undefined> = {};
+    if (options?.triggerIngest !== undefined) {
+      queryParams['trigger_ingest'] = options.triggerIngest;
+    }
+    return this.http.upload<models.FileUploadSyncResponse>(path, [
+      { fieldName: 'files', fileName: filesName, content: files },
+    ], { params: queryParams });
+  }
+
+/**
+ * Stream Upload Progress
+ *
+ * @param uploadId - The upload_id parameter
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async *streamUploadProgress(uploadId: string): AsyncIterable<models.ConnectedEvent | Record<string, unknown>> {
+    const response = await this.http.request<Response>(`/datasources/uploads/${uploadId}/progress`, {
+      method: "GET",
+      stream: true,
+    });
+
+    yield* streamSSE(response);
   }
 
 }
