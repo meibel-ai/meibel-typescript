@@ -14,6 +14,31 @@ export class AgentsSessionsResource {
   constructor(private readonly http: HttpClient) {}
 
 /**
+ * Create Session By Name
+ *
+ * Start a session against the latest published version of an agent by name.
+
+Resolves the current latest published version at runtime — callers do not
+need to track a specific agent ID or version. Returns 404 if no published
+version exists for the given agent name.
+ *
+ * @param name - The name parameter
+ * @param body - Request body
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async createByName(name: string, body?: models.CreateSessionRequest | null): Promise<models.CreateSessionResponse> {
+    const response = await this.http.request<models.CreateSessionResponse>(`/agents/name/${name}/sessions`, {
+      method: "POST",
+      body,
+    });
+
+    return response;
+  }
+
+/**
  * List Sessions
  *
  * @param agentId - The agent_id parameter

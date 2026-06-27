@@ -786,7 +786,7 @@ export const UpdateBatchExecutionRequestSchema = z.object({
   /** Output datasource ID */
   outputDatasourceId: z.union([z.string(), z.null()]).optional(),
   /** Per-item results */
-  items: z.union([z.array(z.union([z.record(z.string(), z.unknown()), z.null()])), z.null()]).optional(),
+  items: z.union([z.array(z.record(z.string(), z.unknown())), z.null()]).optional(),
   /** Overall error message */
   error: z.union([z.string(), z.null()]).optional(),
   additionalProperties: z.record(z.string(), z.unknown()).optional(),

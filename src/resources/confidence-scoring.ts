@@ -69,4 +69,43 @@ export class ConfidenceScoringResource {
     return response;
   }
 
+/**
+ * Get agent scoring summary
+ *
+ * Get an aggregated summary of confidence scores for a specific agent.
+ *
+ * @param agentName - Name of the agent to summarize.
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async getAgentScoringSummary(agentName: string): Promise<models.ScoreSummary> {
+    const response = await this.http.request<models.ScoreSummary>(`/confidence-scoring/summary/agent/${agentName}`, {
+      method: "GET",
+    });
+
+    return response;
+  }
+
+/**
+ * Get agent session scoring summary
+ *
+ * Get an aggregated summary of confidence scores for a specific agent session.
+ *
+ * @param agentName - Name of the agent.
+ * @param sessionId - Agent session ID.
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async getAgentSessionScoringSummary(agentName: string, sessionId: string): Promise<models.ScoreSummary> {
+    const response = await this.http.request<models.ScoreSummary>(`/confidence-scoring/summary/agent/${agentName}/session/${sessionId}`, {
+      method: "GET",
+    });
+
+    return response;
+  }
+
 }
