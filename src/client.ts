@@ -18,6 +18,7 @@ import { FileUploadsResource } from './resources/file-uploads.js';
 import { IngestResource } from './resources/ingest.js';
 import { TablesResource } from './resources/tables.js';
 import { DocumentsResource } from './resources/documents.js';
+import { ExecutionPoliciesResource } from './resources/execution-policies.js';
 import { MetadataModelCatalogResource } from './resources/metadata-model-catalog.js';
 import { SessionsResource } from './resources/sessions.js';
 
@@ -37,6 +38,7 @@ export class MeibelClient {
   public readonly confidenceScoring: ConfidenceScoringResource;
   public readonly datasources: DatasourcesResource;
   public readonly documents: DocumentsResource;
+  public readonly executionPolicies: ExecutionPoliciesResource;
   public readonly metadataModelCatalog: MetadataModelCatalogResource;
   public readonly sessions: SessionsResource;
 
@@ -55,7 +57,7 @@ export class MeibelClient {
       ...options,
       baseUrl,
       headers,
-      _sdkUserAgent: "meibel-typescript/2.0.3",
+      _sdkUserAgent: "meibel-typescript/2.0.4",
     });
 
     this.agents = new AgentsResource(this.http);
@@ -64,6 +66,7 @@ export class MeibelClient {
     this.confidenceScoring = new ConfidenceScoringResource(this.http);
     this.datasources = new DatasourcesResource(this.http);
     this.documents = new DocumentsResource(this.http);
+    this.executionPolicies = new ExecutionPoliciesResource(this.http);
     this.metadataModelCatalog = new MetadataModelCatalogResource(this.http);
     this.sessions = new SessionsResource(this.http);
   }

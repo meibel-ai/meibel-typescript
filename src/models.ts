@@ -6,32 +6,6 @@
 
 import { z } from 'zod';
 
-export const AgentDetailResponseSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  displayName: z.string(),
-  catalogUrn: z.string(),
-  version: z.string(),
-  parentVersion: z.union([z.string(), z.null()]).optional(),
-  type: z.string(),
-  description: z.union([z.string(), z.null()]).optional(),
-  llmModel: z.string(),
-  fallbackModels: z.array(z.string()),
-  datasources: z.array(z.string()),
-  instructions: z.string(),
-  tools: z.array(z.record(z.string(), z.unknown())),
-  artifacts: z.array(z.string()),
-  confidenceConfigs: z.array(z.string()),
-  temperature: z.union([z.number(), z.number().int()]),
-  maxTokens: z.union([z.number().int(), z.null()]).optional(),
-  tags: z.array(z.string()),
-  icon: z.union([z.string(), z.null()]).optional(),
-  createdBy: z.union([z.string(), z.null()]).optional(),
-  createdAt: z.union([z.coerce.date(), z.null()]).optional(),
-  lastExecutionStatus: z.union([z.string(), z.null()]).optional(),
-  lastExecutionTime: z.union([z.coerce.date(), z.null()]).optional(),
-});
-
 /**
  * Identifies the agent, workflow, and tool context that produced the scored output.
  */
@@ -178,33 +152,6 @@ export const BatchDefinitionFiltersSchema = z.object({
 });
 
 /**
- * Full BatchDefinition snapshot.
- */
-export const BatchDefinitionResponseSchema = z.object({
-  id: z.string(),
-  customerId: z.string(),
-  projectId: z.string(),
-  name: z.string(),
-  version: z.string(),
-  parentVersion: z.union([z.string(), z.null()]),
-  catalogUrn: z.string(),
-  agentUrn: z.string(),
-  agentSpecJson: z.record(z.string(), z.unknown()),
-  inputDatasourceId: z.string(),
-  /** Optional override for the tool's parameters schema */
-  filters: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
-  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
-  userMessage: z.union([z.string(), z.null()]).optional(),
-  concurrency: z.number().int(),
-  retryLimit: z.number().int(),
-  recurrenceCron: z.union([z.string(), z.null()]).optional(),
-  description: z.union([z.string(), z.null()]).optional(),
-  createdAt: z.coerce.date(),
-  createdBy: z.string(),
-  deletedAt: z.union([z.coerce.date(), z.null()]).optional(),
-});
-
-/**
  * Per-item result from the Temporal workflow.
  */
 export const BatchItemResultSchema = z.object({
@@ -304,12 +251,6 @@ export const CreateBatchDefinitionResponseSchema = z.object({
   version: z.string(),
 });
 
-export const CreateSessionRequestSchema = z.object({
-  prompt: z.union([z.string(), z.null()]).optional(),
-  initialContext: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
-  maxIterationsPerUserMessage: z.union([z.number().int(), z.null()]).optional(),
-});
-
 export const CreateSessionResponseSchema = z.object({
   sessionId: z.string(),
 });
@@ -358,6 +299,33 @@ export const DatabaseConnectorSchema = z.object({
   database: z.string(),
   /** Schema name (defaults to public) */
   schemaName: z.union([z.string(), z.null()]).optional(),
+});
+
+/**
+ * Public run metrics. Mirrors heron's RunMetrics minus internal cost fields (`cost_*_usd`),
+which are dropped: Pydantic ignores unknown keys, so any cost field heron sends is discarded.
+ */
+export const DeepTransformMetricsSchema = z.object({
+  /** Total wall-clock time of the run */
+  wallMs: z.union([z.number().int(), z.null()]).optional(),
+  /** Minimum achievable time given dependencies */
+  floorMs: z.union([z.number().int(), z.null()]).optional(),
+  /** Peak concurrent LLM calls */
+  llmConcurrencyPeak: z.union([z.number().int(), z.null()]).optional(),
+  /** Fraction of entities resolved to an identity */
+  identityResolutionRate: z.union([z.number(), z.null()]).optional(),
+  /** Entities with no incoming references */
+  orphanCount: z.union([z.number().int(), z.null()]).optional(),
+  /** Edges pointing at a missing entity */
+  danglingEdgeCount: z.union([z.number().int(), z.null()]).optional(),
+  /** Entities split across fragments */
+  fragmentedCount: z.union([z.number().int(), z.null()]).optional(),
+  /** Scalar conflicts shipped un-arbitrated (DEGRADED resolution) */
+  scalarConflictsUnresolved: z.union([z.number().int(), z.null()]).optional(),
+  /** Entities not covered by the extraction */
+  uncoveredEntityCount: z.union([z.number().int(), z.null()]).optional(),
+  /** Work units that failed during the run */
+  failedUnitCount: z.union([z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -590,6 +558,14 @@ export const PublishAgentDefinitionResponseSchema = z.object({
   publishedBy: z.union([z.string(), z.null()]).optional(),
 });
 
+/**
+ * Constraints for RAG (vector search) queries within a datasource.  Controls which documents the agent can retrieve via vector search.  Filters use MongoDB-style constraint dicts. Plain values are automatically normalized to ``{"$eq": value}`` on construction.  Built-in fields:   - ``data_element.__id__``: scope by data element ID   - ``data_element.__name__``: scope by original filename  Custom indexed metadata fields (e.g., ``author``, ``document_type``) are also supported when configured on the datasource.  Supported operators:   - Comparison: ``$eq``, ``$ne``, ``$gt``, ``$gte``, ``$lt``, ``$lte``   - Set: ``$in``, ``$nin``   - Logical: ``$and``, ``$or``, ``$not``
+ */
+export const RagConstraintsSchema = z.object({
+  /** Optional override for the tool's parameters schema */
+  filter: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+});
+
 export const SessionMessageItemSchema = z.object({
   type: z.string(),
   timestamp: z.union([z.string(), z.null()]).optional(),
@@ -622,6 +598,11 @@ export const SourceSchema = z.object({
   snippet: z.union([z.string(), z.null()]).optional(),
   dataElementId: z.union([z.string(), z.null()]).optional(),
   relevanceScore: z.union([z.number(), z.number().int(), z.null()]).optional(),
+});
+
+export const SubmitDeepTransformResponseSchema = z.object({
+  /** Poll status via GET /documents/deep-transform/{job_id} */
+  jobId: z.string(),
 });
 
 export const SubmitDocumentTransformResponseSchema = z.object({
@@ -664,6 +645,18 @@ export const TagColumnUpdateItemSchema = z.object({
 });
 
 /**
+ * Constraints for TAG (SQL/database) queries within a datasource.  Controls which tables and rows the agent can access, and which columns are redacted from query output.  Filters use MongoDB-style constraint dicts. Plain values are automatically normalized to ``{"$eq": value}`` on construction.  Supported operators:   - Comparison: ``$eq``, ``$ne``, ``$gt``, ``$gte``, ``$lt``, ``$lte``   - Set: ``$in``, ``$nin``   - Logical: ``$and``, ``$or``, ``$not``
+ */
+export const TagConstraintsSchema = z.object({
+  /** Optional override for the tool's parameters schema */
+  filter: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+  /** Per-table column names to redact from query output. Keyed by table name; values are lists of column names. Columns remain usable in WHERE/JOIN — only the final result values are stripped. */
+  hiddenColumns: z.union([z.record(z.string(), z.array(z.string())), z.null()]).optional(),
+  /** Table names whose columns are fully redacted from query output. Tables remain queryable in WHERE/JOIN — only SELECT output is stripped. */
+  hiddenTables: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+/**
  * A single table-description update entry within an UpdateTagTablesRequest.
  */
 export const TagTableUpdateItemSchema = z.object({
@@ -694,6 +687,16 @@ export const ToolCallInfoSchema = z.object({
   arguments: z.union([z.record(z.string(), z.unknown()), z.null()]),
   sequence: z.union([z.string(), z.null()]),
   timestamp: z.union([z.string(), z.null()]),
+});
+
+/**
+ * Access controls for a single tool instance.  Tools can be entirely disabled, or have their parameters constrained to specific values or ranges. Keyed by tool instance name in ``ExecutionPolicy.tools``.  Variable constraints use the same MongoDB-style operators as datasource filters. Plain values are automatically normalized to ``{"$eq": value}`` on construction. All constraints are:   1. Annotated in the tool's parameter schema (visible to the LLM)   2. Validated at execution time (enforced by the platform)  Supported operators:   - Comparison: ``$eq``, ``$ne``, ``$gt``, ``$gte``, ``$lt``, ``$lte``   - Set: ``$in``, ``$nin``   - Logical: ``$and``, ``$or``, ``$not``
+ */
+export const ToolConfigSchema = z.object({
+  /** When true, the tool is removed from the agent's toolkit for this session. The agent will not be able to invoke it. */
+  disabled: z.union([z.boolean(), z.null()]).optional(),
+  /** Optional override for the tool's parameters schema */
+  variables: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
 });
 
 /**
@@ -920,6 +923,22 @@ export const WebDomainSchema = z.object({
   excludePattern: z.string().optional(),
 });
 
+/**
+ * Reuse an already-parsed document instead of re-parsing an upload.
+ */
+export const SubmitDeepTransformFromDocumentSchema = z.object({
+  /** A document job id returned by POST /documents. Reuses that parse so the document is not parsed again. The document must belong to the calling customer. */
+  documentJobId: z.string(),
+  /** JSON Schema of the entities to extract */
+  schema: z.record(z.string(), z.unknown()),
+  /** Name of the root entity in the schema. Optional: when omitted it is resolved from the schema's `title` or inferred during extraction. */
+  rootName: z.union([z.string(), z.null()]).optional(),
+  /** Optional domain guidance for the extraction */
+  guidance: z.union([z.string(), z.null()]).optional(),
+  /** Optional cap on the number of pages to process */
+  maxPages: z.union([z.number().int(), z.null()]).optional(),
+});
+
 export const BodyUploadContentSchema = z.object({
   /** One or more files to upload */
   files: z.array(z.instanceof(Uint8Array)),
@@ -970,6 +989,19 @@ export const BodySubmitDocumentTransformSchema = z.object({
   timeoutSeconds: z.number().int().optional(),
 });
 
+export const BodySubmitDeepTransformSchema = z.object({
+  /** Document file to extract from */
+  file: z.instanceof(Uint8Array),
+  /** JSON Schema (as a JSON string) of the entities to extract */
+  schema: z.string(),
+  /** Name of the root entity in the schema. Optional: resolved from the schema's title or inferred when omitted. */
+  rootName: z.string().optional(),
+  /** Optional domain guidance for the extraction */
+  guidance: z.string().optional(),
+  /** Optional cap on the number of pages to process */
+  maxPages: z.number().int().optional(),
+});
+
 /**
  * A confidence scoring job record with metadata and scores only.
  */
@@ -991,75 +1023,6 @@ export const ScoringJobResponseSchema = z.object({
 export const AgentListResponseSchema = z.object({
   data: z.array(AgentSummarySchema),
   total: z.number().int(),
-});
-
-/**
- * Request model for creating a new agent definition.
- */
-export const CreateAgentDefinitionRequestSchema = z.object({
-  /** Human-readable name of the agent (letters, numbers, and spaces only). Converted to kebab-case internally. */
-  displayName: z.string(),
-  /** System prompt/instructions for the agent */
-  instructions: z.string(),
-  /** Agent type */
-  type: z.union([z.string(), z.null()]).optional(),
-  /** Description of the agent */
-  description: z.union([z.string(), z.null()]).optional(),
-  /** LLM model to use */
-  llmModel: z.union([z.string(), z.null()]).optional(),
-  /** List of fallback models */
-  fallbackModels: z.union([z.array(z.string()), z.null()]).optional(),
-  /** Datasource IDs the agent has access to */
-  datasources: z.union([z.array(z.string()), z.null()]).optional(),
-  /** Tools configuration */
-  tools: z.union([z.array(AgentToolDefinitionSchema), z.null()]).optional(),
-  /** Catalog URNs of artifacts the agent produces */
-  artifacts: z.union([z.array(z.string()), z.null()]).optional(),
-  /** Confidence scoring module names to apply during execution */
-  confidenceConfigs: z.union([z.array(z.string()), z.null()]).optional(),
-  /** LLM temperature */
-  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
-  /** Maximum tokens in response */
-  maxTokens: z.union([z.number().int(), z.null()]).optional(),
-  /** Tags for categorization */
-  tags: z.union([z.array(z.string()), z.null()]).optional(),
-  /** UI icon identifier */
-  icon: z.union([z.string(), z.null()]).optional(),
-  additionalProperties: z.record(z.string(), z.unknown()).optional(),
-});
-
-/**
- * Request model for updating an agent definition. Name is intentionally excluded as it serves as the stable identifier for a version chain and cannot be changed.
- */
-export const UpdateAgentDefinitionRequestSchema = z.object({
-  /** Human-readable name of the agent */
-  displayName: z.union([z.string(), z.null()]).optional(),
-  /** System prompt/instructions */
-  instructions: z.union([z.string(), z.null()]).optional(),
-  /** Agent type */
-  type: z.union([z.string(), z.null()]).optional(),
-  /** Description of the agent */
-  description: z.union([z.string(), z.null()]).optional(),
-  /** LLM model to use */
-  llmModel: z.union([z.string(), z.null()]).optional(),
-  /** List of fallback models */
-  fallbackModels: z.union([z.array(z.string()), z.null()]).optional(),
-  /** Datasource IDs the agent has access to */
-  datasources: z.union([z.array(z.string()), z.null()]).optional(),
-  /** Tools configuration */
-  tools: z.union([z.array(AgentToolDefinitionSchema), z.null()]).optional(),
-  /** Catalog URNs of artifacts the agent produces */
-  artifacts: z.union([z.array(z.string()), z.null()]).optional(),
-  /** Confidence scoring module names to apply during execution */
-  confidenceConfigs: z.union([z.array(z.string()), z.null()]).optional(),
-  /** LLM temperature */
-  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
-  /** Maximum tokens in response */
-  maxTokens: z.union([z.number().int(), z.null()]).optional(),
-  /** Tags for categorization */
-  tags: z.union([z.array(z.string()), z.null()]).optional(),
-  /** UI icon identifier */
-  icon: z.union([z.string(), z.null()]).optional(),
 });
 
 export const AgentVersionListResponseSchema = z.object({
@@ -1106,44 +1069,6 @@ export const UpdateAgentArtifactRequestSchema = z.object({
   maxSizeBytes: z.union([z.number().int(), z.null()]).optional(),
   /** Storage strategy */
   storageStrategy: z.union([ArtifactStorageStrategySchema, z.null()]).optional(),
-});
-
-/**
- * Create a new BatchDefinition lineage.
- */
-export const CreateBatchDefinitionRequestSchema = z.object({
-  /** Kebab-case label (non-unique within tenant) */
-  name: z.string(),
-  /** AgentDefinition ID; resolved + pinned at creation time */
-  agentId: z.string(),
-  /** Datasource holding the input Data Elements */
-  inputDatasourceId: z.string(),
-  filters: z.union([BatchDefinitionFiltersSchema, z.null()]).optional(),
-  /** Pinned output sink. NULL = workflow auto-creates per execution. */
-  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
-  userMessage: z.union([z.string(), z.null()]).optional(),
-  concurrency: z.union([z.number().int(), z.null()]).optional(),
-  retryLimit: z.union([z.number().int(), z.null()]).optional(),
-  /** Cron expression validated by croniter; not yet scheduled in DEL-1376. */
-  recurrenceCron: z.union([z.string(), z.null()]).optional(),
-  description: z.union([z.string(), z.null()]).optional(),
-});
-
-/**
- * Patch a BatchDefinition; the service forks a new version row.
- */
-export const UpdateBatchDefinitionRequestSchema = z.object({
-  name: z.union([z.string(), z.null()]).optional(),
-  /** If set, re-resolves and re-pins the agent spec */
-  agentId: z.union([z.string(), z.null()]).optional(),
-  inputDatasourceId: z.union([z.string(), z.null()]).optional(),
-  filters: z.union([BatchDefinitionFiltersSchema, z.null()]).optional(),
-  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
-  userMessage: z.union([z.string(), z.null()]).optional(),
-  concurrency: z.union([z.number().int(), z.null()]).optional(),
-  retryLimit: z.union([z.number().int(), z.null()]).optional(),
-  recurrenceCron: z.union([z.string(), z.null()]).optional(),
-  description: z.union([z.string(), z.null()]).optional(),
 });
 
 /**
@@ -1195,6 +1120,21 @@ export const DataElementListResponseSchema = z.object({
   nextCursor: z.union([z.string(), z.null()]).optional(),
   /** True if more pages are available */
   hasNext: z.boolean().optional(),
+});
+
+export const DeepTransformJobSchema = z.object({
+  /** Deep-transform job id */
+  jobId: z.string(),
+  /** queued | running | succeeded | failed */
+  status: z.string(),
+  /** Names of the artifacts available for download once the job succeeds */
+  artifacts: z.array(z.string()).optional(),
+  /** Run metrics (timing, counts) */
+  metrics: z.union([DeepTransformMetricsSchema, z.null()]).optional(),
+  /** Extraction quality (AEQ) summary */
+  aeq: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+  /** Failure reason when status is failed */
+  error: z.union([z.string(), z.null()]).optional(),
 });
 
 export const ArtifactSchemaSummarySchema = z.object({
@@ -1291,14 +1231,6 @@ export const MetadataModelCatalogEntrySchema = z.object({
   fields: z.array(MetadataFieldSchema),
 });
 
-/**
- * GetBatchDefinitionsResponse
- */
-export const GetBatchDefinitionsResponseSchema = z.object({
-  data: z.array(BatchDefinitionResponseSchema),
-  pagination: PaginationMetaSchema,
-});
-
 export const SessionMessagesResponseSchema = z.object({
   agentId: z.union([z.string(), z.null()]).optional(),
   agentName: z.union([z.string(), z.null()]).optional(),
@@ -1352,6 +1284,18 @@ export const TableDescriptionUpdateSchema = z.object({
 export const UpdateTagColumnsRequestSchema = z.object({
   /** One entry per column to update on the target table */
   columns: z.array(TagColumnUpdateItemSchema),
+});
+
+/**
+ * Access controls for a single datasource.  Each datasource can be entirely disabled, or selectively constrained via TAG (SQL) and/or RAG (vector search) filters. Keyed by datasource_id in ``ExecutionPolicy.datasources``.
+ */
+export const DatasourceViewSchema = z.object({
+  /** When true, the datasource is entirely inaccessible for this session. All queries against it will be blocked. */
+  disabled: z.union([z.boolean(), z.null()]).optional(),
+  /** TAG (SQL/database) constraints. Controls table/row access and column redaction. */
+  tables: z.union([TagConstraintsSchema, z.null()]).optional(),
+  /** RAG (vector search) constraints. Controls which documents can be retrieved. */
+  documents: z.union([RagConstraintsSchema, z.null()]).optional(),
 });
 
 /**
@@ -1444,6 +1388,17 @@ export const TableSchema = z.object({
   bbox: z.union([BoundingBoxSchema, z.null()]).optional(),
 });
 
+export const DeepTransformJobListSchema = z.object({
+  /** The customer's deep-transform jobs, newest first */
+  jobs: z.array(DeepTransformJobSchema).optional(),
+  /** Applied page size */
+  limit: z.number().int(),
+  /** Applied offset */
+  offset: z.number().int(),
+  /** Offset for the next page, or null when this was the last page */
+  nextOffset: z.union([z.number().int(), z.null()]).optional(),
+});
+
 export const ArtifactSchemaListResponseSchema = z.object({
   data: z.array(ArtifactSchemaSummarySchema),
   total: z.number().int(),
@@ -1488,6 +1443,16 @@ export const ChatMessageResponseSchema = z.object({
   thinking: z.union([z.string(), z.null()]).optional(),
   /** Token usage statistics */
   tokenUsage: z.union([z.record(z.string(), z.number().int()), z.null()]).optional(),
+});
+
+/**
+ * Session-level access constraints (hardrails) for data and tools.  Controls what data an agent session can access and what tools it can use. Constraints are enforced by the platform at runtime — the agent cannot bypass them.  Multiple policies can be composed: stored policies (by ID) and/or an inline policy are structurally merged. Overlapping datasource or tool entries are combined with ``$and`` (intersection semantics).  All filter fields use MongoDB-style constraint operators. Plain values are automatically normalized to ``{"$eq": value}``.
+ */
+export const ExecutionPolicySchema = z.object({
+  /** Per-datasource access controls, keyed by datasource_id. Each entry can disable the datasource entirely or apply TAG/RAG filters to restrict which data is accessible. */
+  datasources: z.union([z.record(z.string(), DatasourceViewSchema), z.null()]).optional(),
+  /** Per-tool access controls, keyed by tool instance name. Each entry can disable the tool entirely or constrain its parameters to specific values or ranges. */
+  tools: z.union([z.record(z.string(), ToolConfigSchema), z.null()]).optional(),
 });
 
 /**
@@ -1548,6 +1513,236 @@ export const DocumentElementSchema = z.object({
  */
 export const CreateBatchExecutionRequestSchema = z.object({
   batchSpecJson: LegacyBatchSpecJsonSchema,
+});
+
+export const AgentDetailResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  displayName: z.string(),
+  catalogUrn: z.string(),
+  version: z.string(),
+  parentVersion: z.union([z.string(), z.null()]).optional(),
+  type: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
+  llmModel: z.string(),
+  fallbackModels: z.array(z.string()),
+  datasources: z.array(z.string()),
+  instructions: z.string(),
+  tools: z.array(z.record(z.string(), z.unknown())),
+  artifacts: z.array(z.string()),
+  confidenceConfigs: z.array(z.string()),
+  temperature: z.union([z.number(), z.number().int()]),
+  maxTokens: z.union([z.number().int(), z.null()]).optional(),
+  tags: z.array(z.string()),
+  icon: z.union([z.string(), z.null()]).optional(),
+  createdBy: z.union([z.string(), z.null()]).optional(),
+  createdAt: z.union([z.coerce.date(), z.null()]).optional(),
+  /** Execution policy applied to this agent's sessions. */
+  executionPolicy: z.union([ExecutionPolicySchema, z.null()]).optional(),
+  executionPolicyIds: z.union([z.array(z.string()), z.null()]).optional(),
+  lastExecutionStatus: z.union([z.string(), z.null()]).optional(),
+  lastExecutionTime: z.union([z.coerce.date(), z.null()]).optional(),
+});
+
+/**
+ * Full BatchDefinition snapshot.
+ */
+export const BatchDefinitionResponseSchema = z.object({
+  id: z.string(),
+  customerId: z.string(),
+  projectId: z.string(),
+  name: z.string(),
+  version: z.string(),
+  parentVersion: z.union([z.string(), z.null()]),
+  catalogUrn: z.string(),
+  agentUrn: z.string(),
+  agentSpecJson: z.record(z.string(), z.unknown()),
+  inputDatasourceId: z.string(),
+  /** Optional override for the tool's parameters schema */
+  filters: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  userMessage: z.union([z.string(), z.null()]).optional(),
+  concurrency: z.number().int(),
+  retryLimit: z.number().int(),
+  recurrenceCron: z.union([z.string(), z.null()]).optional(),
+  description: z.union([z.string(), z.null()]).optional(),
+  executionPolicy: z.union([ExecutionPolicySchema, z.null()]).optional(),
+  executionPolicyIds: z.union([z.array(z.string()), z.null()]).optional(),
+  createdAt: z.coerce.date(),
+  createdBy: z.string(),
+  deletedAt: z.union([z.coerce.date(), z.null()]).optional(),
+});
+
+/**
+ * Request model for creating a new agent definition.
+ */
+export const CreateAgentDefinitionRequestSchema = z.object({
+  /** Human-readable name of the agent (letters, numbers, and spaces only). Converted to kebab-case internally. */
+  displayName: z.string(),
+  /** System prompt/instructions for the agent */
+  instructions: z.string(),
+  /** Agent type */
+  type: z.union([z.string(), z.null()]).optional(),
+  /** Description of the agent */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** LLM model to use */
+  llmModel: z.union([z.string(), z.null()]).optional(),
+  /** List of fallback models */
+  fallbackModels: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Datasource IDs the agent has access to */
+  datasources: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Tools configuration */
+  tools: z.union([z.array(AgentToolDefinitionSchema), z.null()]).optional(),
+  /** Catalog URNs of artifacts the agent produces */
+  artifacts: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Confidence scoring module names to apply during execution */
+  confidenceConfigs: z.union([z.array(z.string()), z.null()]).optional(),
+  /** LLM temperature */
+  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
+  /** Maximum tokens in response */
+  maxTokens: z.union([z.number().int(), z.null()]).optional(),
+  /** Tags for categorization */
+  tags: z.union([z.array(z.string()), z.null()]).optional(),
+  /** UI icon identifier */
+  icon: z.union([z.string(), z.null()]).optional(),
+  /** Inline execution policy constraints (datasources, tools) */
+  executionPolicy: z.union([ExecutionPolicySchema, z.null()]).optional(),
+  /** IDs of stored ExecutionPolicies to compose */
+  executionPolicyIds: z.union([z.array(z.string()), z.null()]).optional(),
+  additionalProperties: z.record(z.string(), z.unknown()).optional(),
+});
+
+/**
+ * Create a new BatchDefinition lineage.
+ */
+export const CreateBatchDefinitionRequestSchema = z.object({
+  /** Kebab-case label (non-unique within tenant) */
+  name: z.string(),
+  /** AgentDefinition ID; resolved + pinned at creation time */
+  agentId: z.string(),
+  /** Datasource holding the input Data Elements */
+  inputDatasourceId: z.string(),
+  filters: z.union([BatchDefinitionFiltersSchema, z.null()]).optional(),
+  /** Pinned output sink. NULL = workflow auto-creates per execution. */
+  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  userMessage: z.union([z.string(), z.null()]).optional(),
+  concurrency: z.union([z.number().int(), z.null()]).optional(),
+  retryLimit: z.union([z.number().int(), z.null()]).optional(),
+  /** Cron expression validated by croniter; not yet scheduled in DEL-1376. */
+  recurrenceCron: z.union([z.string(), z.null()]).optional(),
+  description: z.union([z.string(), z.null()]).optional(),
+  /** Inline execution policy constraints (datasources, tools) */
+  executionPolicy: z.union([ExecutionPolicySchema, z.null()]).optional(),
+  /** IDs of stored ExecutionPolicies to compose */
+  executionPolicyIds: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+/**
+ * CreateExecutionPolicyRequest
+ */
+export const CreateExecutionPolicyRequestSchema = z.object({
+  /** Policy name (unique within tenant) */
+  name: z.string(),
+  /** Human-readable description */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** ExecutionPolicy payload (datasources, tools) */
+  executionPolicy: ExecutionPolicySchema,
+});
+
+export const CreateSessionRequestSchema = z.object({
+  prompt: z.union([z.string(), z.null()]).optional(),
+  initialContext: z.union([z.record(z.string(), z.unknown()), z.null()]).optional(),
+  maxIterationsPerUserMessage: z.number().int().optional(),
+  messageWaitTimeoutSeconds: z.number().int().optional(),
+  /** IDs of stored ExecutionPolicies to compose into this session. */
+  executionPolicyIds: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Inline session-level access constraints (hardrails). Controls which datasources and tools the agent can use, and what data is accessible within each. Composed with any stored policies referenced by execution_policy_ids. */
+  executionPolicy: z.union([ExecutionPolicySchema, z.null()]).optional(),
+});
+
+/**
+ * ExecutionPolicyResponse
+ */
+export const ExecutionPolicyResponseSchema = z.object({
+  id: z.string(),
+  customerId: z.string(),
+  projectId: z.string(),
+  name: z.string(),
+  description: z.union([z.string(), z.null()]).optional(),
+  executionPolicy: ExecutionPolicySchema,
+  createdAt: z.coerce.date(),
+  updatedAt: z.coerce.date(),
+});
+
+/**
+ * Request model for updating an agent definition. Name is intentionally excluded as it serves as the stable identifier for a version chain and cannot be changed.
+ */
+export const UpdateAgentDefinitionRequestSchema = z.object({
+  /** Human-readable name of the agent */
+  displayName: z.union([z.string(), z.null()]).optional(),
+  /** System prompt/instructions */
+  instructions: z.union([z.string(), z.null()]).optional(),
+  /** Agent type */
+  type: z.union([z.string(), z.null()]).optional(),
+  /** Description of the agent */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** LLM model to use */
+  llmModel: z.union([z.string(), z.null()]).optional(),
+  /** List of fallback models */
+  fallbackModels: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Datasource IDs the agent has access to */
+  datasources: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Tools configuration */
+  tools: z.union([z.array(AgentToolDefinitionSchema), z.null()]).optional(),
+  /** Catalog URNs of artifacts the agent produces */
+  artifacts: z.union([z.array(z.string()), z.null()]).optional(),
+  /** Confidence scoring module names to apply during execution */
+  confidenceConfigs: z.union([z.array(z.string()), z.null()]).optional(),
+  /** LLM temperature */
+  temperature: z.union([z.number(), z.number().int(), z.null()]).optional(),
+  /** Maximum tokens in response */
+  maxTokens: z.union([z.number().int(), z.null()]).optional(),
+  /** Tags for categorization */
+  tags: z.union([z.array(z.string()), z.null()]).optional(),
+  /** UI icon identifier */
+  icon: z.union([z.string(), z.null()]).optional(),
+  /** Inline execution policy constraints (datasources, tools) */
+  executionPolicy: z.union([ExecutionPolicySchema, z.null()]).optional(),
+  /** IDs of stored ExecutionPolicies to compose */
+  executionPolicyIds: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+/**
+ * Patch a BatchDefinition; the service forks a new version row.
+ */
+export const UpdateBatchDefinitionRequestSchema = z.object({
+  name: z.union([z.string(), z.null()]).optional(),
+  /** If set, re-resolves and re-pins the agent spec */
+  agentId: z.union([z.string(), z.null()]).optional(),
+  inputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  filters: z.union([BatchDefinitionFiltersSchema, z.null()]).optional(),
+  outputDatasourceId: z.union([z.string(), z.null()]).optional(),
+  userMessage: z.union([z.string(), z.null()]).optional(),
+  concurrency: z.union([z.number().int(), z.null()]).optional(),
+  retryLimit: z.union([z.number().int(), z.null()]).optional(),
+  recurrenceCron: z.union([z.string(), z.null()]).optional(),
+  description: z.union([z.string(), z.null()]).optional(),
+  /** Inline execution policy constraints (datasources, tools) */
+  executionPolicy: z.union([ExecutionPolicySchema, z.null()]).optional(),
+  /** IDs of stored ExecutionPolicies to compose */
+  executionPolicyIds: z.union([z.array(z.string()), z.null()]).optional(),
+});
+
+/**
+ * UpdateExecutionPolicyRequest
+ */
+export const UpdateExecutionPolicyRequestSchema = z.object({
+  /** Updated policy name */
+  name: z.union([z.string(), z.null()]).optional(),
+  /** Updated description */
+  description: z.union([z.string(), z.null()]).optional(),
+  /** Updated ExecutionPolicy payload */
+  executionPolicy: z.union([ExecutionPolicySchema, z.null()]).optional(),
 });
 
 /**
@@ -1623,6 +1818,22 @@ export const MeibelDocumentResultSchema = z.object({
 });
 
 /**
+ * GetBatchDefinitionsResponse
+ */
+export const GetBatchDefinitionsResponseSchema = z.object({
+  data: z.array(BatchDefinitionResponseSchema),
+  pagination: PaginationMetaSchema,
+});
+
+/**
+ * GetExecutionPoliciesResponse
+ */
+export const GetExecutionPoliciesResponseSchema = z.object({
+  data: z.array(ExecutionPolicyResponseSchema),
+  pagination: PaginationMetaSchema,
+});
+
+/**
  * List of datasources visible to the caller.
  */
 export const DatasourceListResponseSchema = z.object({
@@ -1642,7 +1853,6 @@ export const ProcessDocumentResponseSchema = z.object({
 });
 
 // Type exports
-export type AgentDetailResponse = z.infer<typeof AgentDetailResponseSchema>;
 export type AgentIdentityContext = z.infer<typeof AgentIdentityContextSchema>;
 export type AgentSummary = z.infer<typeof AgentSummarySchema>;
 export type AgentToolDefinition = z.infer<typeof AgentToolDefinitionSchema>;
@@ -1653,7 +1863,6 @@ export type ArtifactSchemaResponse = z.infer<typeof ArtifactSchemaResponseSchema
 export type ArtifactStorageStrategy = z.infer<typeof ArtifactStorageStrategySchema>;
 export type ArtifactType = z.infer<typeof ArtifactTypeSchema>;
 export type BatchDefinitionFilters = z.infer<typeof BatchDefinitionFiltersSchema>;
-export type BatchDefinitionResponse = z.infer<typeof BatchDefinitionResponseSchema>;
 export type BatchItemResult = z.infer<typeof BatchItemResultSchema>;
 export type BodySendChatMessageStream = z.infer<typeof BodySendChatMessageStreamSchema>;
 export type BoundingBox = z.infer<typeof BoundingBoxSchema>;
@@ -1664,11 +1873,11 @@ export type CloudStorageConnectorSummary = z.infer<typeof CloudStorageConnectorS
 export type CreateAgentResponse = z.infer<typeof CreateAgentResponseSchema>;
 export type CreateArtifactSchemaResponse = z.infer<typeof CreateArtifactSchemaResponseSchema>;
 export type CreateBatchDefinitionResponse = z.infer<typeof CreateBatchDefinitionResponseSchema>;
-export type CreateSessionRequest = z.infer<typeof CreateSessionRequestSchema>;
 export type CreateSessionResponse = z.infer<typeof CreateSessionResponseSchema>;
 export type DataElementResponse = z.infer<typeof DataElementResponseSchema>;
 export type DataElementSearchRequest = z.infer<typeof DataElementSearchRequestSchema>;
 export type DatabaseConnector = z.infer<typeof DatabaseConnectorSchema>;
+export type DeepTransformMetrics = z.infer<typeof DeepTransformMetricsSchema>;
 export type DocumentChild = z.infer<typeof DocumentChildSchema>;
 export type DocumentStatus = z.infer<typeof DocumentStatusSchema>;
 export type DownloadJobRequest = z.infer<typeof DownloadJobRequestSchema>;
@@ -1690,16 +1899,20 @@ export type PaginationMeta = z.infer<typeof PaginationMetaSchema>;
 export type ParseDocumentResponse = z.infer<typeof ParseDocumentResponseSchema>;
 export type PublishAgentDefinitionRequest = z.infer<typeof PublishAgentDefinitionRequestSchema>;
 export type PublishAgentDefinitionResponse = z.infer<typeof PublishAgentDefinitionResponseSchema>;
+export type RagConstraints = z.infer<typeof RagConstraintsSchema>;
 export type SessionMessageItem = z.infer<typeof SessionMessageItemSchema>;
 export type SessionSummary = z.infer<typeof SessionSummarySchema>;
 export type Source = z.infer<typeof SourceSchema>;
+export type SubmitDeepTransformResponse = z.infer<typeof SubmitDeepTransformResponseSchema>;
 export type SubmitDocumentTransformResponse = z.infer<typeof SubmitDocumentTransformResponseSchema>;
 export type TableSummaryResponse = z.infer<typeof TableSummaryResponseSchema>;
 export type TagColumn = z.infer<typeof TagColumnSchema>;
 export type TagColumnUpdateItem = z.infer<typeof TagColumnUpdateItemSchema>;
+export type TagConstraints = z.infer<typeof TagConstraintsSchema>;
 export type TagTableUpdateItem = z.infer<typeof TagTableUpdateItemSchema>;
 export type ToolActivity = z.infer<typeof ToolActivitySchema>;
 export type ToolCallInfo = z.infer<typeof ToolCallInfoSchema>;
+export type ToolConfig = z.infer<typeof ToolConfigSchema>;
 export type ToolResultInfo = z.infer<typeof ToolResultInfoSchema>;
 export type TransformDocumentResponse = z.infer<typeof TransformDocumentResponseSchema>;
 export type TriggerIngestResponse = z.infer<typeof TriggerIngestResponseSchema>;
@@ -1720,24 +1933,23 @@ export type UploadContentResponse = z.infer<typeof UploadContentResponseSchema>;
 export type UpdateDataElementRequest = z.infer<typeof UpdateDataElementRequestSchema>;
 export type DeleteDatasourceResponse = z.infer<typeof DeleteDatasourceResponseSchema>;
 export type WebDomain = z.infer<typeof WebDomainSchema>;
+export type SubmitDeepTransformFromDocument = z.infer<typeof SubmitDeepTransformFromDocumentSchema>;
 export type BodyUploadContent = z.infer<typeof BodyUploadContentSchema>;
 export type BodyUploadAndListContent = z.infer<typeof BodyUploadAndListContentSchema>;
 export type BodyParseDocument = z.infer<typeof BodyParseDocumentSchema>;
 export type BodyProcessDocument = z.infer<typeof BodyProcessDocumentSchema>;
 export type BodyTransformDocument = z.infer<typeof BodyTransformDocumentSchema>;
 export type BodySubmitDocumentTransform = z.infer<typeof BodySubmitDocumentTransformSchema>;
+export type BodySubmitDeepTransform = z.infer<typeof BodySubmitDeepTransformSchema>;
 export type ScoringJobResponse = z.infer<typeof ScoringJobResponseSchema>;
 export type AgentListResponse = z.infer<typeof AgentListResponseSchema>;
-export type CreateAgentDefinitionRequest = z.infer<typeof CreateAgentDefinitionRequestSchema>;
-export type UpdateAgentDefinitionRequest = z.infer<typeof UpdateAgentDefinitionRequestSchema>;
 export type AgentVersionListResponse = z.infer<typeof AgentVersionListResponseSchema>;
 export type CreateAgentArtifactRequest = z.infer<typeof CreateAgentArtifactRequestSchema>;
 export type UpdateAgentArtifactRequest = z.infer<typeof UpdateAgentArtifactRequestSchema>;
-export type CreateBatchDefinitionRequest = z.infer<typeof CreateBatchDefinitionRequestSchema>;
-export type UpdateBatchDefinitionRequest = z.infer<typeof UpdateBatchDefinitionRequestSchema>;
 export type BatchExecutionResponse = z.infer<typeof BatchExecutionResponseSchema>;
 export type TableCell = z.infer<typeof TableCellSchema>;
 export type DataElementListResponse = z.infer<typeof DataElementListResponseSchema>;
+export type DeepTransformJob = z.infer<typeof DeepTransformJobSchema>;
 export type ArtifactSchemaSummary = z.infer<typeof ArtifactSchemaSummarySchema>;
 export type FileParseEntry = z.infer<typeof FileParseEntrySchema>;
 export type IngestCountsResponse = z.infer<typeof IngestCountsResponseSchema>;
@@ -1746,13 +1958,13 @@ export type LegacyBatchInputConfig = z.infer<typeof LegacyBatchInputConfigSchema
 export type MetadataConfigRequest = z.infer<typeof MetadataConfigRequestSchema>;
 export type MetadataConfigResponse = z.infer<typeof MetadataConfigResponseSchema>;
 export type MetadataModelCatalogEntry = z.infer<typeof MetadataModelCatalogEntrySchema>;
-export type GetBatchDefinitionsResponse = z.infer<typeof GetBatchDefinitionsResponseSchema>;
 export type SessionMessagesResponse = z.infer<typeof SessionMessagesResponseSchema>;
 export type SessionListResponse = z.infer<typeof SessionListResponseSchema>;
 export type ChatResponse = z.infer<typeof ChatResponseSchema>;
 export type TagTable = z.infer<typeof TagTableSchema>;
 export type TableDescriptionUpdate = z.infer<typeof TableDescriptionUpdateSchema>;
 export type UpdateTagColumnsRequest = z.infer<typeof UpdateTagColumnsRequestSchema>;
+export type DatasourceView = z.infer<typeof DatasourceViewSchema>;
 export type UpdateTagTablesRequest = z.infer<typeof UpdateTagTablesRequestSchema>;
 export type ToolActivityEntry = z.infer<typeof ToolActivityEntrySchema>;
 export type ScoreSummary = z.infer<typeof ScoreSummarySchema>;
@@ -1762,18 +1974,32 @@ export type ListContentResponse = z.infer<typeof ListContentResponseSchema>;
 export type WebCrawlConnector = z.infer<typeof WebCrawlConnectorSchema>;
 export type GetBatchExecutionsResponse = z.infer<typeof GetBatchExecutionsResponseSchema>;
 export type Table = z.infer<typeof TableSchema>;
+export type DeepTransformJobList = z.infer<typeof DeepTransformJobListSchema>;
 export type ArtifactSchemaListResponse = z.infer<typeof ArtifactSchemaListResponseSchema>;
 export type LegacyBatchSpecJson = z.infer<typeof LegacyBatchSpecJsonSchema>;
 export type ListMetadataModelCatalogResponse = z.infer<typeof ListMetadataModelCatalogResponseSchema>;
 export type ChatMessageResponse = z.infer<typeof ChatMessageResponseSchema>;
+export type ExecutionPolicy = z.infer<typeof ExecutionPolicySchema>;
 export type AgentExecutionDetailsResponse = z.infer<typeof AgentExecutionDetailsResponseSchema>;
 export type ConnectorConfig = z.infer<typeof ConnectorConfigSchema>;
 export type ConnectorSummary = z.infer<typeof ConnectorSummarySchema>;
 export type DocumentElement = z.infer<typeof DocumentElementSchema>;
 export type CreateBatchExecutionRequest = z.infer<typeof CreateBatchExecutionRequestSchema>;
+export type AgentDetailResponse = z.infer<typeof AgentDetailResponseSchema>;
+export type BatchDefinitionResponse = z.infer<typeof BatchDefinitionResponseSchema>;
+export type CreateAgentDefinitionRequest = z.infer<typeof CreateAgentDefinitionRequestSchema>;
+export type CreateBatchDefinitionRequest = z.infer<typeof CreateBatchDefinitionRequestSchema>;
+export type CreateExecutionPolicyRequest = z.infer<typeof CreateExecutionPolicyRequestSchema>;
+export type CreateSessionRequest = z.infer<typeof CreateSessionRequestSchema>;
+export type ExecutionPolicyResponse = z.infer<typeof ExecutionPolicyResponseSchema>;
+export type UpdateAgentDefinitionRequest = z.infer<typeof UpdateAgentDefinitionRequestSchema>;
+export type UpdateBatchDefinitionRequest = z.infer<typeof UpdateBatchDefinitionRequestSchema>;
+export type UpdateExecutionPolicyRequest = z.infer<typeof UpdateExecutionPolicyRequestSchema>;
 export type CreateDatasourceRequest = z.infer<typeof CreateDatasourceRequestSchema>;
 export type UpdateDatasourceRequest = z.infer<typeof UpdateDatasourceRequestSchema>;
 export type DatasourceResponse = z.infer<typeof DatasourceResponseSchema>;
 export type MeibelDocumentResult = z.infer<typeof MeibelDocumentResultSchema>;
+export type GetBatchDefinitionsResponse = z.infer<typeof GetBatchDefinitionsResponseSchema>;
+export type GetExecutionPoliciesResponse = z.infer<typeof GetExecutionPoliciesResponseSchema>;
 export type DatasourceListResponse = z.infer<typeof DatasourceListResponseSchema>;
 export type ProcessDocumentResponse = z.infer<typeof ProcessDocumentResponseSchema>;

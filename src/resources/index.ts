@@ -17,5 +17,6 @@ export { FileUploadsResource } from './file-uploads.js';
 export { IngestResource } from './ingest.js';
 export { TablesResource } from './tables.js';
 export { DocumentsResource } from './documents.js';
+export { ExecutionPoliciesResource } from './execution-policies.js';
 export { MetadataModelCatalogResource } from './metadata-model-catalog.js';
 export { SessionsResource } from './sessions.js';

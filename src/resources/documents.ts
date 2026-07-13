@@ -6,6 +6,7 @@
 
 import type { HttpClient } from '../http.js';
 import * as models from '../models.js';
+import { paginate } from '../pagination.js';
 import { streamSSE } from '../streaming.js';
 import type { UploadFile } from '../upload.js';
 import { z } from 'zod';
@@ -244,6 +245,149 @@ export class DocumentsResource {
     return this.http.upload<models.SubmitDocumentTransformResponse>(path, [
       { fieldName: 'file', fileName: _fileName, content: _fileContent },
     ], { formFields, timeout: options.timeoutSeconds ? options.timeoutSeconds * 1000 : undefined });
+  }
+
+/**
+ * List deep-transform jobs
+ *
+ * List the calling customer's deep-transform jobs, newest first. Scoped to the customer (and project, when a project header is set). Paginated via `offset`/`limit`.
+ *
+ * @param offset - Number of jobs to skip
+ * @param limit - Maximum number of jobs to return
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async *listDeepTransforms(options?: { offset?: number; limit?: number }): AsyncIterable<models.DeepTransformJob> {
+    const queryParams: Record<string, string | number | boolean | undefined> = {
+      offset: options?.offset ?? undefined,
+      limit: options?.limit ?? undefined,
+    };
+
+    yield* paginate<models.DeepTransformJob>(async (cursor) => {
+      const response = await this.http.request<models.DeepTransformJobList>("/documents/deep-transform", {
+        method: "GET",
+        params: {
+          ...queryParams,
+          offset: cursor,
+        },
+      });
+      return {
+        items: response.jobs ?? [],
+      };
+    });
+  }
+
+/**
+ * Submit a deep-transform extraction from a file upload (async)
+ *
+ * Upload a document and submit an extraction against a JSON schema, returning immediately with a job id. To reuse an already-parsed document instead of uploading, use POST /documents/deep-transform/from-document. Poll status via GET /documents/deep-transform/{job_id} and download artifacts once it succeeds. Submission is idempotent on the (document, schema) pair.
+ *
+ * @param body - Request body
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async submitDeepTransform(options: { file: string | File | Blob | ReadableStream<Uint8Array>; schema: string | Record<string, unknown> | z.ZodType; rootName?: string; guidance?: string; maxPages?: number }): Promise<models.SubmitDeepTransformResponse> {
+    const _schema = options.schema instanceof z.ZodType
+      ? zodToJsonSchema(options.schema)
+      : options.schema;
+    const path = "/documents/deep-transform";
+
+    // Resolve file content
+    let _fileContent: ReadableStream<Uint8Array> | Blob | File;
+    let _fileName: string;
+    if (typeof options.file === 'string') {
+      const { createReadStream } = await import('node:fs');
+      const { Readable } = await import('node:stream');
+      _fileContent = Readable.toWeb(createReadStream(options.file)) as ReadableStream<Uint8Array>;
+      _fileName = options.file.split('/').pop() ?? options.file;
+    } else {
+      _fileContent = options.file;
+      _fileName = options.file instanceof File ? options.file.name : 'file';
+    }
+
+    // Build form fields from non-file smart params
+    const formFields: Record<string, string> = {};
+    if (typeof _schema === 'object' && _schema !== null) {
+      formFields['schema'] = JSON.stringify(_schema);
+    } else if (_schema != null) {
+      formFields['schema'] = String(_schema);
+    }
+    if (options.rootName != null) {
+      formFields['root_name'] = String(options.rootName);
+    }
+    if (options.guidance != null) {
+      formFields['guidance'] = String(options.guidance);
+    }
+    if (options.maxPages != null) {
+      formFields['max_pages'] = String(options.maxPages);
+    }
+
+    return this.http.upload<models.SubmitDeepTransformResponse>(path, [
+      { fieldName: 'file', fileName: _fileName, content: _fileContent },
+    ], { formFields });
+  }
+
+/**
+ * Get deep-transform job status
+ *
+ * Check status and, once succeeded, the list of downloadable artifacts.
+ *
+ * @param jobId - The job_id parameter
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async getDeepTransformStatus(jobId: string): Promise<models.DeepTransformJob> {
+    const response = await this.http.request<models.DeepTransformJob>(`/documents/deep-transform/${jobId}`, {
+      method: "GET",
+    });
+
+    return response;
+  }
+
+/**
+ * Download a deep-transform artifact
+ *
+ * Download a named artifact (e.g. output.json) produced by a succeeded job. Ownership is verified against the customer header before any bytes are returned.
+ *
+ * @param jobId - The job_id parameter
+ * @param name - The name parameter
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async downloadDeepTransformArtifact(jobId: string, name: string): Promise<string> {
+    const response = await this.http.request<string>(`/documents/deep-transform/${jobId}/artifact/${name}`, {
+      method: "GET",
+    });
+
+    return response;
+  }
+
+/**
+ * Submit a deep-transform extraction reusing a parsed document (async)
+ *
+ * Submit an extraction that reuses an already-parsed document (by `document_job_id` from POST /documents) instead of re-parsing an upload. Returns immediately with a job id. Poll status via GET /documents/deep-transform/{job_id} and download artifacts once it succeeds. Submission is idempotent on the (document, schema) pair.
+ *
+ * @param body - Request body
+ *
+ * @returns Successful Response
+ *
+ * @throws {ApiError} If the request fails
+ */
+  async submitDeepTransformFrom(body: models.SubmitDeepTransformFromDocument): Promise<models.SubmitDeepTransformResponse> {
+    const response = await this.http.request<models.SubmitDeepTransformResponse>("/documents/deep-transform/from-document", {
+      method: "POST",
+      body,
+    });
+
+    return response;
   }
 
 }
