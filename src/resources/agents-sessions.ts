@@ -52,7 +52,7 @@ version exists for the given agent name.
  *
  * @throws {ApiError} If the request fails
  */
-  async *list(agentId: string, options?: { offset?: number; limit?: number | null; sortBy?: string; sortOrder?: string; status?: string | null }): AsyncIterable<models.SessionSummary> {
+  async *list(agentId: string, options?: { offset?: number; limit?: number; sortBy?: string; sortOrder?: string; status?: string | null }): AsyncIterable<models.SessionSummary> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       offset: options?.offset ?? undefined,
       limit: options?.limit ?? undefined,
@@ -121,7 +121,7 @@ version exists for the given agent name.
  *
  * @throws {ApiError} If the request fails
  */
-  async *sendChatMessageStream(sessionId: string, file: ReadableStream<Uint8Array> | Blob | File, fileName: string, options?: { userMessage?: string | null; timeoutSeconds?: number | null; includeThinking?: boolean | null; includeToolActivity?: boolean | null; files?: string[] | null }): AsyncIterable<models.ConnectedEvent | models.StatusEvent | models.ToolCallEvent | models.ToolResultEvent | models.PartialResponseEvent | models.CompletionEvent | Record<string, unknown>> {
+  async *sendChatMessageStream(sessionId: string, file?: ReadableStream<Uint8Array> | Blob | File, fileName?: string, options?: { userMessage?: string | null; timeoutSeconds?: number | null; includeThinking?: boolean | null; includeToolActivity?: boolean | null; files?: string[] | null }): AsyncIterable<models.ConnectedEvent | models.StatusEvent | models.ToolCallEvent | models.ToolResultEvent | models.PartialResponseEvent | models.CompletionEvent | Record<string, unknown>> {
     const path = `/sessions/${sessionId}/chat/stream`;
     const formFields: Record<string, string> = {};
     if (options?.userMessage !== undefined) {
@@ -139,10 +139,19 @@ version exists for the given agent name.
     if (options?.files !== undefined) {
       formFields['files'] = String(options.files);
     }
-    const response = await this.http.upload<Response>(path, [
-      { fieldName: 'file', fileName: fileName, content: file },
-    ], { formFields, stream: true });
-    yield* streamSSE(response);
+    if (file) {
+      const response = await this.http.upload<Response>(path, [
+        { fieldName: 'file', fileName: fileName ?? 'file', content: file },
+      ], { formFields, stream: true });
+      yield* streamSSE(response);
+    } else {
+      const response = await this.http.request<Response>(path, {
+        method: "POST",
+        formData: formFields,
+        stream: true,
+      });
+      yield* streamSSE(response);
+    }
   }
 
 }

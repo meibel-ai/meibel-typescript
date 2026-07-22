@@ -182,6 +182,13 @@ export class HttpClient {
       });
       clearTimeout(timeoutId);
 
+      // Streaming upload (multipart body + SSE response): return the raw Response
+      // so the caller can consume it via streamSSE(), mirroring request().
+      if (options.stream) {
+        if (!response.ok) await this.handleErrorResponse(response);
+        return response as unknown as T;
+      }
+
       if (!response.ok) await this.handleErrorResponse(response);
       if (response.status === 204) return undefined as T;
 

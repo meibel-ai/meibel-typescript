@@ -21,15 +21,25 @@ export class AgentsResource {
  *
  * @param offset - Number of items to skip
  * @param limit - Maximum number of items to return
+ * @param sortBy - Field to sort by: created_at, name, display_name
+ * @param sortOrder - Sort order: asc or desc
+ * @param publishedOnly - If true, return only published agents (latest published version per name)
+ * @param datasourceId - Return only agents whose latest version uses this datasource ID
+ * @param artifactSchemaId - Return only agents whose latest version produces this artifact (catalog URN)
  *
  * @returns Successful Response
  *
  * @throws {ApiError} If the request fails
  */
-  async *list(options?: { offset?: number; limit?: number | null }): AsyncIterable<models.AgentSummary> {
+  async *list(options?: { offset?: number; limit?: number; sortBy?: string; sortOrder?: string; publishedOnly?: boolean; datasourceId?: string | null; artifactSchemaId?: string | null }): AsyncIterable<models.AgentSummary> {
     const queryParams: Record<string, string | number | boolean | undefined> = {
       offset: options?.offset ?? undefined,
       limit: options?.limit ?? undefined,
+      sort_by: options?.sortBy ?? undefined,
+      sort_order: options?.sortOrder ?? undefined,
+      published_only: options?.publishedOnly ?? undefined,
+      datasource_id: options?.datasourceId ?? undefined,
+      artifact_schema_id: options?.artifactSchemaId ?? undefined,
     };
 
     yield* paginate<models.AgentSummary>(async (cursor) => {

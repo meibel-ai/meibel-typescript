@@ -42,8 +42,12 @@ export const AgentIdentityContextSchema = z.object({
 
 export const AgentSummarySchema = z.object({
   id: z.string(),
+  name: z.string(),
   displayName: z.string(),
   description: z.union([z.string(), z.null()]).optional(),
+  version: z.string(),
+  /** Lifecycle state of the returned version: "draft" or "published". */
+  type: z.string(),
   llmModel: z.string(),
   toolCount: z.number().int(),
   datasourceCount: z.number().int(),
@@ -508,6 +512,18 @@ export const MetadataFieldSchema = z.object({
 });
 
 /**
+ * Result of starting an asynchronous document move workflow.
+ */
+export const MoveDocumentsResponseSchema = z.object({
+  /** ID of the datasource the documents are being moved into */
+  datasourceId: z.string(),
+  /** ID of the move workflow - poll for completion */
+  workflowId: z.string(),
+  /** Number of documents submitted for move */
+  documentsCount: z.number().int(),
+});
+
+/**
  * Pagination metadata included in list responses.
  */
 export const PaginationMetaSchema = z.object({
@@ -598,6 +614,22 @@ export const SourceSchema = z.object({
   snippet: z.union([z.string(), z.null()]).optional(),
   dataElementId: z.union([z.string(), z.null()]).optional(),
   relevanceScore: z.union([z.number(), z.number().int(), z.null()]).optional(),
+});
+
+/**
+ * Reuse an already-parsed document instead of re-parsing an upload.
+ */
+export const SubmitDeepTransformFromDocumentSchema = z.object({
+  /** A document job id returned by POST /documents. Reuses that parse so the document is not parsed again. The document must belong to the calling customer. */
+  documentJobId: z.string(),
+  /** JSON Schema of the entities to extract */
+  schema: z.record(z.string(), z.unknown()),
+  /** Name of the root entity in the schema. Optional: when omitted it is resolved from the schema's `title` or inferred during extraction. */
+  rootName: z.union([z.string(), z.null()]).optional(),
+  /** Optional domain guidance for the extraction */
+  guidance: z.union([z.string(), z.null()]).optional(),
+  /** Optional cap on the number of pages to process */
+  maxPages: z.union([z.number().int(), z.null()]).optional(),
 });
 
 export const SubmitDeepTransformResponseSchema = z.object({
@@ -852,6 +884,77 @@ export const CompletionEventSchema = z.object({
 });
 
 /**
+ * Linear fit `value = slope * pixel_pos + intercept` (on log10(value) for Log10, on unix-timestamp for DateTime). `r_squared` retained to warn on weak fits.
+ */
+export const ParseAffineFitSchema = z.object({
+  intercept: z.number(),
+  rSquared: z.number(),
+  slope: z.number(),
+});
+
+export const ParseAxisScaleSchema = z.object({
+});
+
+/**
+ * Axis-aligned bounding box.
+ */
+export const ParseBBoxSchema = z.object({
+  x0: z.number(),
+  x1: z.number(),
+  y0: z.number(),
+  y1: z.number(),
+});
+
+/**
+ * Where a `ChartText` came from.
+ */
+export const ParseChartTextSourceSchema = z.object({
+});
+
+export const ParseChartTypeSchema = z.object({
+});
+
+/**
+ * Aggregate confidence scores for the document.
+ */
+export const ParseConfidenceScoresSchema = z.object({
+  /** Mean layout detection confidence across all elements. */
+  meanLayoutConfidence: z.number(),
+  /** Minimum layout detection confidence across all elements. */
+  minLayoutConfidence: z.number(),
+  /** Total number of layout elements detected. */
+  numElements: z.number().int(),
+  /** Number of tables recognized. */
+  numTables: z.number().int(),
+});
+
+/**
+ * Layout element types for document layout detection.
+
+PP-DocLayoutV3 produces 25 classes (indices 0-24) which are mapped to these labels. Legacy heron labels (Checkbox*, Form, KeyValueRegion, ListItem) are retained for backward compatibility but no longer emitted by the model.
+ */
+export const ParseLayoutLabelSchema = z.object({
+});
+
+export const ParseModalitySchema = z.object({
+});
+
+export const ParseSeriesStyleSchema = z.object({
+});
+
+/**
+ * Provenance for a digitized value — drives confidence and auditability.
+ */
+export const ParseValueSourceSchema = z.object({
+});
+
+/**
+ * Which Y axis a series reads against. `Ambiguous` is the fallback defined canonically in the spec §7f (dual-Y detected ∧ color match inconclusive ∧ no VLM) — emitted with a warning rather than a wrong guess.
+ */
+export const ParseYAxisRefSchema = z.object({
+});
+
+/**
  * A single file in a datasource's content store.
  */
 export const ContentItemSchema = z.object({
@@ -923,22 +1026,6 @@ export const WebDomainSchema = z.object({
   excludePattern: z.string().optional(),
 });
 
-/**
- * Reuse an already-parsed document instead of re-parsing an upload.
- */
-export const SubmitDeepTransformFromDocumentSchema = z.object({
-  /** A document job id returned by POST /documents. Reuses that parse so the document is not parsed again. The document must belong to the calling customer. */
-  documentJobId: z.string(),
-  /** JSON Schema of the entities to extract */
-  schema: z.record(z.string(), z.unknown()),
-  /** Name of the root entity in the schema. Optional: when omitted it is resolved from the schema's `title` or inferred during extraction. */
-  rootName: z.union([z.string(), z.null()]).optional(),
-  /** Optional domain guidance for the extraction */
-  guidance: z.union([z.string(), z.null()]).optional(),
-  /** Optional cap on the number of pages to process */
-  maxPages: z.union([z.number().int(), z.null()]).optional(),
-});
-
 export const BodyUploadContentSchema = z.object({
   /** One or more files to upload */
   files: z.array(z.instanceof(Uint8Array)),
@@ -947,6 +1034,19 @@ export const BodyUploadContentSchema = z.object({
 export const BodyUploadAndListContentSchema = z.object({
   /** One or more files to upload */
   files: z.array(z.instanceof(Uint8Array)),
+});
+
+export const BodySubmitDeepTransformSchema = z.object({
+  /** Document file to extract from */
+  file: z.instanceof(Uint8Array),
+  /** JSON Schema (as a JSON string) of the entities to extract */
+  schema: z.string(),
+  /** Name of the root entity in the schema. Optional: resolved from the schema's title or inferred when omitted. */
+  rootName: z.string().optional(),
+  /** Optional domain guidance for the extraction */
+  guidance: z.string().optional(),
+  /** Optional cap on the number of pages to process */
+  maxPages: z.number().int().optional(),
 });
 
 export const BodyParseDocumentSchema = z.object({
@@ -989,19 +1089,6 @@ export const BodySubmitDocumentTransformSchema = z.object({
   timeoutSeconds: z.number().int().optional(),
 });
 
-export const BodySubmitDeepTransformSchema = z.object({
-  /** Document file to extract from */
-  file: z.instanceof(Uint8Array),
-  /** JSON Schema (as a JSON string) of the entities to extract */
-  schema: z.string(),
-  /** Name of the root entity in the schema. Optional: resolved from the schema's title or inferred when omitted. */
-  rootName: z.string().optional(),
-  /** Optional domain guidance for the extraction */
-  guidance: z.string().optional(),
-  /** Optional cap on the number of pages to process */
-  maxPages: z.number().int().optional(),
-});
-
 /**
  * A confidence scoring job record with metadata and scores only.
  */
@@ -1023,11 +1110,15 @@ export const ScoringJobResponseSchema = z.object({
 export const AgentListResponseSchema = z.object({
   data: z.array(AgentSummarySchema),
   total: z.number().int(),
+  offset: z.number().int(),
+  limit: z.union([z.number().int(), z.null()]).optional(),
 });
 
 export const AgentVersionListResponseSchema = z.object({
   data: z.array(AgentVersionSummarySchema),
   total: z.number().int(),
+  offset: z.number().int(),
+  limit: z.union([z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -1241,6 +1332,8 @@ export const SessionMessagesResponseSchema = z.object({
 export const SessionListResponseSchema = z.object({
   data: z.array(SessionSummarySchema),
   total: z.number().int(),
+  offset: z.number().int(),
+  limit: z.union([z.number().int(), z.null()]).optional(),
 });
 
 /**
@@ -1338,6 +1431,44 @@ export const HttpValidationErrorSchema = z.object({
 });
 
 /**
+ * A bbox in both coordinate spaces. `pixel` = rendered-image space (top-left origin); `pdf` = page points (bottom-left origin, BOTTOMLEFT).
+ */
+export const ParseDualBBoxSchema = z.object({
+  pdf: ParseBBoxSchema,
+  pixel: ParseBBoxSchema,
+});
+
+/**
+ * A single cell in a recognized table.
+ */
+export const ParseTableCellSchema = z.object({
+  /** Bounding box of this table cell. */
+  bbox: ParseBBoxSchema,
+  /** Column index (0-indexed). */
+  col: z.number().int(),
+  /** Number of columns this cell spans (1 = no spanning). */
+  colSpan: z.number().int(),
+  /** Whether this is a header cell. */
+  isHeader: z.boolean(),
+  /** Row index (0-indexed). */
+  row: z.number().int(),
+  /** Number of rows this cell spans (1 = no spanning). */
+  rowSpan: z.number().int(),
+  /** Text content of this cell (assembled from text cells within the bbox). */
+  text: z.string(),
+});
+
+/**
+ * A transcript gutter line number stripped from the text flow.
+ */
+export const ParseTranscriptLineSchema = z.object({
+  /** Bounding box of the number in pixel coordinates (top-left origin). */
+  bbox: ParseBBoxSchema,
+  /** The printed line number (1-25/26). */
+  number: z.number().int(),
+});
+
+/**
  * Result of a synchronous upload — waits until files are persisted, optionally triggers ingest, and returns the resulting content listing.
  */
 export const FileUploadSyncResponseSchema = z.object({
@@ -1420,6 +1551,28 @@ export const LegacyBatchSpecJsonSchema = z.object({
 });
 
 /**
+ * Move documents into a datasource.
+
+The documents are referenced by the job IDs returned when they were parsed
+(e.g. the job_id from `parseDocument` / `client.documents.parse(...)`),
+not by object-storage paths.
+
+Either target an existing datasource with datasource_id, or create a new
+one by supplying new_datasource_name. Customer and project context are
+injected from request headers, not the body.
+ */
+export const MoveDocumentsRequestSchema = z.object({
+  /** Job IDs of the documents to move (e.g. the job_id returned by parseDocument) */
+  documents: z.array(z.string()),
+  /** Existing datasource to move documents into. Mutually exclusive with new_datasource_name. */
+  datasourceId: z.union([z.string(), z.null()]).optional(),
+  /** Name for a new datasource created to hold the documents. Mutually exclusive with datasource_id. */
+  newDatasourceName: z.union([z.string(), z.null()]).optional(),
+  /** Optional metadata extraction config applied to a newly created datasource. Ignored when datasource_id is set. */
+  metadataConfig: z.union([MetadataConfigRequestSchema, z.null()]).optional(),
+});
+
+/**
  * List of available metadata-extraction models in the catalog.
  */
 export const ListMetadataModelCatalogResponseSchema = z.object({
@@ -1468,6 +1621,51 @@ export const AgentExecutionDetailsResponseSchema = z.object({
   tokenUsage: z.array(z.union([z.record(z.string(), z.unknown()), z.null()])),
   fileParsing: z.array(FileParseEntrySchema),
   result: z.array(ArtifactEntrySchema),
+});
+
+/**
+ * One recognized text run on a chart, with dual-space position and provenance.
+ */
+export const ParseChartTextSchema = z.object({
+  bbox: ParseDualBBoxSchema,
+  confidence: z.number(),
+  source: ParseChartTextSourceSchema,
+  text: z.string(),
+});
+
+/**
+ * One digitized data value. `x` is in data units after inversion; when `x_is_category` it is the float index into `ChartData::categories`; for a DateTime axis it is a unix timestamp (seconds).
+ */
+export const ParseDataPointSchema = z.object({
+  bbox: ParseDualBBoxSchema,
+  confidence: z.number(),
+  source: ParseValueSourceSchema,
+  x: z.number(),
+  xIsCategory: z.boolean(),
+  y: z.number(),
+});
+
+export const ParseTickMarkSchema = z.object({
+  labelBbox: ParseDualBBoxSchema,
+  pixelPos: z.number(),
+  source: ParseValueSourceSchema,
+  value: z.number(),
+});
+
+/**
+ * A recognized table structure on a page. Produced by the table structure recognition model (TableFormer via ONNX).
+ */
+export const ParseTableSchema = z.object({
+  /** Bounding box of the entire table. */
+  bbox: ParseBBoxSchema,
+  /** Table cells (not to be confused with TextCell — these are table grid cells). */
+  cells: z.array(ParseTableCellSchema),
+  /** Number of columns. */
+  numCols: z.number().int(),
+  /** Number of rows. */
+  numRows: z.number().int(),
+  /** Page number this table belongs to (0-indexed). */
+  pageNumber: z.number().int(),
 });
 
 /**
@@ -1745,6 +1943,25 @@ export const UpdateExecutionPolicyRequestSchema = z.object({
   executionPolicy: z.union([ExecutionPolicySchema, z.null()]).optional(),
 });
 
+export const ParseSeriesSchema = z.object({
+  color: z.array(z.number().int()).optional(),
+  /** PDF dash array identifying the series alongside color. `Some(vec![])` = solid. Distinguishes monochrome series (Apple 10-K case). `None` = unknown (raster). */
+  dashPattern: z.array(z.number()).optional(),
+  name: z.string().optional(),
+  points: z.array(ParseDataPointSchema),
+  style: ParseSeriesStyleSchema,
+  yAxis: ParseYAxisRefSchema,
+});
+
+export const ParseAxisCalibrationSchema = z.object({
+  dataRange: z.array(z.number()),
+  pixelToData: ParseAffineFitSchema,
+  scale: ParseAxisScaleSchema,
+  ticks: z.array(ParseTickMarkSchema),
+  title: z.string().optional(),
+  unit: z.string().optional(),
+});
+
 /**
  * Body for creating a new datasource.
  */
@@ -1833,6 +2050,20 @@ export const GetExecutionPoliciesResponseSchema = z.object({
   pagination: PaginationMetaSchema,
 });
 
+export const ParseChartDataSchema = z.object({
+  categories: z.array(z.string()),
+  chartType: ParseChartTypeSchema,
+  modality: ParseModalitySchema,
+  overallConfidence: z.number(),
+  plotArea: ParseDualBBoxSchema,
+  series: z.array(ParseSeriesSchema),
+  title: z.string().optional(),
+  warnings: z.array(z.string()),
+  xAxis: ParseAxisCalibrationSchema,
+  yAxisLeft: z.union([ParseAxisCalibrationSchema, z.null()]).optional(),
+  yAxisRight: z.union([ParseAxisCalibrationSchema, z.null()]).optional(),
+});
+
 /**
  * List of datasources visible to the caller.
  */
@@ -1850,6 +2081,86 @@ export const ProcessDocumentResponseSchema = z.object({
   status: z.string(),
   /** MeibelDocumentResult for meibel format, str for markdown */
   result: z.union([MeibelDocumentResultSchema, z.string()]),
+});
+
+/**
+ * A single document element (text block, table, figure, etc.) in reading order.
+ */
+export const ParseDocumentElementSchema = z.object({
+  /** Bounding box in pixel coordinates (top-left origin). Normalized to [0,1] for annotated export. */
+  bbox: ParseBBoxSchema,
+  /** If this is a Chart element, the digitized plot data. */
+  chartData: z.union([ParseChartDataSchema, z.null()]).optional(),
+  /** Confidence score from the layout model. */
+  confidence: z.number(),
+  /** Heading level (1-6) for Title/SectionHeader elements. Determined by font-size clustering: largest font → H1, decreasing → H2-H6. `None` for non-heading elements. */
+  headingLevel: z.number().int().optional(),
+  /** Layout label from the detection model. */
+  label: ParseLayoutLabelSchema,
+  /** Recognized text on a Chart region, with positions and provenance. Sibling to `chart_data` so it survives when chart_data is None. */
+  ocrText: z.array(ParseChartTextSchema).optional(),
+  /** Position in reading order (0-indexed within page). */
+  readingOrder: z.number().int(),
+  /** If this is a Table element, the recognized table structure. */
+  table: z.union([ParseTableSchema, z.null()]).optional(),
+  /** Text content (assembled from cells within this region). */
+  text: z.string(),
+});
+
+/**
+ * Structured content for a single page.
+ */
+export const ParseStructuredPageSchema = z.object({
+  /** Document elements in reading order. */
+  elements: z.array(ParseDocumentElementSchema),
+  /** The page number printed on the mini-page itself ("Page 62"): read off the page by the grid detector when legible, inferred from the confirmed reading order when obscured. */
+  extractedPageNo: z.number().int().optional(),
+  /** Image dimensions in pixels (if a page image was provided). */
+  imageSize: z.array(z.number().int()).optional(),
+  /** Whether OCR was applied to this page. */
+  ocrApplied: z.boolean().optional(),
+  /** Adaptive OCR rendering DPI used for this page (150-600, computed from page size). Only present when OCR was applied. */
+  ocrDpi: z.number().int().optional(),
+  /** OCR detection signal breakdown (e.g. "enc=0.85(majority_bad), font=0.15(rich_fonts), ..."). */
+  ocrReason: z.string().optional(),
+  /** OCR detection composite score (0.0 = definitely has text, 1.0 = definitely needs OCR). Present even when OCR was not applied. */
+  ocrScore: z.number().optional(),
+  /** Orientation correction applied to this page in degrees (0, 90, 180, 270). 0 means no correction was needed or orientation detection was disabled. */
+  orientationDegrees: z.number().int().optional(),
+  /** Page dimensions in PDF points (bottom-left origin). */
+  pageBbox: ParseBBoxSchema,
+  /** Page number (0-indexed). */
+  pageNumber: z.number().int(),
+  /** 0-based index of the physical PDF page this output page came from. */
+  physicalPage: z.number().int().optional(),
+  /** Which grid cell of the physical page this output page is, numbered in reading order. */
+  quadrant: z.number().int().optional(),
+  /** Rectangle this output page occupies on the physical page, in the physical page's coordinate space. The viewer uses this to reassemble split pages onto the source PDF. */
+  sheetRect: z.union([ParseBBoxSchema, z.null()]).optional(),
+  /** Present when the page was detected as a line-numbered legal transcript. The gutter numbers are stripped from body text and kept here so page:line citations remain resolvable. */
+  transcriptLines: z.array(ParseTranscriptLineSchema).optional(),
+});
+
+/**
+ * The final output of the pipeline: a fully structured document.
+ */
+export const ParseStructuredDocumentSchema = z.object({
+  /** Aggregate confidence scores across all pages. */
+  confidence: ParseConfidenceScoresSchema,
+  /** Detected input format (e.g. "pdf", "docx", "markdown"). `None` for documents processed before this field was added. */
+  format: z.string().optional(),
+  /** Total GPU inference time in milliseconds across all stages (layout detection + table encoder + table decoder + OCR). Zero for non-PDF formats that don't use the ML pipeline. */
+  gpuMs: z.number().int().optional(),
+  /** Number of pages in the source document. */
+  numPages: z.number().int(),
+  /** Number of pages that required OCR (had no extractable text). */
+  ocrPages: z.number().int().optional(),
+  /** Number of pages where orientation detection applied a non-zero rotation. */
+  orientationPages: z.number().int().optional(),
+  /** Per-page structured content. */
+  pages: z.array(ParseStructuredPageSchema),
+  /** Number of regions dispatched to remote endpoints (charts, formulas, seals). */
+  remoteRegions: z.number().int().optional(),
 });
 
 // Type exports
@@ -1895,6 +2206,7 @@ export type LegacyBatchInputFilters = z.infer<typeof LegacyBatchInputFiltersSche
 export type LegacyBatchOutputConfig = z.infer<typeof LegacyBatchOutputConfigSchema>;
 export type MessageEntry = z.infer<typeof MessageEntrySchema>;
 export type MetadataField = z.infer<typeof MetadataFieldSchema>;
+export type MoveDocumentsResponse = z.infer<typeof MoveDocumentsResponseSchema>;
 export type PaginationMeta = z.infer<typeof PaginationMetaSchema>;
 export type ParseDocumentResponse = z.infer<typeof ParseDocumentResponseSchema>;
 export type PublishAgentDefinitionRequest = z.infer<typeof PublishAgentDefinitionRequestSchema>;
@@ -1903,6 +2215,7 @@ export type RagConstraints = z.infer<typeof RagConstraintsSchema>;
 export type SessionMessageItem = z.infer<typeof SessionMessageItemSchema>;
 export type SessionSummary = z.infer<typeof SessionSummarySchema>;
 export type Source = z.infer<typeof SourceSchema>;
+export type SubmitDeepTransformFromDocument = z.infer<typeof SubmitDeepTransformFromDocumentSchema>;
 export type SubmitDeepTransformResponse = z.infer<typeof SubmitDeepTransformResponseSchema>;
 export type SubmitDocumentTransformResponse = z.infer<typeof SubmitDocumentTransformResponseSchema>;
 export type TableSummaryResponse = z.infer<typeof TableSummaryResponseSchema>;
@@ -1928,19 +2241,29 @@ export type ToolCallEvent = z.infer<typeof ToolCallEventSchema>;
 export type ToolResultEvent = z.infer<typeof ToolResultEventSchema>;
 export type PartialResponseEvent = z.infer<typeof PartialResponseEventSchema>;
 export type CompletionEvent = z.infer<typeof CompletionEventSchema>;
+export type ParseAffineFit = z.infer<typeof ParseAffineFitSchema>;
+export type ParseAxisScale = z.infer<typeof ParseAxisScaleSchema>;
+export type ParseBBox = z.infer<typeof ParseBBoxSchema>;
+export type ParseChartTextSource = z.infer<typeof ParseChartTextSourceSchema>;
+export type ParseChartType = z.infer<typeof ParseChartTypeSchema>;
+export type ParseConfidenceScores = z.infer<typeof ParseConfidenceScoresSchema>;
+export type ParseLayoutLabel = z.infer<typeof ParseLayoutLabelSchema>;
+export type ParseModality = z.infer<typeof ParseModalitySchema>;
+export type ParseSeriesStyle = z.infer<typeof ParseSeriesStyleSchema>;
+export type ParseValueSource = z.infer<typeof ParseValueSourceSchema>;
+export type ParseYAxisRef = z.infer<typeof ParseYAxisRefSchema>;
 export type ContentItem = z.infer<typeof ContentItemSchema>;
 export type UploadContentResponse = z.infer<typeof UploadContentResponseSchema>;
 export type UpdateDataElementRequest = z.infer<typeof UpdateDataElementRequestSchema>;
 export type DeleteDatasourceResponse = z.infer<typeof DeleteDatasourceResponseSchema>;
 export type WebDomain = z.infer<typeof WebDomainSchema>;
-export type SubmitDeepTransformFromDocument = z.infer<typeof SubmitDeepTransformFromDocumentSchema>;
 export type BodyUploadContent = z.infer<typeof BodyUploadContentSchema>;
 export type BodyUploadAndListContent = z.infer<typeof BodyUploadAndListContentSchema>;
+export type BodySubmitDeepTransform = z.infer<typeof BodySubmitDeepTransformSchema>;
 export type BodyParseDocument = z.infer<typeof BodyParseDocumentSchema>;
 export type BodyProcessDocument = z.infer<typeof BodyProcessDocumentSchema>;
 export type BodyTransformDocument = z.infer<typeof BodyTransformDocumentSchema>;
 export type BodySubmitDocumentTransform = z.infer<typeof BodySubmitDocumentTransformSchema>;
-export type BodySubmitDeepTransform = z.infer<typeof BodySubmitDeepTransformSchema>;
 export type ScoringJobResponse = z.infer<typeof ScoringJobResponseSchema>;
 export type AgentListResponse = z.infer<typeof AgentListResponseSchema>;
 export type AgentVersionListResponse = z.infer<typeof AgentVersionListResponseSchema>;
@@ -1969,6 +2292,9 @@ export type UpdateTagTablesRequest = z.infer<typeof UpdateTagTablesRequestSchema
 export type ToolActivityEntry = z.infer<typeof ToolActivityEntrySchema>;
 export type ScoreSummary = z.infer<typeof ScoreSummarySchema>;
 export type HttpValidationError = z.infer<typeof HttpValidationErrorSchema>;
+export type ParseDualBBox = z.infer<typeof ParseDualBBoxSchema>;
+export type ParseTableCell = z.infer<typeof ParseTableCellSchema>;
+export type ParseTranscriptLine = z.infer<typeof ParseTranscriptLineSchema>;
 export type FileUploadSyncResponse = z.infer<typeof FileUploadSyncResponseSchema>;
 export type ListContentResponse = z.infer<typeof ListContentResponseSchema>;
 export type WebCrawlConnector = z.infer<typeof WebCrawlConnectorSchema>;
@@ -1977,10 +2303,15 @@ export type Table = z.infer<typeof TableSchema>;
 export type DeepTransformJobList = z.infer<typeof DeepTransformJobListSchema>;
 export type ArtifactSchemaListResponse = z.infer<typeof ArtifactSchemaListResponseSchema>;
 export type LegacyBatchSpecJson = z.infer<typeof LegacyBatchSpecJsonSchema>;
+export type MoveDocumentsRequest = z.infer<typeof MoveDocumentsRequestSchema>;
 export type ListMetadataModelCatalogResponse = z.infer<typeof ListMetadataModelCatalogResponseSchema>;
 export type ChatMessageResponse = z.infer<typeof ChatMessageResponseSchema>;
 export type ExecutionPolicy = z.infer<typeof ExecutionPolicySchema>;
 export type AgentExecutionDetailsResponse = z.infer<typeof AgentExecutionDetailsResponseSchema>;
+export type ParseChartText = z.infer<typeof ParseChartTextSchema>;
+export type ParseDataPoint = z.infer<typeof ParseDataPointSchema>;
+export type ParseTickMark = z.infer<typeof ParseTickMarkSchema>;
+export type ParseTable = z.infer<typeof ParseTableSchema>;
 export type ConnectorConfig = z.infer<typeof ConnectorConfigSchema>;
 export type ConnectorSummary = z.infer<typeof ConnectorSummarySchema>;
 export type DocumentElement = z.infer<typeof DocumentElementSchema>;
@@ -1995,11 +2326,17 @@ export type ExecutionPolicyResponse = z.infer<typeof ExecutionPolicyResponseSche
 export type UpdateAgentDefinitionRequest = z.infer<typeof UpdateAgentDefinitionRequestSchema>;
 export type UpdateBatchDefinitionRequest = z.infer<typeof UpdateBatchDefinitionRequestSchema>;
 export type UpdateExecutionPolicyRequest = z.infer<typeof UpdateExecutionPolicyRequestSchema>;
+export type ParseSeries = z.infer<typeof ParseSeriesSchema>;
+export type ParseAxisCalibration = z.infer<typeof ParseAxisCalibrationSchema>;
 export type CreateDatasourceRequest = z.infer<typeof CreateDatasourceRequestSchema>;
 export type UpdateDatasourceRequest = z.infer<typeof UpdateDatasourceRequestSchema>;
 export type DatasourceResponse = z.infer<typeof DatasourceResponseSchema>;
 export type MeibelDocumentResult = z.infer<typeof MeibelDocumentResultSchema>;
 export type GetBatchDefinitionsResponse = z.infer<typeof GetBatchDefinitionsResponseSchema>;
 export type GetExecutionPoliciesResponse = z.infer<typeof GetExecutionPoliciesResponseSchema>;
+export type ParseChartData = z.infer<typeof ParseChartDataSchema>;
 export type DatasourceListResponse = z.infer<typeof DatasourceListResponseSchema>;
 export type ProcessDocumentResponse = z.infer<typeof ProcessDocumentResponseSchema>;
+export type ParseDocumentElement = z.infer<typeof ParseDocumentElementSchema>;
+export type ParseStructuredPage = z.infer<typeof ParseStructuredPageSchema>;
+export type ParseStructuredDocument = z.infer<typeof ParseStructuredDocumentSchema>;
