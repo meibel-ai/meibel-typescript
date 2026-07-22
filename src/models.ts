@@ -134,14 +134,12 @@ export const ArtifactSchemaResponseSchema = z.object({
 /**
  * Supported storage strategies.
  */
-export const ArtifactStorageStrategySchema = z.object({
-});
+export const ArtifactStorageStrategySchema = z.enum(["inline", "gcs", "auto"]);
 
 /**
  * Supported artifact types.
  */
-export const ArtifactTypeSchema = z.object({
-});
+export const ArtifactTypeSchema = z.enum(["json", "markdown", "csv", "yaml", "text", "html", "pdf"]);
 
 /**
  * Recipe-level filters. element_ids belongs here; per-execution overrides use BatchInputOverrides on the execution row.
@@ -459,8 +457,7 @@ export const IngestMethodSummarySchema = z.object({
 /**
  * Lifecycle state of an ingest run.
  */
-export const IngestStatusSchema = z.object({
-});
+export const IngestStatusSchema = z.enum(["not_started", "running", "completed", "failed", "canceled", "terminated", "timed_out", "unknown"]);
 
 /**
  * LegacyBatchExecutionParams
@@ -892,8 +889,7 @@ export const ParseAffineFitSchema = z.object({
   slope: z.number(),
 });
 
-export const ParseAxisScaleSchema = z.object({
-});
+export const ParseAxisScaleSchema = z.enum(["Linear", "Log10", "Categorical", "DateTime"]);
 
 /**
  * Axis-aligned bounding box.
@@ -908,11 +904,9 @@ export const ParseBBoxSchema = z.object({
 /**
  * Where a `ChartText` came from.
  */
-export const ParseChartTextSourceSchema = z.object({
-});
+export const ParseChartTextSourceSchema = z.enum(["PdfText", "Ocr"]);
 
-export const ParseChartTypeSchema = z.object({
-});
+export const ParseChartTypeSchema = z.enum(["Line", "Scatter", "Bar", "Area", "Pie", "Mixed", "Unknown"]);
 
 /**
  * Aggregate confidence scores for the document.
@@ -933,26 +927,21 @@ export const ParseConfidenceScoresSchema = z.object({
 
 PP-DocLayoutV3 produces 25 classes (indices 0-24) which are mapped to these labels. Legacy heron labels (Checkbox*, Form, KeyValueRegion, ListItem) are retained for backward compatibility but no longer emitted by the model.
  */
-export const ParseLayoutLabelSchema = z.object({
-});
+export const ParseLayoutLabelSchema = z.enum(["Caption", "Chart", "Footnote", "Formula", "ListItem", "PageFooter", "PageHeader", "Picture", "Seal", "SectionHeader", "Table", "Text", "Title", "DocumentIndex", "Code", "CheckboxSelected", "CheckboxUnselected", "Form", "KeyValueRegion"]);
 
-export const ParseModalitySchema = z.object({
-});
+export const ParseModalitySchema = z.enum(["Vector", "Raster"]);
 
-export const ParseSeriesStyleSchema = z.object({
-});
+export const ParseSeriesStyleSchema = z.enum(["Line", "Scatter", "Bar", "Area", "PieSlice"]);
 
 /**
  * Provenance for a digitized value — drives confidence and auditability.
  */
-export const ParseValueSourceSchema = z.object({
-});
+export const ParseValueSourceSchema = z.enum(["VectorPath", "RasterMask", "RasterMarker", "VlmAdjudicated"]);
 
 /**
  * Which Y axis a series reads against. `Ambiguous` is the fallback defined canonically in the spec §7f (dual-Y detected ∧ color match inconclusive ∧ no VLM) — emitted with a warning rather than a wrong guess.
  */
-export const ParseYAxisRefSchema = z.object({
-});
+export const ParseYAxisRefSchema = z.enum(["Left", "Right", "Ambiguous"]);
 
 /**
  * A single file in a datasource's content store.
